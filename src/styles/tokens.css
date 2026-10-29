@@ -1,0 +1,205 @@
+/*
+ * Tidebook design tokens. Palette adapted from the Cognitive Companion design system (warm
+ * paper, terracotta accent, warm ink) with a sea-teal primary for the tide, plus a warm-dark variant selected by the
+ * device's colour scheme. Chrome and floating layers are frosted glass (--tb-glass-*) over a
+ * soft two-tone backdrop. Components read only the semantic --tb-* tokens, never primitives.
+ *
+ *   :root           primitives, fonts, radii, motion (theme-independent)
+ *   .v-theme--light surfaces, text, borders, shadows, chart colours for light
+ *   .v-theme--dark  the same names for dark
+ */
+@layer tb-tokens {
+  :root {
+    /* Stone: warm neutral scale */
+    --stone-50: #fbf8f3;
+    --stone-100: #f4ede2;
+    --stone-200: #e8ddcc;
+    --stone-300: #d6c7af;
+    --stone-400: #b3a286;
+    --stone-500: #877960;
+    --stone-600: #5f5544;
+    --stone-700: #433c30;
+    --stone-800: #2c2820;
+    --stone-850: #221e18;
+    --stone-900: #1d1a14;
+    --stone-950: #15120e;
+
+    /* Tide: primary brand sea-teal */
+    --tide-50: #eaf4f3;
+    --tide-100: #d2e7e5;
+    --tide-200: #a8cfcc;
+    --tide-300: #74b3ae;
+    --tide-400: #4a8f8b;
+    --tide-500: #2d6567;
+    --tide-600: #234f51;
+    --tide-700: #1a3c3e;
+    --tide-800: #122a2b;
+
+    /* Terra: terracotta accent */
+    --terra-50: #fbede5;
+    --terra-100: #f5d8c9;
+    --terra-200: #ebb59b;
+    --terra-300: #dc8d6b;
+    --terra-400: #c8704f;
+    --terra-500: #ac5a3c;
+    --terra-600: #884630;
+
+    --tb-font: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    /* Headings share the UI face at a heavier weight with tight tracking, in the spirit of
+       system UI type, rather than a second display family. */
+    --tb-font-display: var(--tb-font);
+    --tb-font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+    /* Vuetify 4 typography classes read these; without them they fall back to unbundled Roboto. */
+    --v-font-body: var(--tb-font);
+    --v-font-heading: var(--tb-font);
+
+    --tb-radius-xs: 6px;
+    --tb-radius-sm: 10px;
+    --tb-radius-md: 14px;
+    --tb-radius-lg: 20px;
+    --tb-radius-xl: 28px;
+    --tb-radius-pill: 999px;
+
+    --tb-glass-blur: blur(20px) saturate(170%);
+
+    --tb-dur-fast: 130ms;
+    --tb-dur-base: 220ms;
+    --tb-ease-standard: cubic-bezier(0.2, 0.6, 0.2, 1);
+
+    --tb-focus-ring: var(--terra-300);
+    --tb-shadow-focus: 0 0 0 3px var(--tb-focus-ring);
+    --tb-field-label-band: 24px;
+    --tb-label-size: 13px;
+    --tb-label-weight: 700;
+    --tb-label-tracking: 0.01em;
+
+    /* Minimum comfortable touch target (Apple HIG 44pt, Material 48dp). */
+    --tb-touch: 48px;
+  }
+
+  .v-theme--light {
+    color-scheme: light;
+
+    --tb-bg: #fbf8f3;
+    --tb-surface: #fffdf9;
+    --tb-surface-2: #f4ede2;
+    --tb-surface-sunk: #efe6d8;
+
+    --tb-text-1: #1d1a14;
+    --tb-text-2: #5f5544;
+    --tb-text-3: #7a6c54;
+
+    --tb-brand: #2d6567;
+    --tb-brand-strong: #234f51;
+    --tb-brand-soft: rgba(45, 101, 103, 0.12);
+    --tb-brand-softer: rgba(45, 101, 103, 0.06);
+    --tb-accent: #9a4f33;
+    --tb-accent-soft: #fbede5;
+    --tb-accent-line: #f5d8c9;
+
+    --tb-divider: #e8ddcc;
+    --tb-divider-strong: #d6c7af;
+
+    --tb-good-fg: #1f6b41;
+    --tb-good-bg: #e2f0e7;
+    --tb-notice-fg: #8a5c12;
+    --tb-notice-bg: #fbefd7;
+    --tb-alert-fg: #8e3a28;
+    --tb-alert-bg: #fae1da;
+    --tb-info-fg: #2f5663;
+    --tb-info-bg: #e0edf1;
+
+    --tb-shadow-sm: 0 1px 2px rgba(45, 38, 26, 0.06), 0 2px 6px rgba(45, 38, 26, 0.05);
+    --tb-shadow-md: 0 2px 4px rgba(45, 38, 26, 0.05), 0 8px 20px rgba(45, 38, 26, 0.08);
+    --tb-shadow-lg: 0 4px 8px rgba(45, 38, 26, 0.06), 0 18px 40px rgba(45, 38, 26, 0.12);
+    --tb-shadow-inset: inset 0 1px 2px rgba(45, 38, 26, 0.05);
+
+    /*
+     * Glass: translucent warm paper over a blurred backdrop, a bright hairline on the lit (top)
+     * edge and a soft drop. Fills stay at 72% or more so text keeps the contrast it has on
+     * --tb-surface; the solid fallback is --tb-surface itself.
+     */
+    --tb-glass: rgba(255, 253, 249, 0.72);
+    --tb-glass-strong: rgba(255, 253, 249, 0.88);
+    --tb-glass-card: rgba(255, 253, 249, 0.8);
+    --tb-glass-line: rgba(255, 255, 255, 0.7);
+    --tb-glass-edge: rgba(67, 60, 48, 0.1);
+    --tb-glass-sheen:
+      inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 0 rgba(67, 60, 48, 0.04);
+    --tb-glass-shadow: 0 1px 1px rgba(45, 38, 26, 0.04), 0 8px 24px rgba(45, 38, 26, 0.07);
+    --tb-backdrop-1: rgba(116, 179, 174, 0.22);
+    --tb-backdrop-2: rgba(220, 141, 107, 0.16);
+
+    /* Chart: validated with the dataviz palette checker against --tb-surface. */
+    --tb-chart-logged: #1c6468;
+    --tb-chart-preview: #c0643f;
+    --tb-chart-trial: #c0643f;
+    --tb-chart-placebo: #877960;
+    --tb-chart-grid: #e8ddcc;
+    --tb-chart-axis: #7a6c54;
+    --tb-chart-now: #877960;
+  }
+
+  .v-theme--dark {
+    color-scheme: dark;
+
+    /*
+     * Teals on a dark warm surface read greyer than the same chroma on paper, so the dark
+     * brand carries more chroma than the light one to look equally alive. The light block
+     * stays on the tide primitives.
+     */
+
+    --tb-bg: #15120e;
+    --tb-surface: #221e18;
+    --tb-surface-2: #2c2820;
+    --tb-surface-sunk: #1b1813;
+
+    --tb-text-1: #f4ede2;
+    --tb-text-2: #d6c7af;
+    --tb-text-3: #b3a286;
+
+    --tb-brand: #74c3bd;
+    --tb-brand-strong: #a3e0db;
+    --tb-brand-soft: rgba(116, 195, 189, 0.18);
+    --tb-brand-softer: rgba(116, 195, 189, 0.09);
+    --tb-accent: #ebb59b;
+    --tb-accent-soft: #3a2a21;
+    --tb-accent-line: #5b3b2c;
+
+    --tb-divider: #3a342a;
+    --tb-divider-strong: #4d4537;
+
+    --tb-good-fg: #95e2b4;
+    --tb-good-bg: #153925;
+    --tb-notice-fg: #f0c987;
+    --tb-notice-bg: #3a2d16;
+    --tb-alert-fg: #f2a896;
+    --tb-alert-bg: #3d221b;
+    --tb-info-fg: #a9cbd8;
+    --tb-info-bg: #1d2e35;
+
+    --tb-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --tb-shadow-md: 0 2px 4px rgba(0, 0, 0, 0.35), 0 8px 20px rgba(0, 0, 0, 0.35);
+    --tb-shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.4), 0 18px 40px rgba(0, 0, 0, 0.5);
+    --tb-shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+
+    --tb-glass: rgba(34, 30, 24, 0.72);
+    --tb-glass-strong: rgba(34, 30, 24, 0.9);
+    --tb-glass-card: rgba(34, 30, 24, 0.78);
+    --tb-glass-line: rgba(255, 240, 225, 0.1);
+    --tb-glass-edge: rgba(255, 240, 225, 0.07);
+    --tb-glass-sheen: inset 0 1px 0 rgba(255, 240, 225, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+    --tb-glass-shadow: 0 1px 1px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+    --tb-backdrop-1: rgba(58, 169, 166, 0.14);
+    --tb-backdrop-2: rgba(189, 89, 47, 0.12);
+
+    --tb-chart-logged: #3aa9a6;
+    --tb-chart-preview: #d4824f;
+    --tb-chart-trial: #d4824f;
+    --tb-chart-placebo: #b3a286;
+    --tb-chart-grid: #3a342a;
+    --tb-chart-axis: #b3a286;
+    --tb-chart-now: #b3a286;
+  }
+}

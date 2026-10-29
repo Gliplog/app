@@ -1,0 +1,75 @@
+import groovy.json.JsonSlurper
+
+apply plugin: 'com.android.application'
+
+// package.json is the single source of the version. versionCode must only ever increase:
+// major * 10000 + minor * 100 + patch, so each part stays below 100.
+def appVersion = new JsonSlurper().parse(file('../../package.json')).version as String
+def (major, minor, patch) = appVersion.tokenize('.-')[0..2].collect { it as int }
+def appVersionCode = major * 10000 + minor * 100 + patch
+
+// Release signing comes from the environment so the keystore and passwords never enter the
+// repository. Without TIDEBOOK_KEYSTORE the release build is left unsigned.
+def releaseKeystore = System.getenv('TIDEBOOK_KEYSTORE')
+
+android {
+    namespace = "io.github.tidebook"
+    compileSdk = rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "io.github.tidebook"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode appVersionCode
+        versionName appVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    signingConfigs {
+        if (releaseKeystore) {
+            release {
+                storeFile file(releaseKeystore)
+                storePassword System.getenv('TIDEBOOK_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('TIDEBOOK_KEY_ALIAS')
+                keyPassword System.getenv('TIDEBOOK_KEY_PASSWORD')
+            }
+        }
+    }
+    // F-Droid and reproducible builds reject the encrypted dependency report Google adds to
+    // release artifacts; Play does not need it.
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
+    buildTypes {
+        release {
+            if (releaseKeystore) signingConfig signingConfigs.release
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+

@@ -1,0 +1,961 @@
+{
+  "$schema": "./medications.schema.json",
+  "version": 1,
+  "pkProfiles": [
+    {
+      "id": "semaglutide-injection",
+      "name": "Semaglutide injection",
+      "pk": {
+        "halfLifeHours": 168,
+        "tmaxHours": 56,
+        "notes": "Label: half-life about 1 week, peak 1 to 3 days after a dose, bioavailability 89% under the skin. The model uses the single-dose median time to peak of 56 h in healthy adults.",
+        "sources": [
+          {
+            "kind": "label",
+            "citation": "WEGOVY (semaglutide) US prescribing information, section 12.3",
+            "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=ee06186f-2aa3-4990-a760-757579d8f77b"
+          },
+          {
+            "kind": "trial",
+            "citation": "Clinical Pharmacokinetics of Semaglutide: A Systematic Review (2024)",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11215664/"
+          }
+        ]
+      }
+    },
+    {
+      "id": "semaglutide-tablet",
+      "name": "Semaglutide tablet",
+      "pk": null,
+      "pkUnavailableReason": "Only about 0.4% to 2% of a semaglutide tablet is absorbed (prescribing label), and the share changes from day to day with how it is taken. An estimate built from the tablet strength would overstate the amount in the body many times over, so Tidebook does not draw one."
+    },
+    {
+      "id": "tirzepatide-injection",
+      "name": "Tirzepatide injection",
+      "pk": {
+        "halfLifeHours": 120,
+        "tmaxHours": 24,
+        "notes": "Label: half-life about 5 days (5 to 6 days in people with overweight or obesity), median time to peak 24 hours (range 8 to 72), bioavailability 80%.",
+        "sources": [
+          {
+            "kind": "label",
+            "citation": "ZEPBOUND (tirzepatide) US prescribing information, section 12.3",
+            "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=487cd7e7-434c-4925-99fa-aa80b1cc776b"
+          },
+          {
+            "kind": "label",
+            "citation": "MOUNJARO (tirzepatide) US prescribing information, section 12.3",
+            "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=d2d7da5d-ad07-4228-955f-cf7e355c8cc0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "orforglipron-tablet",
+      "name": "Orforglipron tablet",
+      "pk": {
+        "halfLifeHours": 39,
+        "tmaxHours": 6,
+        "notes": "Label: half-life about 29 to 49 hours, peak 4 to 8 hours after a dose, bioavailability 77%. The label gives ranges; the model uses the middle of each.",
+        "sources": [
+          {
+            "kind": "label",
+            "citation": "FOUNDAYO (orforglipron) US prescribing information, section 12.3",
+            "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=8ac446c5-feba-474f-a103-23facb9b5c62"
+          },
+          {
+            "kind": "model",
+            "citation": "Half-life and time to peak set at the middle of the label ranges"
+          }
+        ]
+      }
+    }
+  ],
+  "products": [
+    {
+      "id": "ozempic",
+      "name": "Ozempic",
+      "kind": "brand",
+      "molecule": "semaglutide",
+      "route": "injection",
+      "maker": "Novo Nordisk",
+      "intervalDays": 7,
+      "strengths": {
+        "values": [0.25, 0.5, 1, 2],
+        "source": {
+          "kind": "label",
+          "citation": "OZEMPIC (semaglutide) injection US prescribing information, sections 2 and 3",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=adec4fd2-6858-4c99-91d4-531f5f2a2d79"
+        }
+      },
+      "titration": {
+        "unit": "week",
+        "steps": [
+          {
+            "from": 1,
+            "doseMg": 0.25
+          },
+          {
+            "from": 5,
+            "doseMg": 0.5
+          }
+        ],
+        "maintenance": "0.5 mg, 1 mg or 2 mg once weekly, each step after at least 4 weeks on the current dose.",
+        "source": {
+          "kind": "label",
+          "citation": "OZEMPIC (semaglutide) injection US prescribing information, section 2",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=adec4fd2-6858-4c99-91d4-531f5f2a2d79"
+        }
+      },
+      "pkProfile": "semaglutide-injection",
+      "trialIds": ["sustain-1", "sustain-forte", "surpass-2", "step-2"],
+      "note": "Approved for type 2 diabetes. Its weight results come from diabetes trials."
+    },
+    {
+      "id": "wegovy",
+      "name": "Wegovy",
+      "kind": "brand",
+      "molecule": "semaglutide",
+      "route": "injection",
+      "maker": "Novo Nordisk",
+      "intervalDays": 7,
+      "strengths": {
+        "values": [0.25, 0.5, 1, 1.7, 2.4, 7.2],
+        "source": {
+          "kind": "label",
+          "citation": "WEGOVY (semaglutide) US prescribing information, section 3",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=ee06186f-2aa3-4990-a760-757579d8f77b"
+        }
+      },
+      "titration": {
+        "unit": "week",
+        "steps": [
+          {
+            "from": 1,
+            "doseMg": 0.25
+          },
+          {
+            "from": 5,
+            "doseMg": 0.5
+          },
+          {
+            "from": 9,
+            "doseMg": 1
+          },
+          {
+            "from": 13,
+            "doseMg": 1.7
+          },
+          {
+            "from": 17,
+            "doseMg": 2.4
+          }
+        ],
+        "maintenance": "2.4 mg once weekly, or 1.7 mg; 7.2 mg (WEGOVY HD) for some adults.",
+        "source": {
+          "kind": "label",
+          "citation": "WEGOVY (semaglutide) US prescribing information, section 2",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=ee06186f-2aa3-4990-a760-757579d8f77b"
+        }
+      },
+      "pkProfile": "semaglutide-injection",
+      "trialIds": ["step-1", "step-up", "step-3", "step-2", "step-up-t2d"],
+      "note": "Approved for chronic weight management."
+    },
+    {
+      "id": "mounjaro",
+      "name": "Mounjaro",
+      "kind": "brand",
+      "molecule": "tirzepatide",
+      "route": "injection",
+      "maker": "Eli Lilly",
+      "intervalDays": 7,
+      "strengths": {
+        "values": [2.5, 5, 7.5, 10, 12.5, 15],
+        "source": {
+          "kind": "label",
+          "citation": "MOUNJARO (tirzepatide) US prescribing information, section 3",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=d2d7da5d-ad07-4228-955f-cf7e355c8cc0"
+        }
+      },
+      "titration": {
+        "unit": "week",
+        "steps": [
+          {
+            "from": 1,
+            "doseMg": 2.5
+          },
+          {
+            "from": 5,
+            "doseMg": 5
+          }
+        ],
+        "maintenance": "Increases of 2.5 mg after at least 4 weeks on the current dose, up to 15 mg once weekly.",
+        "source": {
+          "kind": "label",
+          "citation": "MOUNJARO (tirzepatide) US prescribing information, section 2",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=d2d7da5d-ad07-4228-955f-cf7e355c8cc0"
+        }
+      },
+      "pkProfile": "tirzepatide-injection",
+      "trialIds": ["surpass-1", "surpass-2", "surmount-2"],
+      "note": "Approved for type 2 diabetes. Its weight results come from diabetes trials."
+    },
+    {
+      "id": "zepbound",
+      "name": "Zepbound",
+      "kind": "brand",
+      "molecule": "tirzepatide",
+      "route": "injection",
+      "maker": "Eli Lilly",
+      "intervalDays": 7,
+      "strengths": {
+        "values": [2.5, 5, 7.5, 10, 12.5, 15],
+        "source": {
+          "kind": "label",
+          "citation": "ZEPBOUND (tirzepatide) US prescribing information, section 3",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=487cd7e7-434c-4925-99fa-aa80b1cc776b"
+        }
+      },
+      "titration": {
+        "unit": "week",
+        "steps": [
+          {
+            "from": 1,
+            "doseMg": 2.5
+          },
+          {
+            "from": 5,
+            "doseMg": 5
+          }
+        ],
+        "maintenance": "5 mg, 10 mg or 15 mg once weekly, raised in 2.5 mg steps after at least 4 weeks on the current dose.",
+        "source": {
+          "kind": "label",
+          "citation": "ZEPBOUND (tirzepatide) US prescribing information, section 2",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=487cd7e7-434c-4925-99fa-aa80b1cc776b"
+        }
+      },
+      "pkProfile": "tirzepatide-injection",
+      "trialIds": ["surmount-1", "surmount-2"],
+      "note": "Approved for chronic weight management and obstructive sleep apnea."
+    },
+    {
+      "id": "wegovy-tablet",
+      "name": "Wegovy tablets",
+      "kind": "brand",
+      "molecule": "semaglutide",
+      "route": "tablet",
+      "maker": "Novo Nordisk",
+      "intervalDays": 1,
+      "strengths": {
+        "values": [1.5, 4, 9, 25],
+        "source": {
+          "kind": "label",
+          "citation": "WEGOVY (semaglutide) US prescribing information, section 3",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=ee06186f-2aa3-4990-a760-757579d8f77b"
+        }
+      },
+      "titration": {
+        "unit": "day",
+        "steps": [
+          {
+            "from": 1,
+            "doseMg": 1.5
+          },
+          {
+            "from": 31,
+            "doseMg": 4
+          },
+          {
+            "from": 61,
+            "doseMg": 9
+          },
+          {
+            "from": 91,
+            "doseMg": 25
+          }
+        ],
+        "maintenance": "25 mg once daily.",
+        "source": {
+          "kind": "label",
+          "citation": "WEGOVY (semaglutide) US prescribing information, section 2",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=ee06186f-2aa3-4990-a760-757579d8f77b"
+        }
+      },
+      "pkProfile": "semaglutide-tablet",
+      "trialIds": ["oasis-4"],
+      "note": "Approved for chronic weight management. Taken daily on an empty stomach."
+    },
+    {
+      "id": "foundayo",
+      "name": "Foundayo",
+      "kind": "brand",
+      "molecule": "orforglipron",
+      "route": "tablet",
+      "maker": "Eli Lilly",
+      "intervalDays": 1,
+      "strengths": {
+        "values": [0.8, 2.5, 5.5, 9, 14.5, 17.2],
+        "source": {
+          "kind": "label",
+          "citation": "FOUNDAYO (orforglipron) US prescribing information, section 3",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=8ac446c5-feba-474f-a103-23facb9b5c62"
+        }
+      },
+      "titration": {
+        "unit": "day",
+        "steps": [
+          {
+            "from": 1,
+            "doseMg": 0.8
+          },
+          {
+            "from": 31,
+            "doseMg": 2.5
+          },
+          {
+            "from": 61,
+            "doseMg": 5.5
+          }
+        ],
+        "maintenance": "5.5 mg, or 9 mg, 14.5 mg or 17.2 mg once daily after at least 30 days on each dose.",
+        "source": {
+          "kind": "label",
+          "citation": "FOUNDAYO (orforglipron) US prescribing information, section 2",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=8ac446c5-feba-474f-a103-23facb9b5c62"
+        }
+      },
+      "pkProfile": "orforglipron-tablet",
+      "trialIds": ["attain-1", "attain-2"],
+      "note": "Approved for chronic weight management. Taken daily, with or without food."
+    },
+    {
+      "id": "rybelsus",
+      "name": "Rybelsus",
+      "kind": "brand",
+      "molecule": "semaglutide",
+      "route": "tablet",
+      "maker": "Novo Nordisk",
+      "intervalDays": 1,
+      "strengths": {
+        "values": [3, 7, 14],
+        "source": {
+          "kind": "label",
+          "citation": "RYBELSUS and OZEMPIC (semaglutide) tablets US prescribing information, section 3",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=27f15fac-7d98-4114-a2ec-92494a91da98"
+        }
+      },
+      "titration": {
+        "unit": "day",
+        "steps": [
+          {
+            "from": 1,
+            "doseMg": 3
+          },
+          {
+            "from": 31,
+            "doseMg": 7
+          }
+        ],
+        "maintenance": "7 mg, or 14 mg once daily if more glucose control is needed.",
+        "source": {
+          "kind": "label",
+          "citation": "RYBELSUS and OZEMPIC (semaglutide) tablets US prescribing information, section 2",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=27f15fac-7d98-4114-a2ec-92494a91da98"
+        }
+      },
+      "pkProfile": "semaglutide-tablet",
+      "trialIds": [],
+      "note": "Approved for type 2 diabetes. Not interchangeable mg for mg with other semaglutide tablets."
+    },
+    {
+      "id": "ozempic-tablet",
+      "name": "Ozempic tablets",
+      "kind": "brand",
+      "molecule": "semaglutide",
+      "route": "tablet",
+      "maker": "Novo Nordisk",
+      "intervalDays": 1,
+      "strengths": {
+        "values": [1.5, 4, 9],
+        "source": {
+          "kind": "label",
+          "citation": "RYBELSUS and OZEMPIC (semaglutide) tablets US prescribing information, section 3",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=27f15fac-7d98-4114-a2ec-92494a91da98"
+        }
+      },
+      "titration": {
+        "unit": "day",
+        "steps": [
+          {
+            "from": 1,
+            "doseMg": 1.5
+          },
+          {
+            "from": 31,
+            "doseMg": 4
+          }
+        ],
+        "maintenance": "4 mg, or 9 mg once daily if more glucose control is needed.",
+        "source": {
+          "kind": "label",
+          "citation": "RYBELSUS and OZEMPIC (semaglutide) tablets US prescribing information, section 2",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=27f15fac-7d98-4114-a2ec-92494a91da98"
+        }
+      },
+      "pkProfile": "semaglutide-tablet",
+      "trialIds": [],
+      "note": "Approved for type 2 diabetes. Not interchangeable mg for mg with Rybelsus."
+    },
+    {
+      "id": "compounded-semaglutide",
+      "name": "Compounded semaglutide",
+      "kind": "compounded",
+      "molecule": "semaglutide",
+      "route": "injection",
+      "maker": null,
+      "intervalDays": 7,
+      "strengths": {
+        "values": [0.25, 0.5, 1, 1.7, 2.4],
+        "source": {
+          "kind": "label",
+          "citation": "WEGOVY (semaglutide) US prescribing information, section 2 (brand doses, for reference)",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=ee06186f-2aa3-4990-a760-757579d8f77b"
+        }
+      },
+      "titration": null,
+      "pkProfile": "semaglutide-injection",
+      "trialIds": ["step-1", "step-2"],
+      "note": "Compounded drugs are not FDA-approved; the trials studied the brand product."
+    },
+    {
+      "id": "compounded-tirzepatide",
+      "name": "Compounded tirzepatide",
+      "kind": "compounded",
+      "molecule": "tirzepatide",
+      "route": "injection",
+      "maker": null,
+      "intervalDays": 7,
+      "strengths": {
+        "values": [2.5, 5, 7.5, 10, 12.5, 15],
+        "source": {
+          "kind": "label",
+          "citation": "ZEPBOUND (tirzepatide) US prescribing information, section 2 (brand doses, for reference)",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=487cd7e7-434c-4925-99fa-aa80b1cc776b"
+        }
+      },
+      "titration": null,
+      "pkProfile": "tirzepatide-injection",
+      "trialIds": ["surmount-1", "surmount-2"],
+      "note": "Compounded drugs are not FDA-approved; the trials studied the brand product."
+    }
+  ],
+  "trials": [
+    {
+      "id": "step-1",
+      "name": "STEP 1",
+      "molecule": "semaglutide",
+      "route": "injection",
+      "population": "obesity",
+      "design": "With a weight-related condition; diet and activity counselling",
+      "weeks": 68,
+      "measure": "percent",
+      "arms": [
+        {
+          "label": "Placebo",
+          "doseMg": null,
+          "baselineKg": 105.2,
+          "change": -2.4
+        },
+        {
+          "label": "Semaglutide 2.4 mg",
+          "doseMg": 2.4,
+          "baselineKg": 105.4,
+          "change": -14.9
+        }
+      ],
+      "analysis": "Least-squares mean of everyone randomised, as printed in the label; the label explains how missing weights were handled.",
+      "source": {
+        "kind": "label",
+        "citation": "WEGOVY (semaglutide) US prescribing information, section 14",
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=ee06186f-2aa3-4990-a760-757579d8f77b"
+      }
+    },
+    {
+      "id": "step-2",
+      "name": "STEP 2",
+      "molecule": "semaglutide",
+      "route": "injection",
+      "population": "t2d",
+      "design": "Type 2 diabetes with overweight or obesity",
+      "weeks": 68,
+      "measure": "percent",
+      "arms": [
+        {
+          "label": "Placebo",
+          "doseMg": null,
+          "baselineKg": 100.5,
+          "change": -3.4
+        },
+        {
+          "label": "Semaglutide 2.4 mg",
+          "doseMg": 2.4,
+          "baselineKg": 99.9,
+          "change": -9.6
+        }
+      ],
+      "analysis": "Least-squares mean of everyone randomised, as printed in the label; the label explains how missing weights were handled.",
+      "source": {
+        "kind": "label",
+        "citation": "WEGOVY (semaglutide) US prescribing information, section 14",
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=ee06186f-2aa3-4990-a760-757579d8f77b"
+      }
+    },
+    {
+      "id": "step-3",
+      "name": "STEP 3",
+      "molecule": "semaglutide",
+      "route": "injection",
+      "population": "obesity",
+      "design": "With intensive behavioural therapy and a low-calorie diet at the start",
+      "weeks": 68,
+      "measure": "percent",
+      "arms": [
+        {
+          "label": "Placebo",
+          "doseMg": null,
+          "baselineKg": 103.7,
+          "change": -5.7
+        },
+        {
+          "label": "Semaglutide 2.4 mg",
+          "doseMg": 2.4,
+          "baselineKg": 106.9,
+          "change": -16.0
+        }
+      ],
+      "analysis": "Least-squares mean of everyone randomised, as printed in the label; the label explains how missing weights were handled.",
+      "source": {
+        "kind": "label",
+        "citation": "WEGOVY (semaglutide) US prescribing information, section 14",
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=ee06186f-2aa3-4990-a760-757579d8f77b"
+      }
+    },
+    {
+      "id": "step-up",
+      "name": "STEP UP",
+      "molecule": "semaglutide",
+      "route": "injection",
+      "population": "obesity",
+      "design": "Adults with obesity; includes the 7.2 mg dose",
+      "weeks": 72,
+      "measure": "percent",
+      "arms": [
+        {
+          "label": "Placebo",
+          "doseMg": null,
+          "baselineKg": 112.4,
+          "change": -3.9
+        },
+        {
+          "label": "Semaglutide 2.4 mg",
+          "doseMg": 2.4,
+          "baselineKg": 116.5,
+          "change": -15.5
+        },
+        {
+          "label": "Semaglutide 7.2 mg",
+          "doseMg": 7.2,
+          "baselineKg": 112.4,
+          "change": -18.8
+        }
+      ],
+      "analysis": "Least-squares mean of everyone randomised, as printed in the label; the label explains how missing weights were handled.",
+      "source": {
+        "kind": "label",
+        "citation": "WEGOVY (semaglutide) US prescribing information, section 14",
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=ee06186f-2aa3-4990-a760-757579d8f77b"
+      }
+    },
+    {
+      "id": "step-up-t2d",
+      "name": "STEP UP T2D",
+      "molecule": "semaglutide",
+      "route": "injection",
+      "population": "t2d",
+      "design": "Type 2 diabetes with obesity; includes the 7.2 mg dose",
+      "weeks": 72,
+      "measure": "percent",
+      "arms": [
+        {
+          "label": "Placebo",
+          "doseMg": null,
+          "baselineKg": 112.1,
+          "change": -3.8
+        },
+        {
+          "label": "Semaglutide 2.4 mg",
+          "doseMg": 2.4,
+          "baselineKg": 107.0,
+          "change": -10.4
+        },
+        {
+          "label": "Semaglutide 7.2 mg",
+          "doseMg": 7.2,
+          "baselineKg": 110.5,
+          "change": -13.2
+        }
+      ],
+      "analysis": "Least-squares mean of everyone randomised, as printed in the label; the label explains how missing weights were handled.",
+      "source": {
+        "kind": "label",
+        "citation": "WEGOVY (semaglutide) US prescribing information, section 14",
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=ee06186f-2aa3-4990-a760-757579d8f77b"
+      }
+    },
+    {
+      "id": "oasis-4",
+      "name": "OASIS 4",
+      "molecule": "semaglutide",
+      "route": "tablet",
+      "population": "obesity",
+      "design": "With a weight-related condition; daily tablet",
+      "weeks": 64,
+      "measure": "percent",
+      "arms": [
+        {
+          "label": "Placebo",
+          "doseMg": null,
+          "baselineKg": 104.8,
+          "change": -2.4
+        },
+        {
+          "label": "Semaglutide tablet 25 mg",
+          "doseMg": 25,
+          "baselineKg": 106.4,
+          "change": -13.6
+        }
+      ],
+      "analysis": "Least-squares mean of everyone randomised, as printed in the label; the label explains how missing weights were handled.",
+      "source": {
+        "kind": "label",
+        "citation": "WEGOVY (semaglutide) US prescribing information, section 14",
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=ee06186f-2aa3-4990-a760-757579d8f77b"
+      }
+    },
+    {
+      "id": "surmount-1",
+      "name": "SURMOUNT-1",
+      "molecule": "tirzepatide",
+      "route": "injection",
+      "population": "obesity",
+      "design": "Obesity, or overweight with a weight-related condition",
+      "weeks": 72,
+      "measure": "percent",
+      "arms": [
+        {
+          "label": "Placebo",
+          "doseMg": null,
+          "baselineKg": 104.8,
+          "change": -3.1
+        },
+        {
+          "label": "Tirzepatide 5 mg",
+          "doseMg": 5,
+          "baselineKg": 102.9,
+          "change": -15.0
+        },
+        {
+          "label": "Tirzepatide 10 mg",
+          "doseMg": 10,
+          "baselineKg": 105.8,
+          "change": -19.5
+        },
+        {
+          "label": "Tirzepatide 15 mg",
+          "doseMg": 15,
+          "baselineKg": 105.6,
+          "change": -20.9
+        }
+      ],
+      "analysis": "Least-squares mean of everyone randomised, as printed in the label; the label explains how missing weights were handled.",
+      "source": {
+        "kind": "label",
+        "citation": "ZEPBOUND (tirzepatide) US prescribing information, section 14",
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=487cd7e7-434c-4925-99fa-aa80b1cc776b"
+      }
+    },
+    {
+      "id": "surmount-2",
+      "name": "SURMOUNT-2",
+      "molecule": "tirzepatide",
+      "route": "injection",
+      "population": "t2d",
+      "design": "Type 2 diabetes with a BMI of 27 or more",
+      "weeks": 72,
+      "measure": "percent",
+      "arms": [
+        {
+          "label": "Placebo",
+          "doseMg": null,
+          "baselineKg": 101.7,
+          "change": -3.2
+        },
+        {
+          "label": "Tirzepatide 10 mg",
+          "doseMg": 10,
+          "baselineKg": 100.9,
+          "change": -12.8
+        },
+        {
+          "label": "Tirzepatide 15 mg",
+          "doseMg": 15,
+          "baselineKg": 99.6,
+          "change": -14.7
+        }
+      ],
+      "analysis": "Least-squares mean of everyone randomised, as printed in the label; the label explains how missing weights were handled.",
+      "source": {
+        "kind": "label",
+        "citation": "ZEPBOUND (tirzepatide) US prescribing information, section 14",
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=487cd7e7-434c-4925-99fa-aa80b1cc776b"
+      }
+    },
+    {
+      "id": "surpass-1",
+      "name": "SURPASS-1",
+      "molecule": "tirzepatide",
+      "route": "injection",
+      "population": "t2d",
+      "design": "Type 2 diabetes, tirzepatide alone",
+      "weeks": 40,
+      "measure": "kg",
+      "arms": [
+        {
+          "label": "Placebo",
+          "doseMg": null,
+          "baselineKg": 84.5,
+          "change": -1.0
+        },
+        {
+          "label": "Tirzepatide 5 mg",
+          "doseMg": 5,
+          "baselineKg": 87.0,
+          "change": -6.3
+        },
+        {
+          "label": "Tirzepatide 10 mg",
+          "doseMg": 10,
+          "baselineKg": 86.2,
+          "change": -7.0
+        },
+        {
+          "label": "Tirzepatide 15 mg",
+          "doseMg": 15,
+          "baselineKg": 85.5,
+          "change": -7.8
+        }
+      ],
+      "analysis": "Mean change in kilograms as printed in the label, which does not report this trial in percent.",
+      "source": {
+        "kind": "label",
+        "citation": "MOUNJARO (tirzepatide) US prescribing information, section 14",
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=d2d7da5d-ad07-4228-955f-cf7e355c8cc0"
+      }
+    },
+    {
+      "id": "surpass-2",
+      "name": "SURPASS-2",
+      "molecule": "tirzepatide",
+      "route": "injection",
+      "population": "t2d",
+      "design": "Type 2 diabetes on metformin; tirzepatide against semaglutide 1 mg",
+      "weeks": 40,
+      "measure": "kg",
+      "arms": [
+        {
+          "label": "Semaglutide 1 mg",
+          "doseMg": 1,
+          "baselineKg": 93.7,
+          "change": -5.7,
+          "molecule": "semaglutide"
+        },
+        {
+          "label": "Tirzepatide 5 mg",
+          "doseMg": 5,
+          "baselineKg": 92.5,
+          "change": -7.6
+        },
+        {
+          "label": "Tirzepatide 10 mg",
+          "doseMg": 10,
+          "baselineKg": 94.8,
+          "change": -9.3
+        },
+        {
+          "label": "Tirzepatide 15 mg",
+          "doseMg": 15,
+          "baselineKg": 93.8,
+          "change": -11.2
+        }
+      ],
+      "analysis": "Mean change in kilograms as printed in the label, which does not report this trial in percent.",
+      "source": {
+        "kind": "label",
+        "citation": "MOUNJARO (tirzepatide) US prescribing information, section 14",
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=d2d7da5d-ad07-4228-955f-cf7e355c8cc0"
+      }
+    },
+    {
+      "id": "sustain-1",
+      "name": "SUSTAIN 1",
+      "molecule": "semaglutide",
+      "route": "injection",
+      "population": "t2d",
+      "design": "Type 2 diabetes, semaglutide alone",
+      "weeks": 30,
+      "measure": "kg",
+      "arms": [
+        {
+          "label": "Placebo",
+          "doseMg": null,
+          "baselineKg": 89.1,
+          "change": -1.2
+        },
+        {
+          "label": "Semaglutide 0.5 mg",
+          "doseMg": 0.5,
+          "baselineKg": 89.8,
+          "change": -3.8
+        },
+        {
+          "label": "Semaglutide 1 mg",
+          "doseMg": 1,
+          "baselineKg": 96.9,
+          "change": -4.7
+        }
+      ],
+      "analysis": "Mean change in kilograms as printed in the label, which does not report this trial in percent.",
+      "source": {
+        "kind": "label",
+        "citation": "OZEMPIC (semaglutide) injection US prescribing information, section 14",
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=adec4fd2-6858-4c99-91d4-531f5f2a2d79"
+      }
+    },
+    {
+      "id": "sustain-forte",
+      "name": "SUSTAIN FORTE",
+      "molecule": "semaglutide",
+      "route": "injection",
+      "population": "t2d",
+      "design": "Type 2 diabetes on metformin; 2 mg against 1 mg",
+      "weeks": 40,
+      "measure": "kg",
+      "arms": [
+        {
+          "label": "Semaglutide 1 mg",
+          "doseMg": 1,
+          "baselineKg": 98.6,
+          "change": -5.6
+        },
+        {
+          "label": "Semaglutide 2 mg",
+          "doseMg": 2,
+          "baselineKg": 100.1,
+          "change": -6.4
+        }
+      ],
+      "analysis": "Mean change in kilograms as printed in the label, which does not report this trial in percent.",
+      "source": {
+        "kind": "label",
+        "citation": "OZEMPIC (semaglutide) injection US prescribing information, section 14",
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=adec4fd2-6858-4c99-91d4-531f5f2a2d79"
+      }
+    },
+    {
+      "id": "attain-1",
+      "name": "ATTAIN-1",
+      "molecule": "orforglipron",
+      "route": "tablet",
+      "population": "obesity",
+      "design": "Obesity, or overweight with a weight-related condition",
+      "weeks": 72,
+      "measure": "percent",
+      "arms": [
+        {
+          "label": "Placebo",
+          "doseMg": null,
+          "baselineKg": 103.9,
+          "change": -2.1
+        },
+        {
+          "label": "Orforglipron 5.5 mg",
+          "doseMg": 5.5,
+          "baselineKg": 103.2,
+          "change": -7.4
+        },
+        {
+          "label": "Orforglipron 9 mg",
+          "doseMg": 9,
+          "baselineKg": 102.2,
+          "change": -8.3
+        },
+        {
+          "label": "Orforglipron 17.2 mg",
+          "doseMg": 17.2,
+          "baselineKg": 103.1,
+          "change": -11.1
+        }
+      ],
+      "analysis": "Least-squares mean of everyone randomised, as printed in the label; the label explains how missing weights were handled.",
+      "source": {
+        "kind": "label",
+        "citation": "FOUNDAYO (orforglipron) US prescribing information, section 14",
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=8ac446c5-feba-474f-a103-23facb9b5c62"
+      }
+    },
+    {
+      "id": "attain-2",
+      "name": "ATTAIN-2",
+      "molecule": "orforglipron",
+      "route": "tablet",
+      "population": "t2d",
+      "design": "Type 2 diabetes with a BMI of 27 or more",
+      "weeks": 72,
+      "measure": "percent",
+      "arms": [
+        {
+          "label": "Placebo",
+          "doseMg": null,
+          "baselineKg": 101.2,
+          "change": -2.5
+        },
+        {
+          "label": "Orforglipron 5.5 mg",
+          "doseMg": 5.5,
+          "baselineKg": 102.3,
+          "change": -5.1
+        },
+        {
+          "label": "Orforglipron 9 mg",
+          "doseMg": 9,
+          "baselineKg": 102.7,
+          "change": -7.0
+        },
+        {
+          "label": "Orforglipron 17.2 mg",
+          "doseMg": 17.2,
+          "baselineKg": 99.8,
+          "change": -9.6
+        }
+      ],
+      "analysis": "Least-squares mean of everyone randomised, as printed in the label; the label explains how missing weights were handled.",
+      "source": {
+        "kind": "label",
+        "citation": "FOUNDAYO (orforglipron) US prescribing information, section 14",
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=8ac446c5-feba-474f-a103-23facb9b5c62"
+      }
+    }
+  ]
+}

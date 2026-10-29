@@ -1,0 +1,14 @@
+dist
+dist-android
+dev-dist
+node_modules
+coverage
+playwright-report
+test-results
+package-lock.json
+public/*.png
+public/*.ico
+android
+
+# Patched third-party code: kept byte-identical to upstream apart from the fix, so it diffs cleanly.
+vendor/

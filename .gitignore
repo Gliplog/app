@@ -1,0 +1,10 @@
+node_modules
+dist
+dist-android
+dev-dist
+coverage
+playwright-report
+test-results
+*.local
+.DS_Store
+.claude/settings.local.json

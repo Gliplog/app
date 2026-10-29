@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Tidebook</string>
+    <string name="title_activity_main">Tidebook</string>
+    <string name="package_name">io.github.tidebook</string>
+    <string name="custom_url_scheme">io.github.tidebook</string>
+</resources>

@@ -1,0 +1,178 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Tidebook medication catalog",
+  "type": "object",
+  "required": ["version", "pkProfiles", "products", "trials"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "type": "integer", "minimum": 1 },
+    "pkProfiles": { "type": "array", "items": { "$ref": "#/definitions/pkProfile" } },
+    "products": { "type": "array", "items": { "$ref": "#/definitions/product" } },
+    "trials": { "type": "array", "items": { "$ref": "#/definitions/trial" } }
+  },
+  "definitions": {
+    "source": {
+      "type": "object",
+      "required": ["kind", "citation"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["label", "trial", "standard", "model"] },
+        "citation": { "type": "string", "minLength": 1 },
+        "url": { "type": "string", "pattern": "^https://" }
+      }
+    },
+    "labelOrTrial": {
+      "allOf": [
+        { "$ref": "#/definitions/source" },
+        { "properties": { "kind": { "enum": ["label", "trial"] } } }
+      ]
+    },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "pkProfile": {
+      "type": "object",
+      "required": ["id", "name", "pk"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "name": { "type": "string" },
+        "pk": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "required": ["halfLifeHours", "tmaxHours", "notes", "sources"],
+              "additionalProperties": false,
+              "properties": {
+                "halfLifeHours": { "type": "number", "exclusiveMinimum": 0 },
+                "tmaxHours": { "type": "number", "exclusiveMinimum": 0 },
+                "notes": { "type": "string", "minLength": 1 },
+                "sources": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "$ref": "#/definitions/source" },
+                  "contains": { "$ref": "#/definitions/labelOrTrial" }
+                }
+              }
+            }
+          ]
+        },
+        "pkUnavailableReason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "titration": {
+      "type": "object",
+      "required": ["unit", "steps", "maintenance", "source"],
+      "additionalProperties": false,
+      "properties": {
+        "unit": { "enum": ["week", "day"] },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["from", "doseMg"],
+            "additionalProperties": false,
+            "properties": {
+              "from": { "type": "integer", "minimum": 1 },
+              "doseMg": { "type": "number", "exclusiveMinimum": 0 }
+            }
+          }
+        },
+        "maintenance": { "type": "string", "minLength": 1 },
+        "source": { "$ref": "#/definitions/labelOrTrial" }
+      }
+    },
+    "product": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "molecule",
+        "route",
+        "maker",
+        "intervalDays",
+        "strengths",
+        "titration",
+        "pkProfile",
+        "trialIds",
+        "note"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["brand", "compounded"] },
+        "molecule": { "type": "string", "minLength": 1 },
+        "route": { "enum": ["injection", "tablet"] },
+        "maker": { "type": ["string", "null"] },
+        "intervalDays": { "type": "integer", "minimum": 1 },
+        "strengths": {
+          "type": "object",
+          "required": ["values", "source"],
+          "additionalProperties": false,
+          "properties": {
+            "values": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "number", "exclusiveMinimum": 0 }
+            },
+            "source": { "$ref": "#/definitions/labelOrTrial" }
+          }
+        },
+        "titration": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/definitions/titration" }]
+        },
+        "pkProfile": { "$ref": "#/definitions/id" },
+        "trialIds": { "type": "array", "items": { "$ref": "#/definitions/id" } },
+        "note": { "type": "string", "minLength": 1 }
+      }
+    },
+    "trial": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "molecule",
+        "route",
+        "population",
+        "design",
+        "weeks",
+        "measure",
+        "arms",
+        "analysis",
+        "source"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "molecule": { "type": "string", "minLength": 1 },
+        "route": { "enum": ["injection", "tablet"] },
+        "population": { "enum": ["obesity", "t2d"] },
+        "design": { "type": "string", "minLength": 1 },
+        "weeks": { "type": "integer", "minimum": 1 },
+        "measure": { "enum": ["percent", "kg"] },
+        "arms": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["label", "doseMg", "baselineKg", "change"],
+            "additionalProperties": false,
+            "properties": {
+              "label": { "type": "string", "minLength": 1 },
+              "doseMg": { "type": ["number", "null"] },
+              "molecule": { "type": "string" },
+              "baselineKg": { "type": "number", "exclusiveMinimum": 0 },
+              "change": { "type": "number" }
+            }
+          }
+        },
+        "analysis": { "type": "string", "minLength": 1 },
+        "source": { "$ref": "#/definitions/labelOrTrial" }
+      }
+    }
+  }
+}

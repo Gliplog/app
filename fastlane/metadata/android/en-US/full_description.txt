@@ -1,0 +1,23 @@
+Tidebook is a calm, private journal for people taking a GLP-1 medicine, whether a brand-name pen or tablet or a compounded vial from a pharmacy.
+
+<b>What it does</b>
+<ul>
+<li>Log each dose in a couple of taps, with the injection site if you like, and see when the next one falls.</li>
+<li>Log your weight in kilograms or pounds and follow the trend over time.</li>
+<li>Add your height to track your BMI, with the WHO adult bands explained plainly.</li>
+<li>See how your change so far sits beside the published average from the clinical trials of your medicine, each figure linked to its US prescribing label.</li>
+<li>See an estimate of how much medicine is still in your body, drawn from the published half-life and peak time.</li>
+<li>For compounded vials, enter the strength once and every dose also shows the units to draw on a U-100 syringe.</li>
+</ul>
+
+<b>Private by design</b>
+<ul>
+<li>No account, no server, no analytics, no ads.</li>
+<li>The app requests no network permission. Your data never leaves your phone unless you save a backup file yourself.</li>
+<li>Free and open source.</li>
+</ul>
+
+<b>Important</b>
+Tidebook does arithmetic and shows published reference figures. It does not recommend doses and is not medical advice. Talk to your prescriber or pharmacist about your treatment.
+
+Brand names are the trademarks of their respective owners and are used only to identify the medicines. Tidebook is not affiliated with Novo Nordisk, Eli Lilly or any other manufacturer.

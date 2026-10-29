@@ -1,0 +1,12 @@
+import 'vuetify/styles'
+import '@/plugins/fonts'
+import '@/styles/tokens.css'
+import '@/styles/theme.css'
+
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
+import App from './App.vue'
+import { vuetify } from './plugins/vuetify'
+import { createAppRouter } from './router'
+
+createApp(App).use(createPinia()).use(createAppRouter()).use(vuetify).mount('#app')

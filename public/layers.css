@@ -1,0 +1,9 @@
+/*
+ * Cascade layer order. Linked from index.html ahead of every bundled stylesheet: Vite emits
+ * chunk CSS in an order we do not control, and the first @layer statement seen fixes the order.
+ * Vuetify's own declaration then repeats a compatible order. Our theme overrides
+ * sit above Vuetify's component layers but below its utility classes, so `pa-4`, `text-center`
+ * and friends still win over theme rules. Component <style scoped> blocks are unlayered and win
+ * over everything: keep them to layout.
+ */
+@layer vuetify-core, vuetify-components, vuetify-overrides, tb-tokens, tb-theme, vuetify-utilities, tb-utilities, vuetify-final;

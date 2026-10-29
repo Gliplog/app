@@ -1,0 +1,1 @@
+First release: dose and weight journal, BMI over time, trial comparisons from US prescribing labels, estimated levels, and compounded vial units.

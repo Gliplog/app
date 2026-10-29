@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Brand green, matching the PWA's maskable icon (pwa-assets.config.ts). -->
+<resources>
+    <color name="ic_launcher_background">#3F6B52</color>
+</resources>

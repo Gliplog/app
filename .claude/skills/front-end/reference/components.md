@@ -1,0 +1,61 @@
+# Components and views
+
+Part of the `front-end` skill.
+
+## Shared components
+
+| Component                                  | Use                                                                                     |
+| ------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `common/PresetPicker.vue`                  | Number input as preset chips plus a Custom field; chips are buttons with `aria-pressed` |
+| `common/SourceBadge.vue`                   | Shows where a number came from (label, trial, standard, model)                          |
+| `common/SourceList.vue`                    | A list of sources, each with its badge and a link                                       |
+| `common/ListPager.vue`, `SortToggle.vue`   | Range caption and `v-pagination` (hidden on one page); newest or oldest first toggle    |
+| `common/AppLogo.vue`                       | The brand: mark (`src/assets/brand/tidebook-mark.svg`) plus the two-tone wordmark       |
+| `common/AppSnackbar.vue`, `AppConfirm.vue` | Render the notify and confirm stores; mounted once in `App.vue`                         |
+| `common/UpdatePrompt.vue`                  | Service-worker update and offline-ready notices                                         |
+| `common/DisclaimerDialog.vue`              | First-run acknowledgement: a journal, not medical advice                                |
+| `journal/MedicationDialog.vue`             | Add or edit a medication: product, interval, compounded vial strength, own half-life    |
+| `journal/LogDoseDialog.vue`                | Log or edit a dose: label strengths, syringe units for a vial, site rotation            |
+| `journal/LogWeightDialog.vue`              | Log or edit a weigh-in in kg or lb                                                      |
+| `charts/BodyChart.vue`                     | Weight or BMI over time with labelled dashed guides (goal, WHO bands) and a table view  |
+| `charts/TrialComparison.vue`               | Your change beside one trial's endpoint arms as labelled bars, with source and caveats  |
+| `charts/PkPanel.vue`                       | Chooses catalog or user-supplied PK, shows sources and caveats, or why no curve exists  |
+| `charts/PkChart.vue`                       | ECharts curve of logged doses, "Now" marker, table view                                 |
+| `charts/levelsChart.ts`                    | The curve's model and ECharts option                                                    |
+
+## Patterns
+
+- Dialogs reset their form from props each time they open, so abandoned edits never leak.
+- A view that edits data calls a store action, then `notify.show()`.
+- Every number with a source shows a `SourceBadge` or a `SourceList`.
+- Level curves pool every dose of a medicine and route across medications
+  (`journal.levelGroups`), so Today and Progress agree. Progress shows one `PkPanel` per group,
+  never several medicines on one axis.
+- Trial cards show the two most relevant trials and fold the rest behind a button.
+- Lists page in memory, ten to a page (`usePaging`, `domain/listing.ts`), newest first with a
+  sort toggle. Charts and totals always use every row, not the page.
+- The app bar scrolls away while reading (`useHideOnScroll`) and returns on a scroll up, a tap
+  on a non-interactive part of the page, a route change, or focus. Re-tapping the current tab
+  scrolls to the top. The bar keeps its layout slot, so content never jumps.
+
+## Spacing and alignment
+
+- The container owns spacing. A card body, form or panel is a `.tb-stack` (16px between
+  children), `.tb-stack--tight` (8px, a caption and what it describes) or `.tb-stack--loose`
+  (24px, sections of one card). Children carry no margin utilities. Scoped CSS is unlayered and
+  silently beats every utility class, so `margin: 0` in a component cancels `mt-*` on it.
+- Fields default to `hideDetails: 'auto'` (`src/plugins/vuetify.ts`): the message row appears
+  only for a hint or an error, so gaps come from the stack. A hint that must always show takes
+  `persistent-hint`. Rows that pair fields (dose and unit) use `align-start` so an error under
+  one does not shift the other.
+- Labels sit above controls, left-aligned with the control's border. Vuetify fields get this
+  from `theme.css`; any other control (a preset group, a toggle, a list) takes `.tb-label`,
+  which has the same type. Hints and errors share that left edge.
+- Action rows line up with the content above. Text-only rows keep Vuetify's padding, so the
+  label sits at the content edge; a row with a filled, tonal or outlined button insets that
+  button to 16px (24px in dialogs and sheets). `theme.css` does this; components do not pad
+  `v-card-actions`.
+- A notice with actions puts the message first and an end-aligned `.tb-actions` row below it:
+  Dismiss (text), then the action (tonal). Buttons keep the default size for touch targets.
+- Everyday actions sit with the content they act on; archive and delete close the page,
+  separated by a divider.

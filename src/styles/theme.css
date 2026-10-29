@@ -1,0 +1,575 @@
+/*
+ * Global element styles and Vuetify component overrides. Everything here sits in the
+ * `tb-theme` layer (see layers.css), so it beats Vuetify's component styles without
+ * `!important` and still loses to utility classes. Components must not restyle what this file
+ * owns: app bar, navigation, cards, dialogs, fields, buttons.
+ */
+@layer tb-theme {
+  html,
+  body {
+    font-family: var(--tb-font);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.005em;
+    /* Stop iOS inflating text in landscape. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--tb-bg);
+    color: var(--tb-text-1);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  p {
+    margin: 0;
+  }
+
+  code,
+  kbd,
+  pre {
+    font-family: var(--tb-font-mono);
+  }
+
+  ::selection {
+    background: var(--tb-brand-soft);
+  }
+
+  /* tabindex="-1" marks programmatic focus targets (Vuetify focuses the dialog container on
+     open); they are not keyboard stops, so a ring there frames the whole dialog. */
+  :where(a, [tabindex]:not([tabindex='-1']), button):focus-visible {
+    outline: none;
+    box-shadow: var(--tb-shadow-focus);
+    border-radius: var(--tb-radius-xs);
+  }
+
+  a {
+    color: var(--tb-brand);
+  }
+
+  /*
+   * Two soft light pools (teal top left, terracotta top right) give the glass something to
+   * refract. They scroll with the page instead of using background-attachment: fixed, which
+   * iOS ignores and which forces a repaint on every scroll elsewhere.
+   */
+  .v-application {
+    font-family: var(--tb-font);
+    background:
+      radial-gradient(120% 60% at 0% 0%, var(--tb-backdrop-1), transparent 60%),
+      radial-gradient(90% 50% at 100% 8%, var(--tb-backdrop-2), transparent 60%), var(--tb-bg);
+    background-repeat: no-repeat;
+    color: var(--tb-text-1);
+  }
+
+  /*
+   * Chrome (app bar, bottom navigation, rail): frosted glass that lets content scroll beneath
+   * it, a bright hairline on the lit edge, and no hard shadow. Respects the notch in standalone
+   * mode (App.vue pads for the safe areas).
+   */
+  .v-app-bar.v-toolbar,
+  .v-bottom-navigation,
+  .v-navigation-drawer {
+    background-color: var(--tb-glass);
+    color: var(--tb-text-1);
+    -webkit-backdrop-filter: var(--tb-glass-blur);
+    backdrop-filter: var(--tb-glass-blur);
+  }
+
+  .v-app-bar.v-toolbar {
+    border-bottom: 1px solid var(--tb-glass-edge);
+    box-shadow: var(--tb-glass-sheen);
+    transition-property: translate, box-shadow;
+    transition-duration: var(--tb-dur-base);
+    transition-timing-function: var(--tb-ease-standard);
+  }
+
+  /*
+   * Scrolled out of the way while reading (App.vue toggles the class). It slides by its own
+   * height less the safe-area inset, so a strip of glass still covers the status bar and
+   * content never scrolls under the clock. `translate` composes with the inline `transform`
+   * Vuetify's layout writes, so neither overrides the other.
+   */
+  .v-app-bar.v-toolbar.tb-app-bar--hidden {
+    translate: 0 calc(-100% + var(--safe-area-inset-top, env(safe-area-inset-top)));
+    box-shadow: none;
+  }
+
+  .v-bottom-navigation {
+    border-top: 1px solid var(--tb-glass-edge);
+    box-shadow: var(--tb-glass-sheen);
+  }
+
+  .v-navigation-drawer {
+    border-right: 1px solid var(--tb-glass-edge);
+  }
+
+  /*
+   * Tabs are squared-off tiles inset from the bar's edges, not the app-wide pill: a pill the
+   * full height of the bar reads as a lozenge. The active tab is a soft brand tile.
+   */
+  .v-bottom-navigation .v-bottom-navigation__content > .v-btn {
+    border-radius: var(--tb-radius-xs);
+    height: calc(100% - 12px);
+    margin: 6px 3px;
+  }
+
+  .v-bottom-navigation .v-btn--active {
+    color: var(--tb-brand);
+    background-color: var(--tb-brand-soft);
+  }
+
+  .v-bottom-navigation .v-btn--active > .v-btn__overlay,
+  .v-navigation-drawer .v-list-item--active > .v-list-item__overlay {
+    opacity: 0;
+  }
+
+  .v-navigation-drawer .v-list-item {
+    border-radius: var(--tb-radius-xs);
+  }
+
+  .v-list-item--active {
+    background-color: var(--tb-brand-softer);
+    color: var(--tb-brand);
+  }
+
+  .v-navigation-drawer .v-list-item--active {
+    background-color: var(--tb-brand-soft);
+  }
+
+  /*
+   * Cards: translucent paper over the backdrop with a lit top edge. No backdrop blur here:
+   * the backdrop behind a card is only the soft gradient, and blurring every card costs
+   * frames on mid-range phones for no visible gain.
+   */
+  .v-card:not(
+    .v-card--variant-outlined,
+    .v-card--variant-tonal,
+    .v-card--variant-flat,
+    .v-card--variant-text,
+    .v-card--variant-plain
+  ) {
+    background-color: var(--tb-glass-card);
+    color: var(--tb-text-1);
+    border: 1px solid var(--tb-glass-edge);
+    border-radius: var(--tb-radius-lg);
+    box-shadow: var(--tb-glass-sheen), var(--tb-glass-shadow);
+  }
+
+  .v-card.v-card--variant-outlined {
+    border-color: var(--tb-divider);
+    border-radius: var(--tb-radius-lg);
+  }
+
+  .v-card.v-card--variant-tonal {
+    background-color: var(--tb-surface-2);
+    border-radius: var(--tb-radius-lg);
+  }
+
+  .v-card-title {
+    font-family: var(--tb-font-display);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+
+  /* Floating layers (dialogs, sheets, menus, snackbars) are denser glass that blurs the page. */
+  .v-dialog > .v-overlay__content > .v-card,
+  .v-bottom-sheet > .v-overlay__content > .v-card {
+    background-color: var(--tb-glass-strong);
+    -webkit-backdrop-filter: var(--tb-glass-blur);
+    backdrop-filter: var(--tb-glass-blur);
+  }
+
+  .v-dialog > .v-overlay__content > .v-card {
+    border-radius: var(--tb-radius-xl);
+    box-shadow: var(--tb-glass-sheen), var(--tb-shadow-lg);
+    border: 1px solid var(--tb-glass-line);
+  }
+
+  /*
+   * Vuetify's scroll block only locks elements that are scrollable when a dialog opens. The
+   * disclaimer opens before the first view has laid out, so the page was left scrollable
+   * behind it. Locking the root for as long as any dialog is active does not depend on timing.
+   */
+  html:has(.v-dialog.v-overlay--active),
+  html:has(.v-dialog.v-overlay--active) body {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  .v-overlay__scrim {
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+  }
+
+  .v-menu > .v-overlay__content > .v-list,
+  .v-menu > .v-overlay__content > .v-card {
+    border-radius: var(--tb-radius-sm);
+    background-color: var(--tb-glass-strong);
+    -webkit-backdrop-filter: var(--tb-glass-blur);
+    backdrop-filter: var(--tb-glass-blur);
+    border: 1px solid var(--tb-glass-line);
+    box-shadow: var(--tb-glass-sheen), var(--tb-shadow-md);
+  }
+
+  /* Buttons: warm pill, calm press. */
+  .v-btn {
+    letter-spacing: -0.005em;
+    font-weight: 600;
+    border-radius: var(--tb-radius-pill);
+    transition:
+      background var(--tb-dur-fast) var(--tb-ease-standard),
+      transform var(--tb-dur-fast) var(--tb-ease-standard);
+  }
+
+  .v-btn--icon {
+    border-radius: 50%;
+  }
+
+  /* Pill buttons in a toggle would otherwise touch edge to edge. */
+  .v-btn-toggle {
+    gap: 8px;
+  }
+
+  .v-btn:focus-visible {
+    box-shadow: var(--tb-shadow-focus);
+  }
+
+  .v-chip {
+    font-weight: 600;
+    letter-spacing: -0.003em;
+  }
+
+  /* Fields: warm surface, soft inset, teal focus border plus terracotta ring. */
+  .v-field--variant-outlined {
+    background-color: var(--tb-surface);
+    border-radius: var(--tb-radius-md);
+    box-shadow: var(--tb-shadow-inset);
+  }
+
+  .v-field--variant-outlined.v-field--disabled {
+    background-color: var(--tb-surface-2);
+  }
+
+  .v-field--variant-outlined .v-field__outline {
+    --v-field-border-opacity: 1;
+    color: var(--tb-divider-strong);
+  }
+
+  .v-field--focused.v-field--variant-outlined .v-field__outline {
+    color: var(--tb-brand);
+  }
+
+  .v-field--focused.v-field--variant-outlined {
+    box-shadow: var(--tb-shadow-focus);
+  }
+
+  .v-field--error.v-field--variant-outlined .v-field__outline {
+    color: rgb(var(--v-theme-error));
+  }
+
+  /*
+   * Labels sit as static text above the field instead of floating in the border, so the
+   * border stays solid. The band is reserved as padding on the input so it never overlaps the
+   * row above. Fields without a label are untouched.
+   */
+  .v-input:is(.v-text-field, .v-select, .v-textarea, .v-autocomplete, .v-combobox):has(
+      .v-field__field > .v-field-label
+    ) {
+    padding-top: var(--tb-field-label-band);
+  }
+
+  .v-field--variant-outlined,
+  .v-field--variant-outlined .v-field__field {
+    overflow: visible;
+  }
+
+  /* Left-aligned with the field's border, like every other label above a control (.tb-label). */
+  .v-field--variant-outlined .v-field__field > .v-field-label {
+    position: absolute;
+    top: auto;
+    bottom: calc(100% + 6px);
+    left: 0;
+    margin-inline-start: 0;
+    transform: none;
+    font-size: var(--tb-label-size);
+    font-weight: var(--tb-label-weight);
+    line-height: 1.2;
+    letter-spacing: var(--tb-label-tracking);
+    color: var(--tb-text-2);
+    opacity: 1;
+    visibility: visible;
+    max-width: 100%;
+    white-space: nowrap;
+  }
+
+  /* Hints and errors share the label's left edge. */
+  .v-input:has(.v-field--variant-outlined) > .v-input__details {
+    padding-inline: 0;
+  }
+
+  .v-field--variant-outlined .v-field__outline__notch .v-field-label {
+    display: none;
+  }
+
+  .v-field--variant-outlined .v-field__outline__notch {
+    max-width: 0;
+  }
+
+  /* iOS zooms the page when a focused input's font is under 16px. */
+  .v-field input,
+  .v-field textarea,
+  .v-field .v-select__selection-text {
+    font-size: 16px;
+  }
+
+  .v-snackbar__wrapper {
+    border-radius: var(--tb-radius-md);
+    background-color: var(--tb-glass-strong);
+    -webkit-backdrop-filter: var(--tb-glass-blur);
+    backdrop-filter: var(--tb-glass-blur);
+    color: var(--tb-text-1);
+    border: 1px solid var(--tb-glass-line);
+    box-shadow: var(--tb-glass-sheen), var(--tb-shadow-lg);
+  }
+
+  .v-alert {
+    border-radius: var(--tb-radius-md);
+  }
+
+  /*
+   * Action rows line up with the content above them. A text button's label already sits 16px
+   * in (8px row padding plus 8px button padding), so text-only rows keep Vuetify's padding; a
+   * row with a filled, tonal or outlined button insets the button itself to the content edge.
+   * Dialogs and bottom sheets inset content by 24px, so their actions do too.
+   */
+  .v-card-actions:has(> .v-btn:not(.v-btn--variant-text)) {
+    flex-wrap: wrap;
+    padding: 0 16px 16px;
+  }
+
+  .v-dialog > .v-overlay__content > .v-card > .v-card-actions {
+    padding: 0 24px 24px;
+  }
+
+  /*
+   * Solid surfaces where glass cannot render (no backdrop-filter) or is unwanted (the user
+   * asked the OS for less transparency): translucency without blur only muddies text.
+   */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .v-app-bar.v-toolbar,
+    .v-bottom-navigation,
+    .v-navigation-drawer,
+    .v-dialog > .v-overlay__content > .v-card,
+    .v-bottom-sheet > .v-overlay__content > .v-card,
+    .v-menu > .v-overlay__content > .v-list,
+    .v-menu > .v-overlay__content > .v-card,
+    .v-snackbar__wrapper {
+      background-color: var(--tb-surface);
+    }
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .v-app-bar.v-toolbar,
+    .v-bottom-navigation,
+    .v-navigation-drawer,
+    .v-dialog > .v-overlay__content > .v-card,
+    .v-bottom-sheet > .v-overlay__content > .v-card,
+    .v-menu > .v-overlay__content > .v-list,
+    .v-menu > .v-overlay__content > .v-card,
+    .v-snackbar__wrapper {
+      background-color: var(--tb-surface);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+
+    .v-card:not(
+      .v-card--variant-outlined,
+      .v-card--variant-tonal,
+      .v-card--variant-flat,
+      .v-card--variant-text,
+      .v-card--variant-plain
+    ) {
+      background-color: var(--tb-surface);
+    }
+  }
+}
+
+@layer tb-utilities {
+  /*
+   * Hover feedback only where a pointer can hover. Touch browsers keep :hover on the last
+   * element a tap landed on, and a tap that stops a fling does not move it, so a tab left behind
+   * stayed tinted next to the active one. Every Vuetify state layer reads this variable, so
+   * zeroing it removes the hover tint while pressed, active and focus states keep their look.
+   * Vuetify declares it in its theme, in vuetify-utilities, hence this layer.
+   */
+  @media (hover: none) {
+    :root,
+    .v-theme--light,
+    .v-theme--dark {
+      --v-hover-opacity: 0;
+    }
+  }
+
+  /* Small-caps tracked label in terracotta: the warm accent above section titles. */
+  .tb-eyebrow {
+    font-family: var(--tb-font);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--tb-accent);
+  }
+
+  /* The label above a control that is not a Vuetify field: a preset group, a toggle, a list. */
+  .tb-label {
+    display: block;
+    font-size: var(--tb-label-size);
+    font-weight: var(--tb-label-weight);
+    letter-spacing: var(--tb-label-tracking);
+    line-height: 1.2;
+    color: var(--tb-text-2);
+    margin-bottom: 6px;
+    padding: 0;
+  }
+
+  /*
+   * Vertical rhythm: the container owns the spacing between its children, which carry no
+   * margins of their own. 16px between controls and blocks; --tight (8px) for a label-like
+   * line and what it describes; --loose (24px) between sections of one card.
+   */
+  .tb-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .tb-stack--tight {
+    gap: 8px;
+  }
+
+  .tb-stack--loose {
+    gap: 24px;
+  }
+
+  /* A row of actions inside a notice or panel: end-aligned, wrapping on narrow screens. */
+  .tb-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .tb-display {
+    font-family: var(--tb-font-display);
+    font-weight: 700;
+    letter-spacing: -0.022em;
+  }
+
+  .tb-muted {
+    color: var(--tb-text-2);
+  }
+
+  .tb-faint {
+    color: var(--tb-text-3);
+  }
+
+  .tb-mono {
+    font-family: var(--tb-font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tb-num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Inset panel for grouped content inside a card. */
+  .tb-inset {
+    background-color: var(--tb-surface-2);
+    border: 1px solid var(--tb-divider);
+    border-radius: var(--tb-radius-md);
+  }
+
+  .tb-card-soft {
+    background-color: var(--tb-brand-softer);
+    border-color: var(--tb-brand-soft);
+  }
+
+  .tb-card-accent {
+    background-color: var(--tb-accent-soft);
+    border-color: var(--tb-accent-line);
+  }
+
+  /*
+   * Calm pill status label.
+   *   <span class="tb-badge tb-badge--good"><span class="tb-badge__dot" />Human data</span>
+   */
+  .tb-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    white-space: nowrap;
+    padding: 5px 10px;
+    border-radius: var(--tb-radius-pill);
+    background: var(--tb-surface-2);
+    color: var(--tb-text-2);
+  }
+
+  .tb-badge__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: var(--tb-radius-pill);
+    background: currentColor;
+    flex: none;
+  }
+
+  .tb-badge--brand {
+    background: var(--tb-brand-soft);
+    color: var(--tb-brand-strong);
+  }
+  .tb-badge--good {
+    background: var(--tb-good-bg);
+    color: var(--tb-good-fg);
+  }
+  .tb-badge--notice {
+    background: var(--tb-notice-bg);
+    color: var(--tb-notice-fg);
+  }
+  .tb-badge--alert {
+    background: var(--tb-alert-bg);
+    color: var(--tb-alert-fg);
+  }
+  .tb-badge--info {
+    background: var(--tb-info-bg);
+    color: var(--tb-info-fg);
+  }
+
+  .tb-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px 16px 32px;
+  }
+
+  @media (min-width: 840px) {
+    .tb-page {
+      padding: 24px 24px 40px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
+}

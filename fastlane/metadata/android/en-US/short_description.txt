@@ -1,0 +1,1 @@
+Private, offline journal for GLP-1 doses, weight, BMI and trial comparisons.

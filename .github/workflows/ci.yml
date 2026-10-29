@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npm run test:e2e
+      # Any advisory fails the build, then every package is checked against the registry's
+      # signatures and provenance attestations (needs network access to sigstore, so CI only).
+      - run: npm audit --audit-level=low
+      - run: npm audit signatures

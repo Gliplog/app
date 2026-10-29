@@ -1,0 +1,9 @@
+{
+  "name": "deepmerge",
+  "version": "4.3.1-tidebook.1",
+  "description": "deepmerge 4.3.1 with the GHSA-gcqx-w48m-w2h4 prototype-poisoning fix; replaces the registry package through package.json overrides.",
+  "private": true,
+  "license": "MIT",
+  "main": "index.js",
+  "types": "index.d.ts"
+}

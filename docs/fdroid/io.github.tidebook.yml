@@ -1,0 +1,31 @@
+# Template for the F-Droid metadata merge request (fdroiddata: metadata/io.github.tidebook.yml).
+# Fill in the commit for the first release tag before submitting.
+Categories:
+  - Health & Fitness
+License: AGPL-3.0-only
+SourceCode: https://github.com/Tidebook/app
+IssueTracker: https://github.com/Tidebook/app/issues
+WebSite: https://tidebook.github.io/
+
+AutoName: Tidebook
+
+RepoType: git
+Repo: https://github.com/Tidebook/app.git
+
+Builds:
+  - versionName: 0.1.0
+    versionCode: 100
+    commit: v0.1.0
+    subdir: android/app
+    sudo:
+      - curl -Lo node.tar.xz https://nodejs.org/dist/v24.16.0/node-v24.16.0-linux-x64.tar.xz
+      - tar xJf node.tar.xz --strip-components=1 -C /usr/local/
+    init: cd ../.. && npm ci
+    gradle:
+      - yes
+    prebuild: cd ../.. && npm run build:android
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags ^v[0-9.]+$
+CurrentVersion: 0.1.0
+CurrentVersionCode: 100
