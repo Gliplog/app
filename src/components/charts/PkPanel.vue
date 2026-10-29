@@ -53,9 +53,8 @@ const lookbackHours = computed(() => (params.value ? lookbackHoursFor(params.val
           :lookback-hours="lookbackHours"
         />
         <p class="text-body-small tb-muted">
-          An estimate of medicine remaining in the body, not a blood level. It uses a simple model
-          from the published half-life and peak time, assumes no further doses, and can't reflect
-          how your body handles it.
+          An estimate of medicine remaining in the body, based on a simple model from published
+          data.
         </p>
         <div v-if="profile?.pk" class="tb-stack tb-stack--tight">
           <p class="text-body-small tb-muted">{{ profile.pk.notes }}</p>
@@ -65,7 +64,7 @@ const lookbackHours = computed(() => (params.value ? lookbackHoursFor(params.val
       <v-alert v-else type="info" variant="tonal" density="comfortable">
         {{
           profile?.pkUnavailableReason ??
-          'No published data for this medication. To see an estimate, edit it and add a half-life.'
+          'No published data for this medicine. Add a half-life to see an estimate.'
         }}
       </v-alert>
     </v-card-text>

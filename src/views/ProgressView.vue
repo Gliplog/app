@@ -86,9 +86,9 @@ const shownComparisons = computed(() =>
 const basisNote = computed(() => {
   switch (baseline.value?.basis) {
     case 'before-first-dose':
-      return 'Your last weigh-in on or before your first logged dose, as trials measure it.'
+      return 'Your last weigh-in on or before your first dose, as trials measure it.'
     case 'after-first-dose':
-      return 'No weigh-in before your first logged dose, so this is your first one after it. Add an earlier weight for a closer comparison.'
+      return 'Your first weigh-in after your first dose. Add an earlier one for a closer comparison.'
     case 'no-doses':
       return 'Your first weigh-in. Log a dose to count weeks from it.'
     default:
@@ -176,12 +176,11 @@ const basisNote = computed(() => {
               :guides="bmiGuides"
             />
             <p v-if="adult" class="text-body-small tb-muted">
-              Dashed lines are the WHO adult bands (18.5, 25, 30, 35, 40). BMI is a screening
-              measure: it doesn't tell muscle from fat, and the same number means different things
-              for different bodies.
+              Dashed lines are the WHO adult bands. BMI is a screening measure and doesn't tell
+              muscle from fat.
             </p>
             <p v-else class="text-body-small tb-muted">
-              Adult BMI bands don't apply under {{ ADULT_AGE }}; growth charts are used instead.
+              Adult BMI bands don't apply under {{ ADULT_AGE }}.
             </p>
             <SourceList :sources="[BMI_SOURCE]" />
           </template>
@@ -195,11 +194,10 @@ const basisNote = computed(() => {
     <section v-if="product" class="mt-6">
       <h2 class="tb-display text-title-large mb-1">Compared with clinical trials</h2>
       <p class="tb-muted mb-4 section-intro">
-        How your change sits beside the published average for {{ product.name }}'s medicine.
-        <template v-if="product.kind === 'compounded'">
-          These trials studied the brand product, not compounded versions.
-        </template>
-        Trials are a reference, not a target: many people lose more or less, and both can be normal.
+        Your change beside the published averages for {{ product.name }}.
+        <template v-if="product.kind === 'compounded'"
+          >These trials used the brand product.</template
+        >
       </p>
       <template v-if="comparisons.length">
         <div class="progress-grid">

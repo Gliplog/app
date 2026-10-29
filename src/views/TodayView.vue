@@ -110,10 +110,7 @@ const daysSinceStart = computed(() =>
     <v-card v-if="isEmpty" class="tb-card-soft mb-4">
       <v-card-text class="tb-stack">
         <p class="text-title-large tb-display">Start with what you take</p>
-        <p>
-          Add your medication and a first weigh-in. Tidebook keeps everything on this device, works
-          offline, and never asks for an account.
-        </p>
+        <p>Add your medicine and a weigh-in to get started. Everything stays on this device.</p>
         <div class="d-flex flex-wrap ga-2">
           <v-btn color="primary" variant="flat" :prepend-icon="mdiPlus" @click="addMedication">
             Add medication

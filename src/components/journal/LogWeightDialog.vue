@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { computed, reactive, ref, useId, watch } from 'vue'
 import type { WeightRow } from '@/db/database'
-import { formatWeight, fromKg, roundTo, toKg, type WeightUnit } from '@/domain/units'
+import { formatWeight, fromKg, roundTo, toKg } from '@/domain/units'
 import { useJournalStore } from '@/stores/journal'
 import { useSettingsStore } from '@/stores/settings'
 import { useNotifyStore } from '@/stores/notify'
 import { useConfirmStore } from '@/stores/confirm'
 import { fromLocalInputValue, nowIso, toLocalInputValue } from '@/services/time'
 
-/** Log a weigh-in, or edit or delete one. */
+/** Log a weigh-in, or edit or delete one. Entry is in the weight unit chosen in Settings. */
 const props = defineProps<{ weight: WeightRow | null }>()
 const open = defineModel<boolean>({ required: true })
 
@@ -19,14 +19,17 @@ const confirm = useConfirmStore()
 const titleId = useId()
 const saving = ref(false)
 
-const form = reactive({ value: '', unit: 'kg' as WeightUnit, measuredAt: '', notes: '' })
+const form = reactive({ value: '', measuredAt: '', notes: '' })
+/** The value as first shown, so an edit that leaves it alone keeps the stored, unrounded weight. */
+const initialValue = ref('')
+const unit = computed(() => settings.weightUnit)
 
 // Reset from props each time the dialog opens, so an abandoned edit never leaks into the next.
 watch(open, (isOpen) => {
   if (!isOpen) return
   const w = props.weight
-  form.unit = w?.enteredUnit ?? settings.weightUnit
-  form.value = w ? String(roundTo(fromKg(w.kg, form.unit), 2)) : ''
+  form.value = w ? String(roundTo(fromKg(w.kg, unit.value), 2)) : ''
+  initialValue.value = form.value
   form.measuredAt = toLocalInputValue(w?.measuredAt ?? nowIso())
   form.notes = w?.notes ?? ''
 })
@@ -35,13 +38,13 @@ watch(open, (isOpen) => {
 const kg = computed(() => {
   const n = Number.parseFloat(form.value)
   if (!Number.isFinite(n) || n <= 0) return null
-  const value = toKg(n, form.unit)
+  const value = toKg(n, unit.value)
   return value >= 20 && value <= 400 ? value : null
 })
 
 const error = computed(() =>
   form.value && kg.value === null
-    ? `Enter a weight between ${formatWeight(20, form.unit)} and ${formatWeight(400, form.unit)}`
+    ? `Enter a weight between ${formatWeight(20, unit.value)} and ${formatWeight(400, unit.value)}`
     : undefined,
 )
 
@@ -50,16 +53,16 @@ const previous = computed(() => journal.weights.find((w) => w.id !== props.weigh
 async function save() {
   if (kg.value === null || !form.measuredAt) return
   saving.value = true
+  const unchanged = props.weight !== null && form.value === initialValue.value
   const input = {
-    kg: kg.value,
-    enteredUnit: form.unit,
+    kg: unchanged ? props.weight.kg : kg.value,
+    enteredUnit: unchanged ? props.weight.enteredUnit : unit.value,
     measuredAt: fromLocalInputValue(form.measuredAt),
     notes: form.notes.trim(),
   }
   try {
     if (props.weight) await journal.updateWeight(props.weight.id, input)
     else await journal.addWeight(input)
-    if (form.unit !== settings.weightUnit) await settings.setWeightUnit(form.unit)
     notify.show(props.weight ? 'Weight updated' : 'Weight logged', 'success')
     open.value = false
   } catch {
@@ -93,28 +96,19 @@ async function remove() {
         <v-card-title :id="titleId">Weigh-in</v-card-title>
       </v-card-item>
       <v-card-text class="tb-stack">
-        <div class="d-flex ga-3 align-start">
+        <div class="weight-entry">
           <v-text-field
             v-model="form.value"
             label="Weight"
             type="number"
             inputmode="decimal"
+            :suffix="unit"
             :error-messages="error"
             autofocus
           />
-          <v-btn-toggle
-            v-model="form.unit"
-            role="group"
-            mandatory
-            density="comfortable"
-            aria-label="Unit"
-          >
-            <v-btn value="kg">kg</v-btn>
-            <v-btn value="lb">lb</v-btn>
-          </v-btn-toggle>
         </div>
         <p v-if="previous" class="text-body-small tb-faint">
-          Last time: {{ formatWeight(previous.kg, form.unit) }}
+          Last time: {{ formatWeight(previous.kg, unit) }}
         </p>
         <v-text-field v-model="form.measuredAt" label="When" type="datetime-local" />
         <v-textarea v-model="form.notes" label="Notes (optional)" />
@@ -141,3 +135,10 @@ async function remove() {
     </v-card>
   </v-dialog>
 </template>
+
+<style scoped>
+/* A weight is at most five or six characters; a full-width field reads as a text box. */
+.weight-entry {
+  max-width: 240px;
+}
+</style>

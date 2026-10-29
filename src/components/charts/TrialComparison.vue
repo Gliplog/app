@@ -94,13 +94,9 @@ const barWidth = (change: number | null) =>
       </ul>
 
       <p class="text-body-small tb-muted">
-        Trial rows are averages at week {{ trial.weeks }} across everyone in each group; people
-        varied widely. Your row is your latest weigh-in up to week {{ trial.weeks }}, counted from
-        your first logged dose.
-        <template v-if="trial.measure === 'kg'">
-          This trial reports kilograms, so your row is in kilograms too
-          <template v-if="weightUnit === 'lb'"> (shown in pounds)</template>.
-        </template>
+        Trial rows are group averages at week {{ trial.weeks }}. Yours is your latest weigh-in up to
+        week {{ trial.weeks }} after your first dose.
+        <template v-if="trial.measure === 'kg'">This trial reports weight, not percent.</template>
       </p>
       <p class="text-body-small tb-faint">{{ trial.analysis }}</p>
       <SourceList :sources="[trial.source]" />

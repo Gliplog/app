@@ -50,11 +50,8 @@ const presets = computed(() => {
   return [...new Set(logged)].sort((a, b) => a - b).slice(0, 6)
 })
 
-const presetHint = computed(() =>
-  product.value
-    ? `Strengths from the ${product.value.strengths.source.citation}. Use the dose you were prescribed.`
-    : undefined,
-)
+/** Short on purpose: the full citation lives in the catalog; this keeps the strengths sourced. */
+const presetHint = computed(() => (product.value ? 'From the US prescribing label' : undefined))
 
 // Reset from props each time the dialog opens, so an abandoned edit never leaks into the next.
 watch(open, (isOpen) => {

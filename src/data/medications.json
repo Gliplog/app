@@ -8,7 +8,7 @@
       "pk": {
         "halfLifeHours": 168,
         "tmaxHours": 56,
-        "notes": "Label: half-life about 1 week, peak 1 to 3 days after a dose, bioavailability 89% under the skin. The model uses the single-dose median time to peak of 56 h in healthy adults.",
+        "notes": "Label: half-life about 1 week, peak 1 to 3 days after a dose. The model uses the median peak of 56 h.",
         "sources": [
           {
             "kind": "label",
@@ -27,7 +27,7 @@
       "id": "semaglutide-tablet",
       "name": "Semaglutide tablet",
       "pk": null,
-      "pkUnavailableReason": "Only about 0.4% to 2% of a semaglutide tablet is absorbed (prescribing label), and the share changes from day to day with how it is taken. An estimate built from the tablet strength would overstate the amount in the body many times over, so Tidebook does not draw one."
+      "pkUnavailableReason": "Only 0.4% to 2% of a semaglutide tablet is absorbed (prescribing label), and it varies day to day, so Tidebook can't estimate a level."
     },
     {
       "id": "tirzepatide-injection",
@@ -35,7 +35,7 @@
       "pk": {
         "halfLifeHours": 120,
         "tmaxHours": 24,
-        "notes": "Label: half-life about 5 days (5 to 6 days in people with overweight or obesity), median time to peak 24 hours (range 8 to 72), bioavailability 80%.",
+        "notes": "Label: half-life about 5 days, median peak 24 hours after a dose.",
         "sources": [
           {
             "kind": "label",
@@ -56,7 +56,7 @@
       "pk": {
         "halfLifeHours": 39,
         "tmaxHours": 6,
-        "notes": "Label: half-life about 29 to 49 hours, peak 4 to 8 hours after a dose, bioavailability 77%. The label gives ranges; the model uses the middle of each.",
+        "notes": "Label: half-life 29 to 49 hours, peak 4 to 8 hours after a dose. The model uses the middle of each range.",
         "sources": [
           {
             "kind": "label",
@@ -109,7 +109,7 @@
       },
       "pkProfile": "semaglutide-injection",
       "trialIds": ["sustain-1", "sustain-forte", "surpass-2", "step-2"],
-      "note": "Approved for type 2 diabetes. Its weight results come from diabetes trials."
+      "note": "Approved for type 2 diabetes."
     },
     {
       "id": "wegovy",
@@ -199,7 +199,7 @@
       },
       "pkProfile": "tirzepatide-injection",
       "trialIds": ["surpass-1", "surpass-2", "surmount-2"],
-      "note": "Approved for type 2 diabetes. Its weight results come from diabetes trials."
+      "note": "Approved for type 2 diabetes."
     },
     {
       "id": "zepbound",
@@ -427,7 +427,7 @@
       "titration": null,
       "pkProfile": "semaglutide-injection",
       "trialIds": ["step-1", "step-2"],
-      "note": "Compounded drugs are not FDA-approved; the trials studied the brand product."
+      "note": "Compounded drugs are not FDA-approved."
     },
     {
       "id": "compounded-tirzepatide",
@@ -448,7 +448,7 @@
       "titration": null,
       "pkProfile": "tirzepatide-injection",
       "trialIds": ["surmount-1", "surmount-2"],
-      "note": "Compounded drugs are not FDA-approved; the trials studied the brand product."
+      "note": "Compounded drugs are not FDA-approved."
     }
   ],
   "trials": [
@@ -475,7 +475,7 @@
           "change": -14.9
         }
       ],
-      "analysis": "Least-squares mean of everyone randomised, as printed in the label; the label explains how missing weights were handled.",
+      "analysis": "Least-squares mean of everyone randomised, as printed in the label.",
       "source": {
         "kind": "label",
         "citation": "WEGOVY (semaglutide) US prescribing information, section 14",
@@ -505,7 +505,7 @@
           "change": -9.6
         }
       ],
-      "analysis": "Least-squares mean of everyone randomised, as printed in the label; the label explains how missing weights were handled.",
+      "analysis": "Least-squares mean of everyone randomised, as printed in the label.",
       "source": {
         "kind": "label",
         "citation": "WEGOVY (semaglutide) US prescribing information, section 14",
@@ -535,7 +535,7 @@
           "change": -16.0
         }
       ],
-      "analysis": "Least-squares mean of everyone randomised, as printed in the label; the label explains how missing weights were handled.",
+      "analysis": "Least-squares mean of everyone randomised, as printed in the label.",
       "source": {
         "kind": "label",
         "citation": "WEGOVY (semaglutide) US prescribing information, section 14",
@@ -571,7 +571,7 @@
           "change": -18.8
         }
       ],
-      "analysis": "Least-squares mean of everyone randomised, as printed in the label; the label explains how missing weights were handled.",
+      "analysis": "Least-squares mean of everyone randomised, as printed in the label.",
       "source": {
         "kind": "label",
         "citation": "WEGOVY (semaglutide) US prescribing information, section 14",
@@ -607,7 +607,7 @@
           "change": -13.2
         }
       ],
-      "analysis": "Least-squares mean of everyone randomised, as printed in the label; the label explains how missing weights were handled.",
+      "analysis": "Least-squares mean of everyone randomised, as printed in the label.",
       "source": {
         "kind": "label",
         "citation": "WEGOVY (semaglutide) US prescribing information, section 14",
@@ -637,7 +637,7 @@
           "change": -13.6
         }
       ],
-      "analysis": "Least-squares mean of everyone randomised, as printed in the label; the label explains how missing weights were handled.",
+      "analysis": "Least-squares mean of everyone randomised, as printed in the label.",
       "source": {
         "kind": "label",
         "citation": "WEGOVY (semaglutide) US prescribing information, section 14",
@@ -679,7 +679,7 @@
           "change": -20.9
         }
       ],
-      "analysis": "Least-squares mean of everyone randomised, as printed in the label; the label explains how missing weights were handled.",
+      "analysis": "Least-squares mean of everyone randomised, as printed in the label.",
       "source": {
         "kind": "label",
         "citation": "ZEPBOUND (tirzepatide) US prescribing information, section 14",
@@ -715,7 +715,7 @@
           "change": -14.7
         }
       ],
-      "analysis": "Least-squares mean of everyone randomised, as printed in the label; the label explains how missing weights were handled.",
+      "analysis": "Least-squares mean of everyone randomised, as printed in the label.",
       "source": {
         "kind": "label",
         "citation": "ZEPBOUND (tirzepatide) US prescribing information, section 14",
@@ -757,7 +757,7 @@
           "change": -7.8
         }
       ],
-      "analysis": "Mean change in kilograms as printed in the label, which does not report this trial in percent.",
+      "analysis": "Mean change in kilograms, as printed in the label.",
       "source": {
         "kind": "label",
         "citation": "MOUNJARO (tirzepatide) US prescribing information, section 14",
@@ -800,7 +800,7 @@
           "change": -11.2
         }
       ],
-      "analysis": "Mean change in kilograms as printed in the label, which does not report this trial in percent.",
+      "analysis": "Mean change in kilograms, as printed in the label.",
       "source": {
         "kind": "label",
         "citation": "MOUNJARO (tirzepatide) US prescribing information, section 14",
@@ -836,7 +836,7 @@
           "change": -4.7
         }
       ],
-      "analysis": "Mean change in kilograms as printed in the label, which does not report this trial in percent.",
+      "analysis": "Mean change in kilograms, as printed in the label.",
       "source": {
         "kind": "label",
         "citation": "OZEMPIC (semaglutide) injection US prescribing information, section 14",
@@ -866,7 +866,7 @@
           "change": -6.4
         }
       ],
-      "analysis": "Mean change in kilograms as printed in the label, which does not report this trial in percent.",
+      "analysis": "Mean change in kilograms, as printed in the label.",
       "source": {
         "kind": "label",
         "citation": "OZEMPIC (semaglutide) injection US prescribing information, section 14",
@@ -908,7 +908,7 @@
           "change": -11.1
         }
       ],
-      "analysis": "Least-squares mean of everyone randomised, as printed in the label; the label explains how missing weights were handled.",
+      "analysis": "Least-squares mean of everyone randomised, as printed in the label.",
       "source": {
         "kind": "label",
         "citation": "FOUNDAYO (orforglipron) US prescribing information, section 14",
@@ -950,7 +950,7 @@
           "change": -9.6
         }
       ],
-      "analysis": "Least-squares mean of everyone randomised, as printed in the label; the label explains how missing weights were handled.",
+      "analysis": "Least-squares mean of everyone randomised, as printed in the label.",
       "source": {
         "kind": "label",
         "citation": "FOUNDAYO (orforglipron) US prescribing information, section 14",

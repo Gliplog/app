@@ -244,7 +244,7 @@
     letter-spacing: -0.003em;
   }
 
-  /* Fields: warm surface, soft inset, teal focus border plus terracotta ring. */
+  /* Fields: warm surface, soft inset, teal focus border. One focus indicator, not a border and a ring. */
   .v-field--variant-outlined {
     background-color: var(--tb-surface);
     border-radius: var(--tb-radius-md);
@@ -262,10 +262,6 @@
 
   .v-field--focused.v-field--variant-outlined .v-field__outline {
     color: var(--tb-brand);
-  }
-
-  .v-field--focused.v-field--variant-outlined {
-    box-shadow: var(--tb-shadow-focus);
   }
 
   .v-field--error.v-field--variant-outlined .v-field__outline {

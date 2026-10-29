@@ -66,6 +66,7 @@ const busy = ref(false)
 
 const version = __APP_VERSION__
 const PRIVACY_URL = 'https://tidebook.github.io/privacy.html'
+const SOURCE_URL = 'https://github.com/Tidebook/app'
 
 const themeModel = computed({
   get: () => settings.theme,
@@ -243,7 +244,7 @@ async function importData(event: Event) {
 async function eraseEverything() {
   const ok = await confirm.ask({
     title: 'Erase everything?',
-    text: `This deletes your profile, medications, ${describe(journal.doses.length, journal.weights.length)} from this device. Save a backup first if you may want them again.`,
+    text: `This deletes your profile, medications, ${describe(journal.doses.length, journal.weights.length)} from this device. Save a backup first if you might want them.`,
     confirmText: 'Erase everything',
     destructive: true,
   })
@@ -277,8 +278,7 @@ const formatMb = (bytes: number | null) =>
         </v-card-item>
         <v-card-text class="tb-stack">
           <p class="text-body-medium tb-muted">
-            Every field is optional and stays on this device. Height gives you BMI; your birth month
-            gives your age.
+            Optional, and stored only on this device. Height is used for BMI, birth month for age.
           </p>
           <div v-if="settings.heightUnit === 'cm'">
             <v-text-field
@@ -342,8 +342,7 @@ const formatMb = (bytes: number | null) =>
             autocomplete="off"
           />
           <p class="text-body-small tb-muted">
-            Tidebook doesn't use gender in any calculation; BMI bands are the same for everyone.
-            It's here so your record describes you, and it never leaves this device.
+            Not used in any calculation. It's here so your record describes you.
           </p>
           <v-text-field
             v-model="form.goal"
@@ -410,9 +409,7 @@ const formatMb = (bytes: number | null) =>
               <v-btn value="dark">Dark</v-btn>
             </v-btn-toggle>
           </div>
-          <p class="text-body-small tb-muted">
-            Weights are stored exactly as measured, so switching units never rounds them.
-          </p>
+          <p class="text-body-small tb-muted">Switching units never changes your saved weights.</p>
         </v-card-text>
       </v-card>
 
@@ -423,8 +420,8 @@ const formatMb = (bytes: number | null) =>
         </v-card-item>
         <v-card-text class="tb-stack">
           <p>
-            Your data is only on this device. Clearing this site's data in the browser, or
-            uninstalling, deletes it, so keep a backup.
+            Your data is only on this device. Clearing site data or uninstalling deletes it, so keep
+            a backup.
           </p>
           <v-alert v-if="backupStale" type="warning" variant="tonal" density="compact">
             {{
@@ -459,8 +456,8 @@ const formatMb = (bytes: number | null) =>
             />
           </div>
           <p class="text-body-small tb-muted">
-            The backup is a plain file you keep. On iPhone and iPad, Safari and the Home Screen app
-            store data separately; use a backup to move between them.
+            On iPhone and iPad, Safari and the Home Screen app keep separate data. Use a backup to
+            move between them.
           </p>
           <v-divider />
           <div>
@@ -574,26 +571,27 @@ const formatMb = (bytes: number | null) =>
         </v-card-item>
         <v-card-text class="about">
           <p>
-            Tidebook is a free, private journal for GLP-1 medication and weight. It does arithmetic
-            and shows published reference figures, each with its source. It doesn't recommend doses,
-            isn't medical advice, and isn't a medical device. Talk to your prescriber or pharmacist
-            about your treatment.
+            Tidebook is a free, private journal for GLP-1 medicine and weight. It shows published
+            figures with their sources. It doesn't recommend doses and isn't medical advice or a
+            medical device. Ask your prescriber or pharmacist about your treatment.
           </p>
           <p>
-            Trial figures come from US prescribing information and are averages across groups of
-            people. Level charts are model estimates, not blood levels. Compounded medicines are not
-            FDA-approved, and trials did not study them.
+            Trial figures are group averages from US prescribing information. Level charts are
+            estimates, not blood levels. Compounded medicines are not FDA-approved.
           </p>
           <p>
             Ozempic, Wegovy and Rybelsus are trademarks of Novo Nordisk A/S. Mounjaro, Zepbound and
-            Foundayo are trademarks of Eli Lilly and Company. All brand names are the trademarks of
-            their respective owners and are used only to identify the medicines. Tidebook is not
-            affiliated with, endorsed by or sponsored by Novo Nordisk, Eli Lilly or any other
-            manufacturer or pharmacy.
+            Foundayo are trademarks of Eli Lilly and Company. Brand names are used only to identify
+            the medicines. Tidebook is not affiliated with, endorsed by or sponsored by Novo
+            Nordisk, Eli Lilly or any other manufacturer or pharmacy.
           </p>
           <p>
-            Tidebook is provided as is, without warranty of any kind. You are responsible for how
-            you use it.
+            Tidebook is free software under the GNU Affero General Public License, version 3
+            (AGPL-3.0). It is provided as is, without warranty of any kind. You are responsible for
+            how you use it.
+          </p>
+          <p class="text-body-small">
+            <a :href="SOURCE_URL" target="_blank" rel="noopener noreferrer">Source code</a>
           </p>
         </v-card-text>
       </v-card>

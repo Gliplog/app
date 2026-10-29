@@ -33,17 +33,11 @@ async function accept() {
       </v-card-item>
       <v-card-text class="disclaimer">
         <p>
-          Tidebook helps you keep track of your GLP-1 medication, your weight and how they change
-          over time. It shows published reference figures, each with its source. It doesn't
-          recommend doses, and it isn't a substitute for your prescriber or pharmacist.
+          Tidebook tracks your GLP-1 medicine and weight, and shows published figures with their
+          sources. It doesn't recommend doses or replace your prescriber or pharmacist.
         </p>
-        <p>
-          Level charts and trial comparisons are estimates and averages. Your own body, and your own
-          results, will differ.
-        </p>
-        <p>
-          Everything you enter stays on this device. There's no account and nothing is uploaded.
-        </p>
+        <p>Level charts are estimates and trial results are averages. Yours will differ.</p>
+        <p>Everything you enter stays on this device. No account, nothing uploaded.</p>
       </v-card-text>
       <v-card-actions>
         <v-spacer />

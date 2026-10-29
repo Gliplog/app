@@ -218,7 +218,7 @@ async function remove() {
           :error-messages="errors.customDays"
         />
         <p class="text-body-small tb-muted">
-          Used only to show when your next dose falls. Follow the schedule from your prescriber.
+          Used to show when your next dose is due. Follow your prescriber's schedule.
         </p>
 
         <template v-if="showsConcentration">
@@ -229,7 +229,7 @@ async function remove() {
             type="number"
             inputmode="decimal"
             :error-messages="errors.concentration"
-            hint="From your pharmacy label. Doses then also show syringe units (U-100)."
+            hint="From your pharmacy label. Doses will also show U-100 syringe units."
             persistent-hint
           />
         </template>
@@ -255,7 +255,7 @@ async function remove() {
             />
           </div>
           <p class="text-body-small tb-muted">
-            Only for the level chart, which will be labelled as using your values.
+            Used only for the level chart, which is marked as your values.
           </p>
         </template>
 
