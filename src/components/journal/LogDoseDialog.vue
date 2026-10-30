@@ -8,6 +8,7 @@ import { useNotifyStore } from '@/stores/notify'
 import { useConfirmStore } from '@/stores/confirm'
 import { fromLocalInputValue, nowIso, toLocalInputValue } from '@/services/time'
 import PresetPicker from '@/components/common/PresetPicker.vue'
+import SyringeGraphic from './SyringeGraphic.vue'
 import { SITE_LABELS } from './siteLabels'
 
 /** Log a dose, or edit or delete a logged one. */
@@ -49,9 +50,6 @@ const presets = computed(() => {
   const logged = journal.dosesFor(form.medicationId).map((d) => d.doseMg)
   return [...new Set(logged)].sort((a, b) => a - b).slice(0, 6)
 })
-
-/** Short on purpose: the full citation lives in the catalog; this keeps the strengths sourced. */
-const presetHint = computed(() => (product.value ? 'From the US prescribing label' : undefined))
 
 // Reset from props each time the dialog opens, so an abandoned edit never leaks into the next.
 watch(open, (isOpen) => {
@@ -136,15 +134,17 @@ async function remove() {
           label="Dose"
           :presets="presets"
           unit-label="mg"
-          :hint="presetHint"
           input-id="dose-custom"
         />
-        <div v-if="reading" class="tb-inset reading" aria-live="polite">
-          <span class="tb-num text-title-large">{{ roundTo(reading.units, 1) }} units</span>
-          <span class="tb-muted text-body-small">
-            {{ roundTo(reading.ml, 3) }} mL on a U-100 syringe, at
-            {{ medication?.concentrationMgPerMl }} mg/mL
-          </span>
+        <div v-if="reading" class="tb-inset reading">
+          <SyringeGraphic :units="reading.units" />
+          <div class="reading__text" aria-live="polite">
+            <span class="tb-num text-title-large">{{ roundTo(reading.units, 1) }} units</span>
+            <span class="tb-muted text-body-small">
+              {{ roundTo(reading.ml, 3) }} mL on a U-100 syringe, at
+              {{ medication?.concentrationMgPerMl }} mg/mL
+            </span>
+          </div>
         </div>
         <v-text-field v-model="form.takenAt" label="When" type="datetime-local" />
         <fieldset v-if="isInjection" class="sites">
@@ -186,6 +186,12 @@ async function remove() {
 
 <style scoped>
 .reading {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reading__text {
   display: flex;
   flex-direction: column;
   gap: 2px;

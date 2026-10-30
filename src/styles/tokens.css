@@ -139,6 +139,13 @@
     --tb-chart-grid: #e8ddcc;
     --tb-chart-axis: #7a6c54;
     --tb-chart-now: #877960;
+
+    --tb-syringe-barrel: var(--stone-50);
+    --tb-syringe-ink: var(--stone-700);
+    --tb-syringe-fill: var(--tide-300);
+    --tb-syringe-fill-deep: var(--tide-500);
+    --tb-syringe-glint: rgba(255, 255, 255, 0.6);
+    --tb-syringe-plunger: var(--stone-500);
   }
 
   .v-theme--dark {
@@ -201,5 +208,12 @@
     --tb-chart-grid: #3a342a;
     --tb-chart-axis: #b3a286;
     --tb-chart-now: #b3a286;
+
+    --tb-syringe-barrel: var(--stone-800);
+    --tb-syringe-ink: var(--stone-200);
+    --tb-syringe-fill: var(--tide-400);
+    --tb-syringe-fill-deep: var(--tide-600);
+    --tb-syringe-glint: rgba(255, 240, 225, 0.22);
+    --tb-syringe-plunger: var(--stone-500);
   }
 }

@@ -229,7 +229,8 @@ test('a compounded vial shows the dose as syringe units', async ({ page }) => {
   await page.getByRole('button', { name: 'Log dose' }).click()
   const dose = page.getByRole('dialog', { name: 'Compounded semaglutide' })
   await choose(dose, 'Dose', '0.25 mg')
-  await expect(dose.getByText('10 units', { exact: true })).toBeVisible()
+  await expect(dose.getByRole('img', { name: /filled to 10 of 100 units/ })).toBeVisible()
+  await expect(dose.locator('span').getByText('10 units', { exact: true })).toBeVisible()
   await expect(dose.getByText(/0\.1 mL on a U-100 syringe/)).toBeVisible()
 })
 

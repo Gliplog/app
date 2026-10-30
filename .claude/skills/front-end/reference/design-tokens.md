@@ -30,6 +30,7 @@ cards are translucent paper with a lit top edge. Glass falls back to `--tb-surfa
 | Shadows      | `--tb-shadow-{sm,md,lg,inset}`                                                                                                   |
 | Glass        | `--tb-glass`, `--tb-glass-strong`, `--tb-glass-card`, `--tb-glass-{line,edge,sheen,shadow}`, `--tb-backdrop-{1,2}`               |
 | Chart        | `--tb-chart-{logged,preview,trial,placebo,grid,axis,now}`                                                                        |
+| Syringe      | `--tb-syringe-{barrel,ink,fill,fill-deep,glint,plunger}`                                                                         |
 
 Theme-independent: `--tb-font`, `--tb-font-display`, `--tb-font-mono`, `--tb-radius-*`, `--tb-glass-blur`,
 `--tb-dur-*`, `--tb-focus-ring`, `--tb-shadow-focus`, `--tb-touch`.
