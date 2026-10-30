@@ -97,8 +97,7 @@ const barWidth = (change: number | null) =>
         week {{ trial.weeks }} after your first dose.
         <template v-if="trial.measure === 'kg'">This trial reports weight, not percent.</template>
       </p>
-      <p class="text-body-small tb-faint">{{ trial.analysis }}</p>
-      <SourceList :sources="[trial.source]" />
+      <SourceList :sources="[trial.source]" :note="trial.analysis" />
     </v-card-text>
   </v-card>
 </template>

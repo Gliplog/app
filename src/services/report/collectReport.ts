@@ -1,5 +1,4 @@
 import { findProduct } from '@/data'
-import { SOURCE_KIND_LABELS } from '@/domain/catalog'
 import type { DoseRow, GlucoseRow, MedicationRow, SymptomRow, WeightRow } from '@/db/database'
 import {
   formatA1c,
@@ -63,8 +62,8 @@ const interval = (days: number) =>
 
 /**
  * Gather what the journal report prints for `period`, formatted for the reader's locale and
- * units: medications, weight change with its chart, side effects with the labels' terms, HbA1c
- * and glucose, and the dose log. Newest first in every table, as History lists them.
+ * units: medications, weight change with its chart, HbA1c and glucose, side effects with the
+ * labels' terms, and the dose log. Newest first in every table, as History lists them.
  */
 export function collectReport(source: ReportSource): JournalReportData {
   const { period, now, units } = source
@@ -209,9 +208,13 @@ export function collectReport(source: ReportSource): JournalReportData {
       rows: symptomRows,
       empty: 'No side effects logged in this period.',
     },
-    symptomNote:
+    symptomNotes: [
       '"Usually" is the median time from the dose before each entry. Strength: mild, noticeable ' +
-      'but not in the way; moderate, got in the way of some things; severe, stopped them.',
+        'but not in the way; moderate, got in the way of some things; severe, stopped them.',
+      ...(symptoms.length
+        ? [`Bracketed terms: ${SYMPTOM_SOURCES.map((s) => s.citation).join('; ')}.`]
+        : []),
+    ],
     a1c: {
       columns: [
         { title: 'Date', width: 0.2, align: 'left' },
@@ -254,9 +257,6 @@ export function collectReport(source: ReportSource): JournalReportData {
       ]),
       empty: 'No doses logged in this period.',
     },
-    sources: symptoms.length
-      ? SYMPTOM_SOURCES.map((s) => `${SOURCE_KIND_LABELS[s.kind]}: ${s.citation}`)
-      : [],
     formatTick: (at) => formatDate(at),
   }
 }

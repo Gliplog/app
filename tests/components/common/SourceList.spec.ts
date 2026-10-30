@@ -13,13 +13,24 @@ describe('SourceList', () => {
     const toggle = wrapper.get('button')
     expect(toggle.text()).toBe('Sources (2)')
     expect(toggle.attributes('aria-expanded')).toBe('false')
-    expect(wrapper.get('ul').attributes('style')).toContain('display: none')
+    const panel = wrapper.get(`#${toggle.attributes('aria-controls')}`)
+    expect(panel.attributes('style')).toContain('display: none')
 
     await toggle.trigger('click')
     expect(toggle.text()).toBe('Hide sources')
     expect(toggle.attributes('aria-expanded')).toBe('true')
-    expect(wrapper.get('ul').attributes('style') ?? '').not.toContain('display: none')
+    expect(panel.attributes('style') ?? '').not.toContain('display: none')
     expect(wrapper.get('a').attributes('href')).toBe('https://example.org/a')
+  })
+
+  it('folds the note away with the citations', () => {
+    const wrapper = mountWithVuetify(SourceList, {
+      props: { sources, note: 'As printed in the label.' },
+    })
+    const toggle = wrapper.get('button')
+    const panel = wrapper.get(`#${toggle.attributes('aria-controls')}`)
+    expect(panel.text()).toContain('As printed in the label.')
+    expect(panel.attributes('style')).toContain('display: none')
   })
 
   it('renders nothing without sources', () => {

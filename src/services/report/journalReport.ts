@@ -37,12 +37,11 @@ export interface JournalReportData {
   medications: ReportTable
   weight: { stats: readonly (readonly [string, string])[]; series: ReportSeries } | null
   symptoms: ReportTable
-  symptomNote: string
+  /** Printed under the side-effects table: how to read it, then the labels its terms come from. */
+  symptomNotes: readonly string[]
   a1c: ReportTable
   glucose: ReportTable
   doses: ReportTable
-  /** Citations printed under "About these numbers". */
-  sources: readonly string[]
   /** Axis label for a date. */
   formatTick: (epochMs: number) => string
 }
@@ -51,14 +50,6 @@ const MARGIN = 48
 const TOP = 48
 const BOTTOM = 56
 const ROW = 15
-
-const ABOUT = [
-  'Everything here was logged by the person who made this report, on their own device. Tidebook ' +
-    'does arithmetic and shows sourced references; it never recommends a dose and is not medical ' +
-    'advice.',
-  'Side effects are what the person recorded feeling, with the term the US prescribing labels ' +
-    'use in brackets. The report does not say what caused them.',
-]
 
 /**
  * Lays content down the page, starting a new page when the next block will not fit. Footers
@@ -217,8 +208,13 @@ function drawTableHeader(layout: Layout, columns: readonly ReportColumn[]) {
   })
 }
 
-/** A titled table, continued with its header on the next page; `note` follows the last row. */
-function drawTable(layout: Layout, title: string, table: ReportTable, note?: string) {
+/** A titled table, continued with its header on the next page; `notes` follow the last row. */
+function drawTable(
+  layout: Layout,
+  title: string,
+  table: ReportTable,
+  notes: readonly string[] = [],
+) {
   layout.heading(title)
   if (!table.rows.length) {
     layout.paragraph(table.empty, 'regular', 9, ink['text-2'])
@@ -247,10 +243,8 @@ function drawTable(layout: Layout, title: string, table: ReportTable, note?: str
     })
     layout.y += ROW
   })
-  if (note) {
-    layout.gap(4)
-    layout.paragraph(note, 'regular', 8, ink['text-3'])
-  }
+  if (notes.length) layout.gap(4)
+  for (const note of notes) layout.paragraph(note, 'regular', 8, ink['text-3'])
   layout.rule()
 }
 
@@ -347,15 +341,10 @@ export function renderJournalReport(data: JournalReportData): Uint8Array<ArrayBu
   drawHeader(layout, data)
   drawTable(layout, 'Medications', data.medications)
   drawWeight(layout, data)
-  drawTable(layout, 'Side effects', data.symptoms, data.symptomNote)
   drawTable(layout, 'HbA1c', data.a1c)
   drawTable(layout, 'Blood glucose', data.glucose)
+  drawTable(layout, 'Side effects', data.symptoms, data.symptomNotes)
   drawTable(layout, 'Dose log', data.doses)
-  layout.heading('About these numbers', 12)
-  for (const paragraph of [...ABOUT, ...data.sources.map((s) => `Source: ${s}`)]) {
-    layout.paragraph(paragraph, 'regular', 8.5, ink['text-2'])
-    layout.gap(3)
-  }
   drawFooters(layout)
   return buildPdf(layout.pages, 'Tidebook report')
 }

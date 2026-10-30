@@ -21,7 +21,7 @@ import { SITE_LABELS } from '@/components/journal/siteLabels'
 const journal = useJournalStore()
 const settings = useSettingsStore()
 
-const tab = ref<'doses' | 'weights' | 'symptoms' | 'glucose'>('doses')
+const tab = ref<'doses' | 'weights' | 'glucose' | 'symptoms'>('doses')
 const direction = ref<SortDirection>('desc')
 
 const doses = computed(() =>
@@ -108,8 +108,8 @@ function doseSubtitle(d: DoseRow): string {
       <v-tabs v-model="tab" color="primary" show-arrows>
         <v-tab value="doses">Doses ({{ journal.doses.length }})</v-tab>
         <v-tab value="weights">Weights ({{ journal.weights.length }})</v-tab>
-        <v-tab value="symptoms">Side effects ({{ journal.symptoms.length }})</v-tab>
         <v-tab value="glucose">Blood sugar ({{ journal.glucose.length }})</v-tab>
+        <v-tab value="symptoms">Side effects ({{ journal.symptoms.length }})</v-tab>
       </v-tabs>
       <v-card-text class="tb-stack">
         <SortToggle v-model="direction" label="Order" />

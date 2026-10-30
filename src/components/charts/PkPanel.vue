@@ -80,10 +80,7 @@ const shareInput = computed(() =>
           An estimate of medicine remaining in the body, based on a simple model from published
           data.
         </p>
-        <div v-if="profile?.pk" class="tb-stack tb-stack--tight">
-          <p class="text-body-small tb-muted">{{ profile.pk.notes }}</p>
-          <SourceList :sources="profile.pk.sources" />
-        </div>
+        <SourceList v-if="profile?.pk" :sources="profile.pk.sources" :note="profile.pk.notes" />
       </template>
       <v-alert v-else type="info" variant="tonal" density="comfortable">
         {{

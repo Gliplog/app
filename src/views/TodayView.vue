@@ -142,6 +142,29 @@ const daysSinceStart = computed(() =>
         @log-dose="logDose"
       />
 
+      <v-fade-transition v-if="current" mode="out-in">
+        <PkPanel
+          v-if="group"
+          :key="group.key"
+          :profile="profile"
+          :override="current.pkOverride"
+          :doses="group.doses"
+          :preview="null"
+          :now="now"
+          :title="profile?.name ?? current.name"
+          :caption="groupCaption"
+        />
+        <v-card v-else :key="`empty:${current.id}`">
+          <v-card-item>
+            <p class="tb-eyebrow">Estimated levels</p>
+            <v-card-title class="text-wrap">{{ profile?.name ?? current.name }}</v-card-title>
+          </v-card-item>
+          <v-card-text>
+            <p class="tb-muted">Log a dose of {{ current.name }} to see an estimate here.</p>
+          </v-card-text>
+        </v-card>
+      </v-fade-transition>
+
       <v-card v-if="latest || journal.medications.length">
         <v-card-item>
           <p class="tb-eyebrow">Weight</p>
@@ -190,52 +213,6 @@ const daysSinceStart = computed(() =>
         </v-card-text>
       </v-card>
 
-      <v-fade-transition v-if="current" mode="out-in">
-        <PkPanel
-          v-if="group"
-          :key="group.key"
-          :profile="profile"
-          :override="current.pkOverride"
-          :doses="group.doses"
-          :preview="null"
-          :now="now"
-          :title="profile?.name ?? current.name"
-          :caption="groupCaption"
-        />
-        <v-card v-else :key="`empty:${current.id}`">
-          <v-card-item>
-            <p class="tb-eyebrow">Estimated levels</p>
-            <v-card-title class="text-wrap">{{ profile?.name ?? current.name }}</v-card-title>
-          </v-card-item>
-          <v-card-text>
-            <p class="tb-muted">Log a dose of {{ current.name }} to see an estimate here.</p>
-          </v-card-text>
-        </v-card>
-      </v-fade-transition>
-
-      <v-card v-if="journal.medications.length">
-        <v-card-item>
-          <p class="tb-eyebrow">Side effects</p>
-          <v-card-title>Last {{ RECENT_DAYS }} days</v-card-title>
-        </v-card-item>
-        <v-card-text class="tb-stack">
-          <ul v-if="recentSymptoms.length" class="symptom-list" aria-label="Side effects this week">
-            <li v-for="s in recentSymptoms" :key="s.key" class="tb-badge tb-badge--info">
-              {{ s.name }} <span class="tb-num">× {{ s.count }}</span>
-            </li>
-          </ul>
-          <p v-else class="tb-muted">Nothing logged this week.</p>
-          <div class="tb-actions">
-            <v-btn variant="text" :to="{ name: 'progress', hash: '#side-effects' }"
-              >See summary</v-btn
-            >
-            <v-btn variant="tonal" :prepend-icon="mdiStethoscope" @click="symptomDialog = true">
-              Log side effect
-            </v-btn>
-          </div>
-        </v-card-text>
-      </v-card>
-
       <v-card v-if="journal.medications.length">
         <v-card-item>
           <p class="tb-eyebrow">Blood sugar</p>
@@ -271,6 +248,29 @@ const daysSinceStart = computed(() =>
           <div class="tb-actions">
             <v-btn variant="tonal" :prepend-icon="mdiWaterOutline" @click="glucoseDialog = true">
               Log blood sugar
+            </v-btn>
+          </div>
+        </v-card-text>
+      </v-card>
+
+      <v-card v-if="journal.medications.length">
+        <v-card-item>
+          <p class="tb-eyebrow">Side effects</p>
+          <v-card-title>Last {{ RECENT_DAYS }} days</v-card-title>
+        </v-card-item>
+        <v-card-text class="tb-stack">
+          <ul v-if="recentSymptoms.length" class="symptom-list" aria-label="Side effects this week">
+            <li v-for="s in recentSymptoms" :key="s.key" class="tb-badge tb-badge--info">
+              {{ s.name }} <span class="tb-num">× {{ s.count }}</span>
+            </li>
+          </ul>
+          <p v-else class="tb-muted">Nothing logged this week.</p>
+          <div class="tb-actions">
+            <v-btn variant="text" :to="{ name: 'progress', hash: '#side-effects' }"
+              >See summary</v-btn
+            >
+            <v-btn variant="tonal" :prepend-icon="mdiStethoscope" @click="symptomDialog = true">
+              Log side effect
             </v-btn>
           </div>
         </v-card-text>

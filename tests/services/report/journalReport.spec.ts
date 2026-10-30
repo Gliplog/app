@@ -121,7 +121,21 @@ describe('renderJournalReport', () => {
     ]) {
       expect(all).toContain(text)
     }
-    expect(all).toContain('Source: Prescribing label: WEGOVY \\(semaglutide\\)')
+    expect(all).toContain('Bracketed terms: WEGOVY \\(semaglutide\\)')
+  })
+
+  it('prints the sections in reading order, with no closing notes section', () => {
+    const all = readPdf(render()).streams.join('\n')
+    const order = [
+      '(Medications)',
+      '(Weight)',
+      '(HbA1c)',
+      '(Blood glucose)',
+      '(Side effects)',
+      '(Dose log)',
+    ].map((heading) => all.indexOf(heading))
+    expect(order).toEqual([...order].sort((a, b) => a - b))
+    expect(all).not.toContain('About these numbers')
   })
 
   it('repeats the dose-log header on continuation pages', () => {

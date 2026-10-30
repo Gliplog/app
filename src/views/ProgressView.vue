@@ -97,8 +97,6 @@ const basisNote = computed(() => {
       <TrendCard :now="now" />
     </div>
 
-    <CohortSection class="mt-6" />
-
     <section v-if="journal.medications.length" id="side-effects" class="mt-6">
       <h2 class="tb-display text-title-large mb-4">Side effects</h2>
       <div class="progress-grid">
@@ -121,6 +119,8 @@ const basisNote = computed(() => {
         />
       </div>
     </section>
+
+    <CohortSection class="mt-6" />
 
     <ExportReportDialog v-model="reportOpen" />
   </div>
