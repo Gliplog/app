@@ -110,3 +110,45 @@ export function fileDate(epochMs: number): string {
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
+
+/**
+ * Epoch ms of `hour`:`minute` on the local calendar day `dayOffset` days after the day of
+ * `epochMs`. Built from local date parts, so 9:00 stays 9:00 across a daylight-saving change.
+ */
+export function atLocalTime(epochMs: number, dayOffset: number, hour: number, minute: number) {
+  const d = new Date(epochMs)
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + dayOffset, hour, minute).getTime()
+}
+
+/** A Date for an epoch, for APIs that take one (native notification schedules). */
+export function toDate(epochMs: number): Date {
+  return new Date(epochMs)
+}
+
+/** UTC ISO for an epoch, such as a chosen file's last-modified time. */
+export function toIso(epochMs: number): string {
+  return new Date(epochMs).toISOString()
+}
+
+/** The local calendar date and wall-clock time of an instant, for calendar files and links. */
+export function localParts(epochMs: number): {
+  year: number
+  month: number
+  day: number
+  hour: number
+  minute: number
+} {
+  const d = new Date(epochMs)
+  return {
+    year: d.getFullYear(),
+    month: d.getMonth() + 1,
+    day: d.getDate(),
+    hour: d.getHours(),
+    minute: d.getMinutes(),
+  }
+}
+
+/** The device's IANA time zone ("Europe/London"), so a calendar repeats at local time. */
+export function deviceTimeZone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone
+}

@@ -28,6 +28,10 @@ Part of the `front-end` skill.
 | `share/ShareImageDialog.vue`                          | Preview and share a 4:5 image card; privacy switches go in its slot                     |
 | `share/ShareTrendDialog.vue`, `ShareLevelsDialog.vue` | Image cards for a trend (numbers off by default) and estimated levels                   |
 | `report/ExportReportDialog.vue`                       | Choose a period and export the journal PDF                                              |
+| `photos/PhotosCard.vue`                               | Progress photos: take or choose one, a paged grid newest first, Compare                 |
+| `photos/PhotoDialog.vue`                              | Save a new photo (pose, when, notes) or view, edit and delete one                       |
+| `photos/PhotoCompareDialog.vue`                       | Two photos side by side with dates and nearest weigh-ins (within three days)            |
+| `reminders/AddToCalendarDialog.vue`                   | A medication's schedule as a calendar file or a Google, Outlook or Microsoft 365 link   |
 | `charts/GlycemicComparison.vue`                       | Your HbA1c or fasting glucose change beside one trial's arms, with starting values      |
 | `charts/BodyChart.vue`                                | Weight or BMI over time with labelled dashed guides (goal, WHO bands) and a table view  |
 | `charts/TrialComparison.vue`                          | Your change beside one trial's endpoint arms as labelled bars, with source and caveats  |

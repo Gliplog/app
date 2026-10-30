@@ -3,6 +3,8 @@
  * and unused icons are tree-shaken out of the bundle.
  */
 export {
+  mdiCalendarPlus,
+  mdiCameraOutline,
   mdiCellphoneArrowDown,
   mdiChartLine,
   mdiCheckCircleOutline,
@@ -14,6 +16,7 @@ export {
   mdiDownload,
   mdiFilePdfBox,
   mdiHistory,
+  mdiImageOutline,
   mdiNeedle,
   mdiPlus,
   mdiRefresh,
@@ -22,6 +25,7 @@ export {
   mdiShieldLockOutline,
   mdiSortCalendarAscending,
   mdiSortCalendarDescending,
+  mdiCompare,
   mdiStethoscope,
   mdiTrayArrowUp,
   mdiWaterOutline,

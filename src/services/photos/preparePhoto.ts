@@ -1,0 +1,100 @@
+import { fitWithin, IMAGE_EDGE, THUMB_EDGE } from '@/domain/photos'
+
+export interface PreparedPhoto {
+  image: ArrayBuffer
+  thumb: ArrayBuffer
+  width: number
+  height: number
+}
+
+export class PhotoReadError extends Error {
+  constructor() {
+    super("Couldn't read that photo. Try a JPEG or PNG.")
+    this.name = 'PhotoReadError'
+  }
+}
+
+/** Decodes with the camera's orientation applied, so a portrait photo stays upright. */
+async function decode(file: Blob): Promise<ImageBitmap | HTMLImageElement> {
+  try {
+    return await createImageBitmap(file, { imageOrientation: 'from-image' })
+  } catch {
+    // Some WebViews decode only through an <img> (which also honours the orientation).
+    const url = URL.createObjectURL(file)
+    try {
+      const img = new Image()
+      img.src = url
+      await img.decode()
+      return img
+    } catch {
+      throw new PhotoReadError()
+    } finally {
+      URL.revokeObjectURL(url)
+    }
+  }
+}
+
+async function encode(
+  source: ImageBitmap | HTMLImageElement,
+  width: number,
+  height: number,
+  quality: number,
+): Promise<ArrayBuffer> {
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new PhotoReadError()
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(source, 0, 0, width, height)
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, 'image/jpeg', quality),
+  )
+  if (!blob) throw new PhotoReadError()
+  return blob.arrayBuffer()
+}
+
+/**
+ * Re-encode a chosen or captured photo as a stored image and a thumbnail. Redrawing through a
+ * canvas keeps only the pixels: EXIF metadata, including the GPS location phones embed, never
+ * reaches the database or a backup.
+ */
+export async function preparePhoto(file: Blob): Promise<PreparedPhoto> {
+  const source = await decode(file)
+  const naturalWidth = 'naturalWidth' in source ? source.naturalWidth : source.width
+  const naturalHeight = 'naturalHeight' in source ? source.naturalHeight : source.height
+  if (!(naturalWidth > 0) || !(naturalHeight > 0)) throw new PhotoReadError()
+  const size = fitWithin(naturalWidth, naturalHeight, IMAGE_EDGE)
+  const thumbSize = fitWithin(naturalWidth, naturalHeight, THUMB_EDGE)
+  try {
+    const [image, thumb] = await Promise.all([
+      encode(source, size.width, size.height, 0.85),
+      encode(source, thumbSize.width, thumbSize.height, 0.8),
+    ])
+    return { image, thumb, ...size }
+  } finally {
+    if ('close' in source) source.close()
+  }
+}
+
+/**
+ * The Android WebView saves a camera capture in the app's own Pictures folder before handing it
+ * over. Gliplog keeps its own stripped copy, so the original (with its location data) is
+ * deleted. Never throws: a leftover file is private to the app and removed on uninstall.
+ */
+export async function clearNativeCaptures(): Promise<void> {
+  if (!__NATIVE__) return
+  try {
+    const { Directory, Filesystem } = await import('@capacitor/filesystem')
+    const { files } = await Filesystem.readdir({ path: 'Pictures', directory: Directory.External })
+    await Promise.all(
+      files
+        .filter((f) => /^JPEG_.*\.jpg$/.test(f.name))
+        .map((f) =>
+          Filesystem.deleteFile({ path: `Pictures/${f.name}`, directory: Directory.External }),
+        ),
+    )
+  } catch {
+    // Nothing captured yet, so there is no folder.
+  }
+}

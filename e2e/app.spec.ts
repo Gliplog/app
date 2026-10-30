@@ -468,3 +468,138 @@ test('a tab tapped while the page is still coasting from a fling opens', async (
   await expect(page.locator('.v-bottom-navigation .v-ripple__container')).toHaveCount(0)
   await expect(page.locator('.v-bottom-navigation .v-btn--active')).toHaveText('Today')
 })
+
+test('saves progress photos, compares them, and carries them through a zip backup', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    delete (navigator as { canShare?: unknown }).canShare
+  })
+  await page.goto('./')
+  await acceptDisclaimer(page)
+  await logWeight(page, '100')
+  await page.getByRole('link', { name: 'Progress', exact: true }).first().click()
+
+  // A real image, so the canvas re-encode and the blob: previews run as on a phone.
+  const png = Buffer.from(
+    await page.evaluate(() => {
+      const canvas = document.createElement('canvas')
+      canvas.width = 300
+      canvas.height = 400
+      const ctx = canvas.getContext('2d')!
+      ctx.fillStyle = '#2d6567'
+      ctx.fillRect(0, 0, 300, 400)
+      return canvas.toDataURL('image/png').split(',')[1]!
+    }),
+    'base64',
+  )
+  const library = page.locator('input[type="file"][aria-label="Choose a photo"]')
+  const dialog = page.getByRole('dialog', { name: 'Progress photo' })
+  for (const name of ['one.png', 'two.png']) {
+    await library.setInputFiles({ name, mimeType: 'image/png', buffer: png })
+    const image = dialog.getByRole('img', { name: 'Your progress photo' })
+    await expect
+      .poll(() => image.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth))
+      .toBe(300)
+    await dialog.getByLabel('When').fill('2026-10-01T09:00')
+    await dialog.getByRole('button', { name: 'Save' }).click()
+    await expect(page.getByText('Photo saved')).toBeVisible()
+    await expect(dialog).toBeHidden()
+  }
+  await expect(page.getByRole('button', { name: /^Front photo from / })).toHaveCount(2)
+
+  await page.getByRole('button', { name: 'Compare' }).click()
+  const compare = page.getByRole('dialog', { name: 'Compare' })
+  for (const img of await compare.getByRole('img', { name: /^Progress photo from / }).all()) {
+    await expect
+      .poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth))
+      .toBe(300)
+  }
+  await compare.getByRole('button', { name: 'Close' }).click()
+
+  await page.getByRole('link', { name: 'Settings', exact: true }).first().click()
+  const download = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Save a backup' }).click()
+  const backup = await download
+  expect(backup.suggestedFilename()).toMatch(/^gliplog-backup-\d{4}-\d{2}-\d{2}\.zip$/)
+
+  await page.getByRole('button', { name: 'Erase everything' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Erase everything' }).click()
+  await expect(page.getByText('Everything erased')).toBeVisible()
+
+  await page.getByLabel('Backup file').setInputFiles((await backup.path())!)
+  await page.getByRole('dialog').getByRole('button', { name: 'Restore backup' }).click()
+  await expect(page.getByText('Backup restored')).toBeVisible()
+  await page.getByRole('link', { name: 'Progress', exact: true }).first().click()
+  await expect(page.getByRole('button', { name: /^Front photo from / })).toHaveCount(2)
+})
+
+test('a reminder link opens Log dose for its medication, once', async ({ page }) => {
+  await page.goto('./')
+  await acceptDisclaimer(page)
+  await addMedication(page, 'Wegovy')
+  const id = await page.evaluate(
+    () =>
+      new Promise<string>((resolve, reject) => {
+        const open = indexedDB.open('gliplog')
+        open.onerror = () => reject(open.error)
+        open.onsuccess = () => {
+          const read = open.result.transaction('medications').objectStore('medications').getAll()
+          read.onsuccess = () => resolve((read.result as { id: string }[])[0]!.id)
+        }
+      }),
+  )
+
+  // The native app routes a tapped notification here; the web route is the same.
+  await page.goto(`./#/?log=${id}`)
+  await expect(page.getByRole('dialog', { name: 'Wegovy' })).toBeVisible()
+  await expect(page).not.toHaveURL(/log=/)
+  await page.keyboard.press('Escape')
+  await page.reload()
+  await expect(page.getByRole('dialog', { name: 'Wegovy' })).toBeHidden()
+
+  await page.goto('./#/?log=not-a-medication')
+  await expect(page).not.toHaveURL(/log=/)
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+})
+
+test('adds the dose schedule to a calendar as a file or a link', async ({ page }) => {
+  await page.addInitScript(() => {
+    delete (navigator as { canShare?: unknown }).canShare
+  })
+  await page.goto('./')
+  await acceptDisclaimer(page)
+  await addMedication(page, 'Wegovy')
+  await page.getByRole('button', { name: 'Log dose' }).click()
+  const dose = page.getByRole('dialog', { name: 'Wegovy' })
+  await choose(dose, 'Dose', '0.25 mg')
+  await dose.getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByText('0.25 mg logged')).toBeVisible()
+
+  await page.getByRole('link', { name: 'Settings', exact: true }).first().click()
+  await page.getByRole('button', { name: 'Add Wegovy to calendar' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Add to calendar' })
+  await dialog.getByLabel('Time of day').fill('08:30')
+  await expect(dialog.getByText(/repeats every week\.$/)).toBeVisible()
+
+  // Links are only checked, never followed: the test must make no third-party request.
+  const google = new URL(
+    (await dialog.getByRole('link', { name: 'Google Calendar' }).getAttribute('href'))!,
+  )
+  expect(google.host).toBe('calendar.google.com')
+  expect(google.searchParams.get('text')).toBe('Dose due')
+  expect(google.searchParams.get('recur')).toBe('RRULE:FREQ=WEEKLY;INTERVAL=1')
+  expect(google.searchParams.get('dates')).toMatch(/^\d{8}T083000\/\d{8}T084500$/)
+  const outlook = await dialog.getByRole('link', { name: 'Outlook.com' }).getAttribute('href')
+  expect(outlook).toMatch(/^https:\/\/outlook\.live\.com\/calendar\/0\/deeplink\/compose\?/)
+
+  await dialog.getByLabel('Show the medication name').check()
+  const download = page.waitForEvent('download')
+  await dialog.getByRole('button', { name: 'Download calendar file' }).click()
+  const file = await download
+  expect(file.suggestedFilename()).toMatch(/^gliplog-dose-\d{4}-\d{2}-\d{2}\.ics$/)
+  const ics = await (await import('node:fs/promises')).readFile((await file.path())!, 'utf8')
+  expect(ics).toContain('SUMMARY:Wegovy dose due\r\n')
+  expect(ics).toMatch(/\r\nDTSTART:\d{8}T083000\r\n/)
+  expect(ics).toContain('RRULE:FREQ=WEEKLY;INTERVAL=1')
+})

@@ -1,7 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createDatabase, type GliplogDb } from '@/db/database'
 import { createRepository, type NewMedication } from '@/db/repository'
-import { exportBackup, parseBackup, restoreBackup, BackupFormatError } from '@/db/backup'
+import { strToU8, zipSync } from 'fflate'
+import {
+  exportBackup,
+  exportBackupArchive,
+  parseBackup,
+  readBackupFile,
+  restoreBackup,
+  BackupFormatError,
+} from '@/db/backup'
 
 const fixedClock = () => new Date('2026-10-25T12:00:00.000Z')
 
@@ -234,4 +242,79 @@ describe('backup', () => {
     }
     expect(() => parseBackup(JSON.stringify(zeroInterval))).toThrow(/Medication 1/)
   })
+
+  const bytes = (...values: number[]) => new Uint8Array(values).buffer
+
+  async function seedPhoto() {
+    return createRepository(db, fixedClock).addPhoto(
+      { takenAt: '2026-10-01T07:05:00.000Z', pose: 'front', notes: '', width: 1200, height: 1600 },
+      bytes(1, 2, 3),
+      bytes(4, 5),
+    )
+  }
+
+  it('round-trips photos through a zip backup', async () => {
+    await seed()
+    const photo = await seedPhoto()
+    const { bytes: zip } = await exportBackupArchive(db, fixedClock)
+    const { backup, photoFiles } = readBackupFile(zip)
+    expect(backup.version).toBe(3)
+    expect(backup.photos).toHaveLength(1)
+    expect(backup.doses).toHaveLength(1)
+
+    const other = createDatabase(`test-${++counter}`)
+    await other.open()
+    await restoreBackup(other, backup, photoFiles)
+    const restored = createRepository(other)
+    expect((await restored.listPhotos())[0]!.pose).toBe('front')
+    expect(new Uint8Array((await restored.getPhotoImage(photo.id))!)).toEqual(
+      new Uint8Array([1, 2, 3]),
+    )
+    expect(new Uint8Array((await restored.listPhotoThumbs())[0]!.bytes)).toEqual(
+      new Uint8Array([4, 5]),
+    )
+    await other.delete()
+  })
+
+  it('still reads a .json backup, which carries no photos', async () => {
+    await seed()
+    await seedPhoto()
+    const json = JSON.stringify(await exportBackup(db, fixedClock))
+    const { backup, photoFiles } = readBackupFile(strToU8(json))
+    expect(backup.photos).toEqual([])
+    expect(photoFiles).toEqual([])
+    await restoreBackup(db, backup)
+    expect(await createRepository(db).listPhotos()).toEqual([])
+  })
+
+  it('refuses a .json that lists photos, and a zip with missing or unexpected files', async () => {
+    await seed()
+    const photo = await seedPhoto()
+    const withPhotos = JSON.stringify(await exportBackup(db, fixedClock, true))
+    expect(() => readBackupFile(strToU8(withPhotos))).toThrow(/Restore the .zip/)
+
+    const data = strToU8(withPhotos)
+    const missing = zipSync({ 'gliplog-backup.json': data, [`photos/${photo.id}.jpg`]: bytes1() })
+    expect(() => readBackupFile(missing)).toThrow(/Photo 1 is missing/)
+    const stray = zipSync({ 'gliplog-backup.json': data, 'notes.txt': strToU8('hi') })
+    expect(() => readBackupFile(stray)).toThrow(/not a Gliplog backup/)
+    const unlisted = zipSync({
+      'gliplog-backup.json': data,
+      [`photos/${photo.id}.jpg`]: bytes1(),
+      [`thumbs/${photo.id}.jpg`]: bytes1(),
+      'photos/other.jpg': bytes1(),
+    })
+    expect(() => readBackupFile(unlisted)).toThrow(/does not list/)
+  })
+
+  it('deletes a photo with its image and thumbnail', async () => {
+    const photo = await seedPhoto()
+    const repo = createRepository(db)
+    await repo.deletePhoto(photo.id)
+    expect(await repo.listPhotos()).toEqual([])
+    expect(await repo.getPhotoImage(photo.id)).toBeUndefined()
+    expect(await repo.listPhotoThumbs()).toEqual([])
+  })
 })
+
+const bytes1 = () => new Uint8Array([1])

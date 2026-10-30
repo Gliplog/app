@@ -4,8 +4,10 @@ import { useDisplay, useTheme } from 'vuetify'
 import { useRoute, useRouter } from 'vue-router'
 import { useSettingsStore } from '@/stores/settings'
 import { useJournalStore } from '@/stores/journal'
+import { usePhotosStore } from '@/stores/photos'
 import { useInstallPrompt } from '@/composables/useInstallPrompt'
 import { useHideOnScroll } from '@/composables/useHideOnScroll'
+import { useReminderSync } from '@/composables/useReminderSync'
 import AppLogo from '@/components/common/AppLogo.vue'
 import AppSnackbar from '@/components/common/AppSnackbar.vue'
 import AppConfirm from '@/components/common/AppConfirm.vue'
@@ -21,11 +23,13 @@ import {
 
 const settings = useSettingsStore()
 const journal = useJournalStore()
+const photos = usePhotosStore()
 const theme = useTheme()
 const display = useDisplay()
 const route = useRoute()
 const router = useRouter()
 const install = useInstallPrompt()
+useReminderSync()
 
 const NAV = [
   { name: 'today', title: 'Today', icon: mdiWaves },
@@ -100,7 +104,7 @@ const showInstallBanner = computed(
 )
 
 onMounted(async () => {
-  await Promise.all([settings.load(), journal.load()])
+  await Promise.all([settings.load(), journal.load(), photos.load()])
   theme.change(settings.theme)
 })
 </script>

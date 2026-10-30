@@ -18,6 +18,10 @@ const config: CapacitorConfig = {
   android: {
     allowMixedContent: false,
   },
+  plugins: {
+    // A white silhouette of the mark: Android draws status bar icons from the alpha channel only.
+    LocalNotifications: { smallIcon: 'ic_stat_gliplog', iconColor: '#2d6567' },
+  },
 }
 
 export default config

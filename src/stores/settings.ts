@@ -4,6 +4,12 @@ import { repository } from '@/db'
 import { isBirthMonth, type BirthMonth } from '@/domain/body'
 import { A1C_UNITS, GLUCOSE_UNITS, type A1cUnit, type GlucoseUnit } from '@/domain/glucose'
 import { HEIGHT_UNITS, WEIGHT_UNITS, type HeightUnit, type WeightUnit } from '@/domain/units'
+import {
+  DEFAULT_REMINDER,
+  sanitizeReminderSettings,
+  type MedicationReminder,
+  type ReminderSettings,
+} from '@/domain/reminders'
 
 export type ThemePreference = 'system' | 'light' | 'dark'
 
@@ -47,6 +53,7 @@ const SETTING_KEYS = {
   lastBackupAt: 'lastBackupAt',
   disclaimerAcceptedAt: 'disclaimerAcceptedAt',
   installHintDismissed: 'installHintDismissed',
+  reminders: 'reminders',
 } as const
 
 const positiveOrNull = (v: unknown) =>
@@ -77,9 +84,10 @@ export const useSettingsStore = defineStore('settings', () => {
   const lastBackupAt = ref<string | null>(null)
   const disclaimerAcceptedAt = ref<string | null>(null)
   const installHintDismissed = ref(false)
+  const reminders = ref<ReminderSettings>(sanitizeReminderSettings(null))
 
   async function load() {
-    const [themePref, wUnit, hUnit, gUnit, aUnit, stored, backup, disclaimer, hint] =
+    const [themePref, wUnit, hUnit, gUnit, aUnit, stored, backup, disclaimer, hint, remind] =
       await Promise.all([
         repository.getSetting<ThemePreference>(SETTING_KEYS.theme),
         repository.getSetting<WeightUnit>(SETTING_KEYS.weightUnit),
@@ -90,6 +98,7 @@ export const useSettingsStore = defineStore('settings', () => {
         repository.getSetting<string>(SETTING_KEYS.lastBackupAt),
         repository.getSetting<string>(SETTING_KEYS.disclaimerAcceptedAt),
         repository.getSetting<boolean>(SETTING_KEYS.installHintDismissed),
+        repository.getSetting<unknown>(SETTING_KEYS.reminders),
       ])
     theme.value = themePref === 'light' || themePref === 'dark' ? themePref : 'system'
     weightUnit.value = wUnit && WEIGHT_UNITS.includes(wUnit) ? wUnit : 'kg'
@@ -100,6 +109,7 @@ export const useSettingsStore = defineStore('settings', () => {
     lastBackupAt.value = backup ?? null
     disclaimerAcceptedAt.value = disclaimer ?? null
     installHintDismissed.value = hint ?? false
+    reminders.value = sanitizeReminderSettings(remind)
     loaded.value = true
   }
 
@@ -154,6 +164,33 @@ export const useSettingsStore = defineStore('settings', () => {
     await repository.setSetting(SETTING_KEYS.installHintDismissed, true)
   }
 
+  /** One medication's reminder choices, or the defaults (off, 9:00) if never set. */
+  function reminderFor(medicationId: string): MedicationReminder {
+    return reminders.value.medications[medicationId] ?? { ...DEFAULT_REMINDER }
+  }
+
+  async function saveReminders(next: ReminderSettings) {
+    // Sanitising also copies out of the reactive proxy, which IndexedDB cannot clone.
+    const clean = sanitizeReminderSettings(next)
+    reminders.value = clean
+    await repository.setSetting(SETTING_KEYS.reminders, clean)
+  }
+
+  async function setReminder(medicationId: string, changes: Partial<MedicationReminder>) {
+    const current = reminders.value
+    await saveReminders({
+      ...current,
+      medications: {
+        ...current.medications,
+        [medicationId]: { ...reminderFor(medicationId), ...changes },
+      },
+    })
+  }
+
+  async function setReminderNames(showNames: boolean) {
+    await saveReminders({ ...reminders.value, showNames })
+  }
+
   return {
     loaded,
     theme,
@@ -165,6 +202,7 @@ export const useSettingsStore = defineStore('settings', () => {
     lastBackupAt,
     disclaimerAcceptedAt,
     installHintDismissed,
+    reminders,
     load,
     setTheme,
     setWeightUnit,
@@ -175,5 +213,8 @@ export const useSettingsStore = defineStore('settings', () => {
     markBackedUp,
     acceptDisclaimer,
     dismissInstallHint,
+    reminderFor,
+    setReminder,
+    setReminderNames,
   }
 })

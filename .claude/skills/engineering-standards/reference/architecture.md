@@ -10,17 +10,19 @@ src/
                  progress (baseline, change series, trial comparison, cohort overlay), schedule
                  (next dose, syringe units), pk, levels (pooling and the curve model), glucose
                  (HbA1c and glucose units, glycemic comparison), symptoms (side-effect list and
-                 summary), listing, catalog types
+                 summary), reminders (when to remind, notification wording), photos (sizing,
+                 nearest weigh-in, comparison pair), listing, catalog types
   data/          medications.json, its JSON Schema, typed loader (index.ts)
   db/            Dexie database (schema history), repository, backup export/restore
   stores/        Pinia: journal (medications, doses, weights, side effects, blood sugar, the
-                 focused medication), settings (units, theme, profile),
-                 notify, confirm
+                 focused medication), settings (units, theme, profile, reminders), photos
+                 (details and thumbnail URLs), notify, confirm
   composables/   useBodyMetrics, useChartColors, useInstallPrompt, useStoragePersistence, useNow,
-                 usePaging, useHideOnScroll
+                 usePaging, useHideOnScroll, useReminderSync
   services/      time.ts (the only clock and date formatter), fileTransfer.ts (share/download),
-                 pdf/ (dependency-free PDF writer), report/ (journal report data and layout)
-  components/    journal/ (dialogs), charts/, common/
+                 pdf/ (dependency-free PDF writer), report/ (journal report data and layout),
+                 photos/ (canvas re-encode), reminders/ (native local notifications)
+  components/    journal/ (dialogs), charts/, common/, photos/
   views/         one per route: Today, Progress, History, Settings
   plugins/       vuetify.ts (themes, defaults), icons.ts (inline SVG icons), fonts.ts
   styles/        tokens.css (design tokens), theme.css (global and Vuetify overrides)
@@ -43,8 +45,13 @@ that must survive a reload goes into the database.
 ## Storage
 
 - IndexedDB via Dexie, database `gliplog`. Tables: `medications`, `doses`, `weights`,
-  `symptoms` and `glucose` (both from version 2), `settings` (key/value; the profile is the
-  `profile` key, sanitised on load).
+  `symptoms` and `glucose` (both from version 2), `photos`, `photoImages` and `photoThumbs`
+  (version 3), `settings` (key/value; the profile is the `profile` key and reminder choices
+  the `reminders` key, both sanitised on load).
+- Photo bytes are JPEG ArrayBuffers, not Blobs (older Safari and fake-indexeddb cannot store
+  Blobs), with thumbnails in their own table so the grid never reads full images. Every photo
+  is redrawn through a canvas before storage, which drops EXIF and GPS. On Android the
+  WebView's camera capture file is deleted once stored. Photos never go to the gallery.
 - HbA1c is stored in NGSP percent and glucose in mg/dL, unrounded, with the unit typed;
   Settings chooses the display units, as for weight.
 - Ids are `crypto.randomUUID()`; timestamps are UTC ISO strings. A birth month is a `YYYY-MM`
@@ -54,9 +61,31 @@ that must survive a reload goes into the database.
   still evict data; a backup file (Settings, Save a backup) is the only guarantee. The app
   shares the `gliplog.com` origin with the marketing site, which must never register a
   service worker or run scripts.
-- Backups are versioned JSON (`format: "gliplog-backup"`, version 2). `parseBackup` validates
-  untrusted input fully before `restoreBackup` replaces data atomically; a version 1 file
-  restores with no side effects or blood sugar.
+- Backups are versioned JSON (`format: "gliplog-backup"`, version 3). With photos the JSON
+  goes in a zip (fflate) beside `photos/<id>.jpg` and `thumbs/<id>.jpg`; without, it is a
+  plain `.json`. `readBackupFile` takes either, refuses unexpected or oversized zip entries
+  before decompressing, and validates everything before `restoreBackup` replaces data
+  atomically. Older files restore with the newer tables empty, so restoring a `.json` removes
+  photos (the confirmation says so). The Android share path writes binary files in 3 MB
+  appended slices so a large zip never crosses the bridge as one string.
+
+## Reminders
+
+Dose reminders exist only in the native app: a web app can notify on time only through a push
+server, which Gliplog will not run. `domain/reminders.ts` plans them from the last dose and
+interval at the user's local time of day (a weekly medicine: the due day, optionally the day
+before, and the day after; a daily one: the next seven days). `useReminderSync` (mounted in
+App) replaces every pending notification whenever the journal or the settings change and when
+the app returns to the foreground. Alarms are inexact and `SCHEDULE_EXACT_ALARM` is removed
+from the manifest. Text is generic unless the user turns on names. A tap routes to
+`#/?log=<medication id>`, which Today turns into Log dose for that medication.
+
+Both builds can also add a medication's schedule to a calendar (`domain/calendar.ts`,
+`components/reminders/AddToCalendarDialog.vue`): an `.ics` file made on the device (floating
+local time, a repeat rule and an alert), or links that open Google Calendar (repeating, local
+time with `ctz`) or Outlook on the web (one event in UTC; its link has no repeat parameter).
+The links send the event's title and times to that service only when the user taps one, so the
+title is generic unless the user names the medicine.
 
 ## Progress and trials
 

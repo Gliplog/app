@@ -2,6 +2,8 @@ import type {
   DoseRow,
   GlucoseRow,
   MedicationRow,
+  PhotoBytesRow,
+  PhotoRow,
   SymptomRow,
   GliplogDb,
   WeightRow,
@@ -14,6 +16,8 @@ export type NewWeight = Omit<WeightRow, 'id' | 'createdAt'>
 export type NewSymptom = Omit<SymptomRow, 'id' | 'createdAt'>
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never
 export type NewGlucose = DistributiveOmit<GlucoseRow, 'id' | 'createdAt'>
+export type NewPhoto = Omit<PhotoRow, 'id' | 'createdAt'>
+export type PhotoChanges = Partial<Pick<PhotoRow, 'takenAt' | 'pose' | 'notes'>>
 
 /**
  * All reads and writes of user data. Views and stores call this, never Dexie tables directly,
@@ -121,6 +125,41 @@ export function createRepository(db: GliplogDb, clock: Clock = systemClock) {
 
     async deleteGlucose(id: string): Promise<void> {
       await db.glucose.delete(id)
+    },
+
+    async listPhotos(): Promise<PhotoRow[]> {
+      return db.photos.orderBy('takenAt').reverse().toArray()
+    },
+
+    async listPhotoThumbs(): Promise<PhotoBytesRow[]> {
+      return db.photoThumbs.toArray()
+    },
+
+    async getPhotoImage(id: string): Promise<ArrayBuffer | undefined> {
+      return (await db.photoImages.get(id))?.bytes
+    },
+
+    /** Stores a photo's details, image and thumbnail together, or none of them. */
+    async addPhoto(input: NewPhoto, image: ArrayBuffer, thumb: ArrayBuffer): Promise<PhotoRow> {
+      const row: PhotoRow = { ...input, id: crypto.randomUUID(), createdAt: nowIso(clock) }
+      await db.transaction('rw', db.photos, db.photoImages, db.photoThumbs, async () => {
+        await db.photos.add(row)
+        await db.photoImages.add({ id: row.id, bytes: image })
+        await db.photoThumbs.add({ id: row.id, bytes: thumb })
+      })
+      return row
+    },
+
+    async updatePhoto(id: string, changes: PhotoChanges): Promise<void> {
+      await db.photos.update(id, changes)
+    },
+
+    async deletePhoto(id: string): Promise<void> {
+      await db.transaction('rw', db.photos, db.photoImages, db.photoThumbs, async () => {
+        await db.photos.delete(id)
+        await db.photoImages.delete(id)
+        await db.photoThumbs.delete(id)
+      })
     },
 
     async getSetting<T>(key: string): Promise<T | undefined> {

@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { A1cUnit, GlucoseContext, GlucoseUnit } from '@/domain/glucose'
+import type { PhotoPose } from '@/domain/photos'
 import type { PkParameters } from '@/domain/pk'
 import type { Severity, Symptom } from '@/domain/symptoms'
 import type { WeightUnit } from '@/domain/units'
@@ -82,6 +83,28 @@ export type GlucoseRow = {
   | { kind: 'glucose'; enteredUnit: GlucoseUnit; context: GlucoseContext }
 )
 
+/** A progress photo's details. Its pixels live in `photoImages` and `photoThumbs`, by id. */
+export interface PhotoRow {
+  id: string
+  takenAt: string
+  pose: PhotoPose
+  notes: string
+  /** Pixel size of the stored image, for laying out before it loads. */
+  width: number
+  height: number
+  createdAt: string
+}
+
+/**
+ * A photo's JPEG bytes. Stored as an ArrayBuffer, not a Blob: older Safari and some IndexedDB
+ * implementations cannot store Blobs. Thumbnails sit in their own table so a grid of them never
+ * reads the full images.
+ */
+export interface PhotoBytesRow {
+  id: string
+  bytes: ArrayBuffer
+}
+
 export interface SettingRow {
   key: string
   value: unknown
@@ -93,6 +116,9 @@ export type GliplogDb = Dexie & {
   weights: EntityTable<WeightRow, 'id'>
   symptoms: EntityTable<SymptomRow, 'id'>
   glucose: EntityTable<GlucoseRow, 'id'>
+  photos: EntityTable<PhotoRow, 'id'>
+  photoImages: EntityTable<PhotoBytesRow, 'id'>
+  photoThumbs: EntityTable<PhotoBytesRow, 'id'>
   settings: EntityTable<SettingRow, 'key'>
 }
 
@@ -115,6 +141,12 @@ export function createDatabase(name = DB_NAME): GliplogDb {
   db.version(2).stores({
     symptoms: 'id, occurredAt',
     glucose: 'id, kind, measuredAt',
+  })
+  // Progress photos: new tables only, so existing rows need no upgrade.
+  db.version(3).stores({
+    photos: 'id, takenAt',
+    photoImages: 'id',
+    photoThumbs: 'id',
   })
   return db
 }

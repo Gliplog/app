@@ -12,6 +12,7 @@ import CohortSection from '@/components/charts/CohortSection.vue'
 import PkPanel from '@/components/charts/PkPanel.vue'
 import SymptomSummaryCard from '@/components/journal/SymptomSummaryCard.vue'
 import ExportReportDialog from '@/components/report/ExportReportDialog.vue'
+import PhotosCard from '@/components/photos/PhotosCard.vue'
 
 const journal = useJournalStore()
 const settings = useSettingsStore()
@@ -96,6 +97,13 @@ const basisNote = computed(() => {
 
       <TrendCard :now="now" />
     </div>
+
+    <section id="photos" class="mt-6">
+      <h2 class="gl-display text-title-large mb-4">Photos</h2>
+      <div class="progress-grid">
+        <PhotosCard />
+      </div>
+    </section>
 
     <section v-if="journal.medications.length" id="side-effects" class="mt-6">
       <h2 class="gl-display text-title-large mb-4">Side effects</h2>

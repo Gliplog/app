@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useTheme } from 'vuetify'
 import { db, repository } from '@/db'
 import {
   backupFileName,
   BackupFormatError,
   exportBackup,
-  parseBackup,
+  exportBackupArchive,
+  readBackupFile,
   restoreBackup,
 } from '@/db/backup'
 import { ADULT_AGE, ageOn } from '@/domain/body'
@@ -29,20 +30,27 @@ import {
   type ThemePreference,
 } from '@/stores/settings'
 import { useJournalStore } from '@/stores/journal'
+import { usePhotosStore } from '@/stores/photos'
 import { useNotifyStore } from '@/stores/notify'
 import { useConfirmStore } from '@/stores/confirm'
 import { useStoragePersistence } from '@/composables/useStoragePersistence'
 import { useInstallPrompt } from '@/composables/useInstallPrompt'
+import { remindersSupported } from '@/composables/useReminderSync'
+import AddToCalendarDialog from '@/components/reminders/AddToCalendarDialog.vue'
+import { fromTimeValue, planReminders, toTimeValue } from '@/domain/reminders'
+import type { MedicationRow } from '@/db/database'
 import { saveFile } from '@/services/fileTransfer'
 import {
   calendarMonth,
   daysBetween,
   formatBirthMonth,
   formatDateTime,
+  atLocalTime,
   monthNames,
   systemClock,
 } from '@/services/time'
 import {
+  mdiCalendarPlus,
   mdiCellphoneArrowDown,
   mdiCheckCircleOutline,
   mdiCloudOffOutline,
@@ -54,14 +62,16 @@ import {
 
 const settings = useSettingsStore()
 const journal = useJournalStore()
+const photos = usePhotosStore()
 const notify = useNotifyStore()
 const confirm = useConfirmStore()
 const theme = useTheme()
 const storage = useStoragePersistence()
 const install = useInstallPrompt()
-// Android file providers often label a .json backup as a generic type, which would grey it out
-// in the native picker; parseBackup rejects anything that is not a backup.
-const backupAccept = __NATIVE__ ? undefined : 'application/json,.json'
+// Android file providers often label a backup as a generic type, which would grey it out in
+// the native picker; readBackupFile rejects anything that is not a backup.
+const backupAccept = __NATIVE__ ? undefined : 'application/json,.json,application/zip,.zip'
+const includePhotos = ref(true)
 const fileInput = ref<HTMLInputElement | null>(null)
 const busy = ref(false)
 
@@ -204,7 +214,9 @@ async function saveProfile() {
 const backupAge = computed(() =>
   settings.lastBackupAt ? daysBetween(settings.lastBackupAt, systemClock()) : null,
 )
-const hasData = computed(() => journal.doses.length > 0 || journal.weights.length > 0)
+const hasData = computed(
+  () => journal.doses.length > 0 || journal.weights.length > 0 || photos.photos.length > 0,
+)
 const backupStale = computed(
   () => hasData.value && (backupAge.value === null || backupAge.value > 14),
 )
@@ -212,22 +224,35 @@ const backupStale = computed(
 async function exportData() {
   busy.value = true
   try {
-    const backup = await exportBackup(db)
-    const result = await saveFile(
-      backupFileName(backup.exportedAt),
-      JSON.stringify(backup, null, 2),
-    )
+    let result: Awaited<ReturnType<typeof saveFile>>
+    let backup
+    if (photos.photos.length && includePhotos.value) {
+      const archive = await exportBackupArchive(db)
+      backup = archive.backup
+      result = await saveFile(
+        backupFileName(backup.exportedAt, true),
+        new Blob([archive.bytes as BlobPart], { type: 'application/zip' }),
+      )
+    } else {
+      backup = await exportBackup(db)
+      result = await saveFile(backupFileName(backup.exportedAt), JSON.stringify(backup, null, 2))
+    }
     if (result !== 'cancelled') {
       await settings.markBackedUp(backup.exportedAt)
       notify.show('Backup saved', 'success')
     }
+  } catch {
+    notify.show("Couldn't save the backup. Your device may be out of space.", 'error')
   } finally {
     busy.value = false
   }
 }
 
-const describe = (doses: number, weights: number) =>
-  `${doses} dose${doses === 1 ? '' : 's'} and ${weights} weigh-in${weights === 1 ? '' : 's'}`
+const plural = (n: number, noun: string) => `${n} ${noun}${n === 1 ? '' : 's'}`
+const describe = (doses: number, weights: number, photoCount = 0) =>
+  photoCount
+    ? `${plural(doses, 'dose')}, ${plural(weights, 'weigh-in')} and ${plural(photoCount, 'photo')}`
+    : `${plural(doses, 'dose')} and ${plural(weights, 'weigh-in')}`
 
 async function importData(event: Event) {
   const input = event.target as HTMLInputElement
@@ -235,16 +260,19 @@ async function importData(event: Event) {
   input.value = ''
   if (!file) return
   try {
-    const backup = parseBackup(await file.text())
+    const { backup, photoFiles } = readBackupFile(new Uint8Array(await file.arrayBuffer()))
+    const mine = describe(journal.doses.length, journal.weights.length, photos.photos.length)
+    const theirs = describe(backup.doses.length, backup.weights.length, backup.photos.length)
+    const losesPhotos = photos.photos.length > 0 && backup.photos.length === 0
     const ok = await confirm.ask({
       title: 'Replace everything on this device?',
-      text: `Your ${describe(journal.doses.length, journal.weights.length)} will be replaced with ${describe(backup.doses.length, backup.weights.length)} from the backup.`,
+      text: `Your ${mine} will be replaced with ${theirs} from the backup.${losesPhotos ? ' This backup has no photos, so your photos will be deleted.' : ''}`,
       confirmText: 'Restore backup',
       destructive: true,
     })
     if (!ok) return
-    await restoreBackup(db, backup)
-    await Promise.all([journal.load(), settings.load()])
+    await restoreBackup(db, backup, photoFiles)
+    await Promise.all([journal.load(), settings.load(), photos.load()])
     theme.change(settings.theme)
     notify.show('Backup restored', 'success')
   } catch (e) {
@@ -255,15 +283,87 @@ async function importData(event: Event) {
 async function eraseEverything() {
   const ok = await confirm.ask({
     title: 'Erase everything?',
-    text: `This deletes your profile, medications, ${describe(journal.doses.length, journal.weights.length)} from this device. Save a backup first if you might want them.`,
+    text: `This deletes your profile, medications, ${describe(journal.doses.length, journal.weights.length, photos.photos.length)} from this device. Save a backup first if you might want them.`,
     confirmText: 'Erase everything',
     destructive: true,
   })
   if (!ok) return
   await repository.eraseAll()
-  await Promise.all([journal.load(), settings.load()])
+  await Promise.all([journal.load(), settings.load(), photos.load()])
   theme.change(settings.theme)
   notify.show('Everything erased', 'success')
+}
+
+/*
+ * Reminders switched on can still be silenced: after a restore onto a new phone, or when
+ * notifications are turned off in Android settings. Say so rather than fail quietly.
+ */
+const notificationsBlocked = ref(false)
+const anyReminderOn = computed(() =>
+  journal.activeMedications.some((m) => settings.reminderFor(m.id).enabled),
+)
+
+async function checkNotifications() {
+  if (!__NATIVE__ || !anyReminderOn.value) {
+    notificationsBlocked.value = false
+    return
+  }
+  const { notificationsAllowed } = await import('@/services/reminders/nativeReminders')
+  notificationsBlocked.value = !(await notificationsAllowed())
+}
+
+onMounted(checkNotifications)
+watch(anyReminderOn, checkNotifications)
+
+async function allowNotifications() {
+  if (!__NATIVE__) return
+  const { requestNotificationPermission } = await import('@/services/reminders/nativeReminders')
+  notificationsBlocked.value = !(await requestNotificationPermission())
+  if (notificationsBlocked.value)
+    notify.show('Notifications are off for Gliplog. Turn them on in Android settings.', 'error')
+}
+
+const calendarOpen = ref(false)
+const calendarFor = ref<MedicationRow | null>(null)
+
+function openCalendar(med: MedicationRow) {
+  calendarFor.value = med
+  calendarOpen.value = true
+}
+
+/** Turning a reminder on asks Android for notification permission first. */
+async function setReminderEnabled(med: MedicationRow, enabled: boolean | null) {
+  if (enabled && __NATIVE__) {
+    const { requestNotificationPermission } = await import('@/services/reminders/nativeReminders')
+    if (!(await requestNotificationPermission())) {
+      notify.show('Notifications are off for Gliplog. Turn them on in Android settings.', 'error')
+      return
+    }
+    notificationsBlocked.value = false
+  }
+  await settings.setReminder(med.id, { enabled: !!enabled })
+}
+
+function setReminderTime(med: MedicationRow, value: string) {
+  const time = fromTimeValue(value)
+  if (time) void settings.setReminder(med.id, time)
+}
+
+/** "Next reminder …", or why there is none yet. */
+function nextReminderText(med: MedicationRow): string {
+  const dueAt = journal.nextDueOf(med)
+  if (dueAt === null) return 'Reminders start after you log a first dose.'
+  const [next] = planReminders({
+    medicationId: med.id,
+    dueAt,
+    intervalDays: med.intervalDays,
+    reminder: settings.reminderFor(med.id),
+    now: systemClock().getTime(),
+    atLocalTime,
+  })
+  return next
+    ? `Next reminder ${formatDateTime(next.at)}`
+    : 'No reminder until your next dose is logged.'
 }
 
 async function promptInstall() {
@@ -451,6 +551,95 @@ const formatMb = (bytes: number | null) =>
 
       <v-card>
         <v-card-item>
+          <p class="gl-eyebrow">Reminders</p>
+          <v-card-title>Dose reminders</v-card-title>
+        </v-card-item>
+        <v-card-text v-if="!journal.activeMedications.length" class="gl-stack">
+          <p>Add a medication on Today to set a reminder for it.</p>
+        </v-card-text>
+        <v-card-text v-else-if="!remindersSupported" class="gl-stack">
+          <p>
+            Add your dose schedule to your calendar, and it will remind you. A web app can't send
+            reminders itself without a server, and Gliplog doesn't have one; the Android app can.
+          </p>
+          <div class="d-flex flex-wrap ga-2">
+            <v-btn
+              v-for="med in journal.activeMedications"
+              :key="med.id"
+              variant="tonal"
+              :prepend-icon="mdiCalendarPlus"
+              @click="openCalendar(med)"
+            >
+              Add {{ med.name }} to calendar
+            </v-btn>
+          </div>
+        </v-card-text>
+        <v-card-text v-else class="gl-stack gl-stack--loose">
+          <p>
+            A notification on the day your next dose is due, from your last logged dose. Tap it to
+            log the dose.
+          </p>
+          <v-alert v-if="notificationsBlocked" type="warning" variant="tonal" density="compact">
+            <p>Notifications are off for Gliplog, so reminders won't appear.</p>
+            <div class="gl-actions">
+              <v-btn variant="tonal" @click="allowNotifications">Turn on</v-btn>
+            </div>
+          </v-alert>
+          <div
+            v-for="med in journal.activeMedications"
+            :key="med.id"
+            class="gl-stack gl-stack--tight"
+          >
+            <v-switch
+              :model-value="settings.reminderFor(med.id).enabled"
+              :label="`Remind me about ${med.name}`"
+              color="primary"
+              hide-details
+              @update:model-value="setReminderEnabled(med, $event)"
+            />
+            <template v-if="settings.reminderFor(med.id).enabled">
+              <v-text-field
+                :model-value="toTimeValue(settings.reminderFor(med.id))"
+                label="Time of day"
+                type="time"
+                @change="setReminderTime(med, ($event.target as HTMLInputElement).value)"
+              />
+              <v-switch
+                v-if="med.intervalDays > 1"
+                :model-value="settings.reminderFor(med.id).dayBefore"
+                label="Also remind me the day before"
+                color="primary"
+                hide-details
+                @update:model-value="settings.setReminder(med.id, { dayBefore: !!$event })"
+              />
+              <p class="text-body-small gl-muted">{{ nextReminderText(med) }}</p>
+            </template>
+            <div>
+              <v-btn variant="text" :prepend-icon="mdiCalendarPlus" @click="openCalendar(med)">
+                Add to calendar
+              </v-btn>
+            </div>
+          </div>
+          <v-divider />
+          <div class="gl-stack gl-stack--tight">
+            <v-switch
+              :model-value="settings.reminders.showNames"
+              label="Show medication names in reminders"
+              color="primary"
+              hide-details
+              @update:model-value="settings.setReminderNames(!!$event)"
+            />
+            <p class="text-body-small gl-muted">
+              Off, a reminder just says a dose is due, in case your screen is seen by others.
+            </p>
+          </div>
+        </v-card-text>
+      </v-card>
+
+      <AddToCalendarDialog v-model="calendarOpen" :medication="calendarFor" />
+
+      <v-card>
+        <v-card-item>
           <p class="gl-eyebrow">Your data</p>
           <v-card-title>Backup and restore</v-card-title>
         </v-card-item>
@@ -469,6 +658,18 @@ const formatMb = (bytes: number | null) =>
           <p v-else-if="settings.lastBackupAt" class="gl-muted">
             Last backup {{ formatDateTime(settings.lastBackupAt) }}
           </p>
+          <div v-if="photos.photos.length" class="gl-stack gl-stack--tight">
+            <v-switch
+              v-model="includePhotos"
+              :label="`Include ${plural(photos.photos.length, 'photo')}`"
+              color="primary"
+              hide-details
+            />
+            <p class="text-body-small gl-muted">
+              With photos, the backup is a .zip file. Keep it somewhere private: it holds your
+              photos as ordinary images.
+            </p>
+          </div>
           <div class="d-flex flex-wrap ga-2">
             <v-btn
               color="primary"

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { findPkProfile } from '@/data'
 import type { MedicationRow } from '@/db/database'
 import { formatPercentChange, formatWeight, formatWeightChange, roundTo } from '@/domain/units'
@@ -53,6 +54,27 @@ function logDose(med?: MedicationRow) {
   doseFor.value = med?.id
   doseDialog.value = true
 }
+
+/*
+ * A tapped dose reminder arrives as `?log=<medication id>`. It waits for the journal to load,
+ * opens Log dose for that medication if it is still active, and clears the query so a reload
+ * or Back does not open the dialog again.
+ */
+const route = useRoute()
+const router = useRouter()
+watch(
+  () => [route.query.log, journal.loaded] as const,
+  ([id]) => {
+    if (typeof id !== 'string' || !journal.loaded) return
+    const med = journal.activeMedications.find((m) => m.id === id)
+    if (med) {
+      journal.focusMedication(med.id)
+      logDose(med)
+    }
+    void router.replace({ query: {} })
+  },
+  { immediate: true },
+)
 
 /** The front card of the stack; the levels panel below follows it. */
 const current = computed(() => journal.focusedMedication)

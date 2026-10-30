@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  atLocalTime,
   daysBetween,
   formatHours,
   fromLocalInputValue,
@@ -25,5 +26,15 @@ describe('time', () => {
 
   it('counts whole days', () => {
     expect(daysBetween('2026-10-20T12:00:00Z', new Date('2026-10-25T11:00:00Z'))).toBe(4)
+  })
+})
+
+describe('atLocalTime', () => {
+  it('lands on a local wall-clock time a whole number of days later', () => {
+    const start = new Date(2026, 9, 20, 21, 30).getTime()
+    const at = new Date(atLocalTime(start, 2, 9, 5))
+    expect([at.getFullYear(), at.getMonth(), at.getDate(), at.getHours(), at.getMinutes()]).toEqual(
+      [2026, 9, 22, 9, 5],
+    )
   })
 })
