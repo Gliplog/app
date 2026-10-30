@@ -8,7 +8,7 @@ type Merged = Record<string, unknown>
 describe('vendored deepmerge', () => {
   it('is the patched copy, not the registry package', () => {
     const pkg = createRequire(import.meta.url)('deepmerge/package.json') as { version: string }
-    expect(pkg.version).toBe('4.3.1-tidebook.1')
+    expect(pkg.version).toBe('4.3.1-gliplog.1')
   })
 
   it('does not let a parsed "__proto__" key replace the prototype (GHSA-gcqx-w48m-w2h4)', () => {

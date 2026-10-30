@@ -61,17 +61,17 @@ const barWidth = (change: number | null) =>
 <template>
   <v-card>
     <v-card-item>
-      <p class="tb-eyebrow">Trial cohort</p>
+      <p class="gl-eyebrow">Trial cohort</p>
       <v-card-title class="text-wrap">{{ trial.name }} · {{ trial.weeks }} weeks</v-card-title>
     </v-card-item>
-    <v-card-text class="tb-stack">
+    <v-card-text class="gl-stack">
       <div class="d-flex flex-wrap ga-2">
-        <span class="tb-badge tb-badge--info">{{ POPULATION_LABELS[trial.population] }}</span>
-        <span class="tb-badge tb-badge--brand">
+        <span class="gl-badge gl-badge--info">{{ POPULATION_LABELS[trial.population] }}</span>
+        <span class="gl-badge gl-badge--brand">
           {{ trial.measure === 'percent' ? 'Percent of starting weight' : 'Kilograms' }}
         </span>
       </div>
-      <p class="text-body-medium tb-muted">{{ trial.design }}.</p>
+      <p class="text-body-medium gl-muted">{{ trial.design }}.</p>
 
       <ul class="bars" :aria-label="`Average weight change at week ${trial.weeks}, and yours`">
         <li
@@ -81,18 +81,18 @@ const barWidth = (change: number | null) =>
         >
           <span class="bar__label">
             {{ row.label }}
-            <span v-if="row.yourDose" class="tb-badge tb-badge--good">Your dose</span>
+            <span v-if="row.yourDose" class="gl-badge gl-badge--good">Your dose</span>
           </span>
           <span class="bar__track" aria-hidden="true">
             <span class="bar__fill" :style="{ width: barWidth(row.change) }" />
           </span>
-          <span class="bar__value tb-num">
+          <span class="bar__value gl-num">
             {{ row.change === null ? missingText : format(row.change) }}
           </span>
         </li>
       </ul>
 
-      <p class="text-body-small tb-muted">
+      <p class="text-body-small gl-muted">
         Trial rows are group averages at week {{ trial.weeks }}. Yours is your latest weigh-in up to
         week {{ trial.weeks }} after your first dose.
         <template v-if="trial.measure === 'kg'">This trial reports weight, not percent.</template>
@@ -138,8 +138,8 @@ const barWidth = (change: number | null) =>
 .bar__track {
   grid-area: track;
   height: 10px;
-  border-radius: var(--tb-radius-pill);
-  background: var(--tb-surface-sunk);
+  border-radius: var(--gl-radius-pill);
+  background: var(--gl-surface-sunk);
   overflow: hidden;
 }
 
@@ -147,7 +147,7 @@ const barWidth = (change: number | null) =>
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--tb-chart-trial);
+  background: var(--gl-chart-trial);
 }
 
 .bar--you .bar__label {
@@ -155,11 +155,11 @@ const barWidth = (change: number | null) =>
 }
 
 .bar--placebo .bar__fill {
-  background: var(--tb-chart-placebo);
+  background: var(--gl-chart-placebo);
 }
 
 /* Your row is solid brand and set apart by weight and position, not colour alone. */
 .bar--you .bar__fill {
-  background: var(--tb-chart-logged);
+  background: var(--gl-chart-logged);
 }
 </style>

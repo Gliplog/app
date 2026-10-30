@@ -166,10 +166,10 @@ async function remove() {
   <v-dialog v-model="open" max-width="560" scrollable :aria-labelledby="titleId">
     <v-card>
       <v-card-item>
-        <p class="tb-eyebrow">{{ medication ? 'Edit' : 'Add' }}</p>
+        <p class="gl-eyebrow">{{ medication ? 'Edit' : 'Add' }}</p>
         <v-card-title :id="titleId">{{ medication ? medication.name : 'Medication' }}</v-card-title>
       </v-card-item>
-      <v-card-text class="tb-stack">
+      <v-card-text class="gl-stack">
         <v-autocomplete
           :model-value="form.productId"
           :items="productItems"
@@ -185,7 +185,7 @@ async function remove() {
           persistent-hint
           @update:model-value="chooseProduct"
         />
-        <p v-if="product" class="text-body-small tb-muted">{{ product.note }}</p>
+        <p v-if="product" class="text-body-small gl-muted">{{ product.note }}</p>
         <v-text-field
           v-if="isOther"
           v-model="form.name"
@@ -195,7 +195,7 @@ async function remove() {
         />
 
         <div>
-          <p id="schedule-label" class="tb-label">How often</p>
+          <p id="schedule-label" class="gl-label">How often</p>
           <v-btn-toggle
             v-model="form.schedule"
             role="group"
@@ -217,7 +217,7 @@ async function remove() {
           inputmode="numeric"
           :error-messages="errors.customDays"
         />
-        <p class="text-body-small tb-muted">
+        <p class="text-body-small gl-muted">
           Used to show when your next dose is due. Follow your prescriber's schedule.
         </p>
 
@@ -235,7 +235,7 @@ async function remove() {
         </template>
 
         <template v-if="isOther">
-          <p class="tb-label">Your own half-life (optional)</p>
+          <p class="gl-label">Your own half-life (optional)</p>
           <div class="d-flex ga-3 align-start">
             <v-text-field
               v-model="form.halfLife"
@@ -254,7 +254,7 @@ async function remove() {
               :error="!!errors.pk"
             />
           </div>
-          <p class="text-body-small tb-muted">
+          <p class="text-body-small gl-muted">
             Used only for the level chart, which is marked as your values.
           </p>
         </template>

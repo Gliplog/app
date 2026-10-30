@@ -1,4 +1,4 @@
-Tidebook is a calm, private journal for people taking a GLP-1 medicine, whether a brand-name pen or tablet or a compounded vial from a pharmacy.
+Gliplog is a calm, private journal for people taking a GLP-1 medicine, whether a brand-name pen or tablet or a compounded vial from a pharmacy.
 
 <b>What it does</b>
 <ul>
@@ -18,6 +18,6 @@ Tidebook is a calm, private journal for people taking a GLP-1 medicine, whether 
 </ul>
 
 <b>Important</b>
-Tidebook does arithmetic and shows published reference figures. It does not recommend doses and is not medical advice. Talk to your prescriber or pharmacist about your treatment.
+Gliplog does arithmetic and shows published reference figures. It does not recommend doses and is not medical advice. Talk to your prescriber or pharmacist about your treatment.
 
-Brand names are the trademarks of their respective owners and are used only to identify the medicines. Tidebook is not affiliated with Novo Nordisk, Eli Lilly or any other manufacturer.
+Brand names are the trademarks of their respective owners and are used only to identify the medicines. Gliplog is not affiliated with Novo Nordisk, Eli Lilly or any other manufacturer.

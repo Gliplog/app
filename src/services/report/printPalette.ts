@@ -4,7 +4,7 @@ import type { Rgb } from '@/services/pdf/document'
  * The report prints in the light theme whatever the device is set to: paper is light. Each
  * value mirrors the `.v-theme--light` token of the same name in src/styles/tokens.css, which
  * tests/services/report/printPalette.spec.ts checks, so the PDF and the app stay one palette.
- * The mark's colours mirror src/assets/brand/tidebook-mark.svg.
+ * The mark's colours mirror src/assets/brand/gliplog-mark.svg.
  */
 export const PRINT_TOKENS = {
   'text-1': '#1d1a14',

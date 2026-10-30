@@ -223,7 +223,7 @@ const flagX = computed(() =>
 }
 
 .syringe__needle {
-  stroke: var(--tb-syringe-plunger);
+  stroke: var(--gl-syringe-plunger);
   stroke-width: 3;
   stroke-linecap: round;
 }
@@ -232,12 +232,12 @@ const flagX = computed(() =>
 .syringe__thumb,
 .syringe__flange,
 .syringe__rod {
-  fill: var(--tb-syringe-plunger);
+  fill: var(--gl-syringe-plunger);
 }
 
 .syringe__barrel {
-  fill: var(--tb-syringe-barrel);
-  stroke: var(--tb-syringe-ink);
+  fill: var(--gl-syringe-barrel);
+  stroke: var(--gl-syringe-ink);
   stroke-width: 2;
 }
 
@@ -246,52 +246,52 @@ const flagX = computed(() =>
 }
 
 .syringe__stop--light {
-  stop-color: var(--tb-syringe-fill);
+  stop-color: var(--gl-syringe-fill);
   stop-opacity: 0.75;
 }
 
 .syringe__stop--mid {
-  stop-color: var(--tb-syringe-fill);
+  stop-color: var(--gl-syringe-fill);
 }
 
 .syringe__stop--deep {
-  stop-color: var(--tb-syringe-fill-deep);
+  stop-color: var(--gl-syringe-fill-deep);
 }
 
 .syringe__stopper {
-  fill: var(--tb-syringe-ink);
+  fill: var(--gl-syringe-ink);
 }
 
 .syringe__groove {
-  fill: var(--tb-syringe-plunger);
+  fill: var(--gl-syringe-plunger);
   opacity: 0.6;
 }
 
 .syringe__glint {
-  fill: var(--tb-syringe-glint);
+  fill: var(--gl-syringe-glint);
   pointer-events: none;
 }
 
 .syringe__ticks line {
-  stroke: var(--tb-syringe-ink);
+  stroke: var(--gl-syringe-ink);
   stroke-width: 1.5;
 }
 
 .syringe__labels text {
-  fill: var(--tb-text-2);
-  font-family: var(--tb-font-mono);
+  fill: var(--gl-text-2);
+  font-family: var(--gl-font-mono);
   font-size: 15px;
 }
 
 .syringe__target {
-  stroke: var(--tb-text-1);
+  stroke: var(--gl-text-1);
   stroke-width: 2;
   stroke-dasharray: 4 3;
 }
 
 .syringe__reading {
-  fill: var(--tb-text-1);
-  font-family: var(--tb-font);
+  fill: var(--gl-text-1);
+  font-family: var(--gl-font);
   font-weight: 700;
   font-size: 18px;
 }

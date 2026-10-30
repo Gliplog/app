@@ -3,7 +3,7 @@ import type { SourceRef } from './catalog'
 /**
  * Side effects a user can log, in plain words. The list is the adverse reactions printed in the
  * US labels' clinical-trial tables (section 6.1) for semaglutide and tirzepatide, so it covers
- * what people in the trials reported most; "Something else" covers the rest. Tidebook records
+ * what people in the trials reported most; "Something else" covers the rest. Gliplog records
  * what the user felt; it never says whether a symptom is caused by a medicine.
  */
 const WEGOVY: SourceRef = {

@@ -212,7 +212,7 @@ const announcement = computed(() =>
         :key="med.id"
         :class="[
           'med-stack__card',
-          'tb-card-stacked',
+          'gl-card-stacked',
           {
             'med-stack__card--front': depthOf(i) === 0,
             'med-stack__card--dragging': depthOf(i) === 0 && drag.active,
@@ -233,7 +233,7 @@ const announcement = computed(() =>
         @click.capture="onClickCapture"
       >
         <v-card-item>
-          <p class="tb-eyebrow">Medication</p>
+          <p class="gl-eyebrow">Medication</p>
           <v-card-title class="text-wrap">{{ med.name }}</v-card-title>
           <v-card-subtitle>
             <template v-if="journal.productOf(med)"
@@ -241,17 +241,17 @@ const announcement = computed(() =>
             >{{ intervalText(med.intervalDays) }}
           </v-card-subtitle>
         </v-card-item>
-        <v-card-text class="tb-stack">
+        <v-card-text class="gl-stack">
           <p class="text-title-medium">{{ dueText(med) }}</p>
-          <p v-if="journal.lastDoseOf(med.id)" class="tb-muted">
-            Last: <span class="tb-num">{{ formatDose(journal.lastDoseOf(med.id)!.doseMg) }}</span
+          <p v-if="journal.lastDoseOf(med.id)" class="gl-muted">
+            Last: <span class="gl-num">{{ formatDose(journal.lastDoseOf(med.id)!.doseMg) }}</span
             >,
             {{ formatDateTime(journal.lastDoseOf(med.id)!.takenAt) }}
           </p>
-          <p v-if="sharesWith(med).length" class="text-body-small tb-muted">
+          <p v-if="sharesWith(med).length" class="text-body-small gl-muted">
             Shares a level estimate with {{ sharesWith(med).join(' and ') }}.
           </p>
-          <div class="tb-actions">
+          <div class="gl-actions">
             <v-btn
               color="primary"
               variant="flat"
@@ -285,7 +285,7 @@ const announcement = computed(() =>
           <span aria-hidden="true" />
         </button>
       </div>
-      <span v-else class="text-body-small tb-muted tb-num">{{ index + 1 }} of {{ count }}</span>
+      <span v-else class="text-body-small gl-muted gl-num">{{ index + 1 }} of {{ count }}</span>
       <v-btn :icon="mdiChevronRight" variant="text" aria-label="Next medication" @click="go(1)" />
     </div>
     <p class="d-sr-only" aria-live="polite">{{ announcement }}</p>
@@ -311,8 +311,8 @@ const announcement = computed(() =>
     scale(calc(1 - var(--depth) * 0.045)) rotate(calc(var(--drag) * 0.012deg));
   transition:
     transform 460ms var(--stack-ease),
-    opacity var(--tb-dur-base) var(--tb-ease-standard),
-    filter var(--tb-dur-base) var(--tb-ease-standard);
+    opacity var(--gl-dur-base) var(--gl-ease-standard),
+    filter var(--gl-dur-base) var(--gl-ease-standard);
   user-select: none;
   will-change: transform;
 }
@@ -388,31 +388,31 @@ const announcement = computed(() =>
   display: grid;
   place-items: center;
   width: 32px;
-  height: var(--tb-touch);
+  height: var(--gl-touch);
   border: 0;
   background: none;
   cursor: pointer;
-  border-radius: var(--tb-radius-pill);
+  border-radius: var(--gl-radius-pill);
 }
 
 .med-stack__dot:focus-visible {
   outline: none;
-  box-shadow: var(--tb-shadow-focus);
+  box-shadow: var(--gl-shadow-focus);
 }
 
 .med-stack__dot span {
   width: 8px;
   height: 8px;
-  border-radius: var(--tb-radius-pill);
-  background: var(--tb-divider-strong);
+  border-radius: var(--gl-radius-pill);
+  background: var(--gl-divider-strong);
   transition:
-    width var(--tb-dur-base) var(--tb-ease-standard),
-    background-color var(--tb-dur-base) var(--tb-ease-standard);
+    width var(--gl-dur-base) var(--gl-ease-standard),
+    background-color var(--gl-dur-base) var(--gl-ease-standard);
 }
 
 /* The chosen dot is longer as well as darker, so it never relies on colour alone. */
 .med-stack__dot--on span {
   width: 22px;
-  background: var(--tb-brand);
+  background: var(--gl-brand);
 }
 </style>

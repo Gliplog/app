@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 # Builds with the repository name as the base path (https://<owner>.github.io/<repo>/), except
 # for a user or organization site repo named <owner>.github.io, which Pages serves from "/".
-# Set the TIDEBOOK_BASE repository variable to "/" when serving from a custom domain.
+# Set the GLIPLOG_BASE repository variable to "/" when serving from a custom domain.
 on:
   push:
     branches: [main]
@@ -21,7 +21,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      TIDEBOOK_BASE: ${{ vars.TIDEBOOK_BASE || (endsWith(github.event.repository.name, '.github.io') && '/' || format('/{0}/', github.event.repository.name)) }}
+      GLIPLOG_BASE: ${{ vars.GLIPLOG_BASE || (endsWith(github.event.repository.name, '.github.io') && '/' || format('/{0}/', github.event.repository.name)) }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7

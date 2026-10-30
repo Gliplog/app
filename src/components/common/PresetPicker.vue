@@ -74,7 +74,7 @@ const customError = computed(() => {
 
 <template>
   <fieldset class="preset-picker">
-    <legend class="tb-label">{{ label }}</legend>
+    <legend class="gl-label">{{ label }}</legend>
     <v-chip-group :model-value="selected" color="primary" column @update:model-value="choose">
       <v-chip
         v-for="value in presets"
@@ -82,7 +82,7 @@ const customError = computed(() => {
         :value="value"
         :aria-pressed="selected === value"
         tag="button"
-        class="tb-num"
+        class="gl-num"
         filter
         size="large"
       >
@@ -109,7 +109,7 @@ const customError = computed(() => {
         />
       </div>
     </v-expand-transition>
-    <p v-if="hint" class="preset-picker__hint tb-faint">{{ hint }}</p>
+    <p v-if="hint" class="preset-picker__hint gl-faint">{{ hint }}</p>
   </fieldset>
 </template>
 

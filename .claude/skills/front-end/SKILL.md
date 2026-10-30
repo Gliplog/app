@@ -1,6 +1,6 @@
 ---
 name: front-end
-description: 'Use when changing tidebook Vue components, views, layout, Vuetify usage, styling, theming, charts, or user-facing copy.'
+description: 'Use when changing gliplog Vue components, views, layout, Vuetify usage, styling, theming, charts, or user-facing copy.'
 ---
 
 # Front-end
@@ -14,7 +14,7 @@ One-line rules; detail lives in `reference/`. Read a reference when its trigger 
 
 ## Styling
 
-1. Colours come only from `--tb-*` tokens (`src/styles/tokens.css`) or Vuetify theme colours
+1. Colours come only from `--gl-*` tokens (`src/styles/tokens.css`) or Vuetify theme colours
    (`primary`, `secondary`, `success`, `warning`, `error`, `info`). No hex, `rgb()`, or Material
    names in components; `npm run check:tokens` enforces it and catches undefined tokens.
 2. Two themes, `light` and `dark`, follow the device by default; Settings can pin one. Every new
@@ -23,8 +23,8 @@ One-line rules; detail lives in `reference/`. Read a reference when its trigger 
    Scoped styles are for layout and for drawing (SVG), never to restyle a Vuetify component.
 4. Cascade layers: our theme sits above Vuetify components and below Vuetify utilities
    (`public/layers.css`). No `!important` outside the reduced-motion rule.
-5. Typography: Hanken Grotesk throughout; headings (`tb-display` 700, card titles 600) use tight
-   tracking. IBM Plex Mono or `tb-num` for figures. Use Vuetify 4 MD3 classes
+5. Typography: Hanken Grotesk throughout; headings (`gl-display` 700, card titles 600) use tight
+   tracking. IBM Plex Mono or `gl-num` for figures. Use Vuetify 4 MD3 classes
    (`text-headline-large`). The brand is `AppLogo` (mark plus wordmark), never plain text.
 
 ## Layout and interaction

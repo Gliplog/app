@@ -38,6 +38,6 @@ icons:
 android:
 	$(NODE) npm run build:android
 
-## Retake the Today screenshots for the project site (writes to ../tidebook.github.io).
+## Retake the Today and Progress screenshots for the project site (writes to ../gliplog.github.io).
 screenshots:
 	$(NODE) npm run screenshots:site

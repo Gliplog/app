@@ -6,4 +6,4 @@
  * and friends still win over theme rules. Component <style scoped> blocks are unlayered and win
  * over everything: keep them to layout.
  */
-@layer vuetify-core, vuetify-components, vuetify-overrides, tb-tokens, tb-theme, vuetify-utilities, tb-utilities, vuetify-final;
+@layer vuetify-core, vuetify-components, vuetify-overrides, gl-tokens, gl-theme, vuetify-utilities, gl-utilities, vuetify-final;

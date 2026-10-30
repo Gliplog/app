@@ -216,10 +216,10 @@ const trialCount = computed(() =>
 </script>
 
 <template>
-  <section v-if="product" class="tb-stack">
+  <section v-if="product" class="gl-stack">
     <div>
-      <h2 class="tb-display text-title-large">Compared with trial cohorts</h2>
-      <p class="tb-muted section-intro">
+      <h2 class="gl-display text-title-large">Compared with trial cohorts</h2>
+      <p class="gl-muted section-intro">
         Your change beside the published averages from {{ product.molecule }} trials.
         <template v-if="product.kind === 'compounded'"
           >These trials used the brand product.</template
@@ -228,7 +228,7 @@ const trialCount = computed(() =>
     </div>
 
     <div v-if="products.length > 1">
-      <p :id="ids.product" class="tb-label">Medication</p>
+      <p :id="ids.product" class="gl-label">Medication</p>
       <v-btn-toggle
         v-model="productModel"
         role="group"
@@ -243,13 +243,13 @@ const trialCount = computed(() =>
 
     <v-card>
       <v-card-item>
-        <p class="tb-eyebrow">Trial cohorts</p>
+        <p class="gl-eyebrow">Trial cohorts</p>
         <v-card-title class="text-wrap">{{ medicineName }}</v-card-title>
       </v-card-item>
-      <v-card-text class="tb-stack">
+      <v-card-text class="gl-stack">
         <div class="d-flex flex-wrap ga-4">
           <div v-if="measures.length > 1">
-            <p :id="ids.measure" class="tb-label">Measure</p>
+            <p :id="ids.measure" class="gl-label">Measure</p>
             <v-btn-toggle
               v-model="measure"
               role="group"
@@ -262,7 +262,7 @@ const trialCount = computed(() =>
             </v-btn-toggle>
           </div>
           <div v-if="mixedPopulations">
-            <p :id="ids.population" class="tb-label">Trials</p>
+            <p :id="ids.population" class="gl-label">Trials</p>
             <v-btn-toggle
               v-model="population"
               role="group"
@@ -284,7 +284,7 @@ const trialCount = computed(() =>
           :glucose-unit="settings.glucoseUnit"
         />
 
-        <p class="text-body-small tb-muted">{{ captionText }}</p>
+        <p class="text-body-small gl-muted">{{ captionText }}</p>
         <SourceList :sources="summary.sources" />
       </v-card-text>
     </v-card>

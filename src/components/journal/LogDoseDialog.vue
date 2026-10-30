@@ -119,10 +119,10 @@ async function remove() {
   <v-dialog v-model="open" max-width="560" scrollable :aria-labelledby="titleId">
     <v-card>
       <v-card-item>
-        <p class="tb-eyebrow">{{ dose ? 'Edit dose' : 'Log a dose' }}</p>
+        <p class="gl-eyebrow">{{ dose ? 'Edit dose' : 'Log a dose' }}</p>
         <v-card-title :id="titleId">{{ medication?.name ?? 'Dose' }}</v-card-title>
       </v-card-item>
-      <v-card-text class="tb-stack">
+      <v-card-text class="gl-stack">
         <v-select
           v-if="medicationItems.length > 1"
           v-model="form.medicationId"
@@ -136,11 +136,11 @@ async function remove() {
           unit-label="mg"
           input-id="dose-custom"
         />
-        <div v-if="reading" class="tb-inset reading">
+        <div v-if="reading" class="gl-inset reading">
           <SyringeGraphic :units="reading.units" />
           <div class="reading__text" aria-live="polite">
-            <span class="tb-num text-title-large">{{ roundTo(reading.units, 1) }} units</span>
-            <span class="tb-muted text-body-small">
+            <span class="gl-num text-title-large">{{ roundTo(reading.units, 1) }} units</span>
+            <span class="gl-muted text-body-small">
               {{ roundTo(reading.ml, 3) }} mL on a U-100 syringe, at
               {{ medication?.concentrationMgPerMl }} mg/mL
             </span>
@@ -148,7 +148,7 @@ async function remove() {
         </div>
         <v-text-field v-model="form.takenAt" label="When" type="datetime-local" />
         <fieldset v-if="isInjection" class="sites">
-          <legend class="tb-label">Where (optional)</legend>
+          <legend class="gl-label">Where (optional)</legend>
           <v-chip-group v-model="form.site" column color="primary">
             <v-chip
               v-for="site in INJECTION_SITES"
@@ -161,7 +161,7 @@ async function remove() {
               {{ SITE_LABELS[site] }}
             </v-chip>
           </v-chip-group>
-          <p v-if="suggestedSite && !dose" class="text-body-small tb-faint">
+          <p v-if="suggestedSite && !dose" class="text-body-small gl-faint">
             Next in rotation: {{ SITE_LABELS[suggestedSite] }}
           </p>
         </fieldset>

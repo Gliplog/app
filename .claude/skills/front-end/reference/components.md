@@ -10,7 +10,7 @@ Part of the `front-end` skill.
 | `common/SourceBadge.vue`                              | Shows where a number came from (label, trial, standard, model)                          |
 | `common/SourceList.vue`                               | A list of sources, each with its badge and a link                                       |
 | `common/ListPager.vue`, `SortToggle.vue`              | Range caption and `v-pagination` (hidden on one page); newest or oldest first toggle    |
-| `common/AppLogo.vue`                                  | The brand: mark (`src/assets/brand/tidebook-mark.svg`) plus the two-tone wordmark       |
+| `common/AppLogo.vue`                                  | The brand: mark (`src/assets/brand/gliplog-mark.svg`) plus the two-tone wordmark        |
 | `common/AppSnackbar.vue`, `AppConfirm.vue`            | Render the notify and confirm stores; mounted once in `App.vue`                         |
 | `common/UpdatePrompt.vue`                             | Service-worker update and offline-ready notices                                         |
 | `common/DisclaimerDialog.vue`                         | First-run acknowledgement: a journal, not medical advice                                |
@@ -53,8 +53,8 @@ Part of the `front-end` skill.
 
 ## Spacing and alignment
 
-- The container owns spacing. A card body, form or panel is a `.tb-stack` (16px between
-  children), `.tb-stack--tight` (8px, a caption and what it describes) or `.tb-stack--loose`
+- The container owns spacing. A card body, form or panel is a `.gl-stack` (16px between
+  children), `.gl-stack--tight` (8px, a caption and what it describes) or `.gl-stack--loose`
   (24px, sections of one card). Children carry no margin utilities. Scoped CSS is unlayered and
   silently beats every utility class, so `margin: 0` in a component cancels `mt-*` on it.
 - Fields default to `hideDetails: 'auto'` (`src/plugins/vuetify.ts`): the message row appears
@@ -62,13 +62,13 @@ Part of the `front-end` skill.
   `persistent-hint`. Rows that pair fields (dose and unit) use `align-start` so an error under
   one does not shift the other.
 - Labels sit above controls, left-aligned with the control's border. Vuetify fields get this
-  from `theme.css`; any other control (a preset group, a toggle, a list) takes `.tb-label`,
+  from `theme.css`; any other control (a preset group, a toggle, a list) takes `.gl-label`,
   which has the same type. Hints and errors share that left edge.
 - Action rows line up with the content above. Text-only rows keep Vuetify's padding, so the
   label sits at the content edge; a row with a filled, tonal or outlined button insets that
   button to 16px (24px in dialogs and sheets). `theme.css` does this; components do not pad
   `v-card-actions`.
-- A notice with actions puts the message first and an end-aligned `.tb-actions` row below it:
+- A notice with actions puts the message first and an end-aligned `.gl-actions` row below it:
   Dismiss (text), then the action (tonal). Buttons keep the default size for touch targets.
 - Everyday actions sit with the content they act on; archive and delete close the page,
   separated by a divider.

@@ -26,7 +26,7 @@ const listId = useId()
     </v-btn>
     <v-expand-transition>
       <div v-show="open" :id="listId" class="source-panel">
-        <p v-if="note" class="text-body-small tb-muted">{{ note }}</p>
+        <p v-if="note" class="text-body-small gl-muted">{{ note }}</p>
         <ul class="source-list">
           <li v-for="source in sources" :key="source.citation" class="text-body-small">
             <SourceBadge :kind="source.kind" />

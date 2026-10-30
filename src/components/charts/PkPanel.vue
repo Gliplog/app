@@ -43,7 +43,7 @@ const shareInput = computed(() =>
 <template>
   <v-card>
     <v-card-item>
-      <p class="tb-eyebrow">Estimated levels</p>
+      <p class="gl-eyebrow">Estimated levels</p>
       <v-card-title class="text-wrap">{{ title ?? 'Amount in the body over time' }}</v-card-title>
       <template v-if="shareInput && doses.length && !preview" #append>
         <v-btn
@@ -54,20 +54,20 @@ const shareInput = computed(() =>
         />
       </template>
     </v-card-item>
-    <v-card-text class="tb-stack">
+    <v-card-text class="gl-stack">
       <template v-if="params">
         <div class="d-flex flex-wrap ga-2 align-center">
-          <span class="tb-badge tb-badge--brand tb-num"
+          <span class="gl-badge gl-badge--brand gl-num"
             >half-life {{ formatHours(params.halfLifeHours) }}</span
           >
-          <span class="tb-badge tb-badge--brand tb-num"
+          <span class="gl-badge gl-badge--brand gl-num"
             >peak {{ formatHours(params.tmaxHours) }}</span
           >
-          <span v-if="userSupplied" class="tb-badge tb-badge--notice">
-            <span class="tb-badge__dot" />Your own values
+          <span v-if="userSupplied" class="gl-badge gl-badge--notice">
+            <span class="gl-badge__dot" />Your own values
           </span>
         </div>
-        <p v-if="caption" class="text-body-small tb-muted">{{ caption }}</p>
+        <p v-if="caption" class="text-body-small gl-muted">{{ caption }}</p>
         <PkChart
           :params="params"
           :doses="doses"
@@ -76,7 +76,7 @@ const shareInput = computed(() =>
           :now="now"
           :lookback-hours="lookbackHours"
         />
-        <p class="text-body-small tb-muted">
+        <p class="text-body-small gl-muted">
           An estimate of medicine remaining in the body, based on a simple model from published
           data.
         </p>

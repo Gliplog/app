@@ -4,7 +4,7 @@ paths: ['src/**']
 
 # Data and privacy
 
-- Tidebook makes no network requests: no `fetch`, no CDN, no analytics, no remote fonts or icons.
+- Gliplog makes no network requests: no `fetch`, no CDN, no analytics, no remote fonts or icons.
   ESLint blocks `fetch`; the e2e suite fails on any non-local request; the production CSP is
   `default-src 'self'`.
 - All user data goes through `src/db/repository.ts` (IndexedDB via Dexie). Never use

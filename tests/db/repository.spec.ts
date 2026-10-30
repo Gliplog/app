@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { createDatabase, type TidebookDb } from '@/db/database'
+import { createDatabase, type GliplogDb } from '@/db/database'
 import { createRepository, type NewMedication } from '@/db/repository'
 import { exportBackup, parseBackup, restoreBackup, BackupFormatError } from '@/db/backup'
 
@@ -15,7 +15,7 @@ const wegovy: NewMedication = {
   notes: '',
 }
 
-let db: TidebookDb
+let db: GliplogDb
 let counter = 0
 
 beforeEach(async () => {
@@ -211,12 +211,12 @@ describe('backup', () => {
     expect(() => parseBackup(JSON.stringify(badUnit))).toThrow(/Blood sugar reading 1/)
   })
 
-  it('rejects files that are not Tidebook backups', () => {
+  it('rejects files that are not Gliplog backups', () => {
     expect(() => parseBackup('not json')).toThrow(BackupFormatError)
     expect(() => parseBackup(JSON.stringify({ format: 'pepcalc-backup', version: 1 }))).toThrow(
-      'This is not a Tidebook backup file.',
+      'This is not a Gliplog backup file.',
     )
-    expect(() => parseBackup(JSON.stringify({ format: 'tidebook-backup', version: 99 }))).toThrow(
+    expect(() => parseBackup(JSON.stringify({ format: 'gliplog-backup', version: 99 }))).toThrow(
       /newer version/,
     )
   })

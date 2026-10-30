@@ -19,16 +19,16 @@ function readColors(): ChartColors {
   const style = getComputedStyle(root)
   const read = (name: string) => style.getPropertyValue(name).trim()
   return {
-    logged: read('--tb-chart-logged'),
-    preview: read('--tb-chart-preview'),
-    trial: read('--tb-chart-trial'),
-    placebo: read('--tb-chart-placebo'),
-    grid: read('--tb-chart-grid'),
-    axis: read('--tb-chart-axis'),
-    now: read('--tb-chart-now'),
-    text: read('--tb-text-1'),
-    surface: read('--tb-surface'),
-    font: read('--tb-font'),
+    logged: read('--gl-chart-logged'),
+    preview: read('--gl-chart-preview'),
+    trial: read('--gl-chart-trial'),
+    placebo: read('--gl-chart-placebo'),
+    grid: read('--gl-chart-grid'),
+    axis: read('--gl-chart-axis'),
+    now: read('--gl-chart-now'),
+    text: read('--gl-text-1'),
+    surface: read('--gl-surface'),
+    font: read('--gl-font'),
   }
 }
 

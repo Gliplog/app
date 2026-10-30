@@ -110,12 +110,12 @@ onMounted(async () => {
     <v-app-bar
       flat
       density="compact"
-      :class="['app-bar', { 'tb-app-bar--hidden': bar.state.hidden }]"
+      :class="['app-bar', { 'gl-app-bar--hidden': bar.state.hidden }]"
       @click="bar.actions.reveal"
       @focusin="bar.actions.reveal"
     >
       <v-app-bar-title>
-        <router-link :to="{ name: 'today' }" class="brand" aria-label="Tidebook, today">
+        <router-link :to="{ name: 'today' }" class="brand" aria-label="Gliplog, today">
           <AppLogo :size="30" />
         </router-link>
       </v-app-bar-title>
@@ -151,7 +151,7 @@ onMounted(async () => {
         class="install-banner"
       >
         <v-banner-text>
-          Add Tidebook to your Home Screen to use it offline, like an app.
+          Add Gliplog to your Home Screen to use it offline, like an app.
         </v-banner-text>
         <template #actions>
           <v-btn :to="{ name: 'settings' }" variant="text">How</v-btn>
@@ -213,6 +213,6 @@ onMounted(async () => {
 }
 
 .install-banner {
-  border-bottom: 1px solid var(--tb-divider);
+  border-bottom: 1px solid var(--gl-divider);
 }
 </style>

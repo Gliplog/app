@@ -28,9 +28,9 @@ async function exportReport() {
       <v-card-item>
         <v-card-title :id="titleId" class="text-wrap">Export PDF</v-card-title>
       </v-card-item>
-      <v-card-text class="tb-stack">
+      <v-card-text class="gl-stack">
         <div>
-          <p :id="periodId" class="tb-label">Period</p>
+          <p :id="periodId" class="gl-label">Period</p>
           <v-btn-toggle
             v-model="period"
             mandatory

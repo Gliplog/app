@@ -1,16 +1,16 @@
-# Template for the F-Droid metadata merge request (fdroiddata: metadata/io.github.tidebook.yml).
+# Template for the F-Droid metadata merge request (fdroiddata: metadata/io.github.gliplog.yml).
 # Fill in the commit for the first release tag before submitting.
 Categories:
   - Health & Fitness
 License: AGPL-3.0-only
-SourceCode: https://github.com/Tidebook/app
-IssueTracker: https://github.com/Tidebook/app/issues
-WebSite: https://tidebook.github.io/
+SourceCode: https://github.com/Gliplog/app
+IssueTracker: https://github.com/Gliplog/app/issues
+WebSite: https://gliplog.github.io/
 
-AutoName: Tidebook
+AutoName: Gliplog
 
 RepoType: git
-Repo: https://github.com/Tidebook/app.git
+Repo: https://github.com/Gliplog/app.git
 
 Builds:
   - versionName: 0.1.0

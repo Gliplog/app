@@ -143,7 +143,7 @@ test('shares a trend as an image and exports the journal as a PDF', async ({ pag
   await expect(share.getByText('Only the percent change is shown.')).toBeVisible()
   const image = page.waitForEvent('download')
   await share.getByRole('button', { name: 'Share' }).click()
-  expect((await image).suggestedFilename()).toMatch(/^tidebook-weight-\d{4}-\d{2}-\d{2}\.png$/)
+  expect((await image).suggestedFilename()).toMatch(/^gliplog-weight-\d{4}-\d{2}-\d{2}\.png$/)
 
   await page.getByRole('button', { name: 'Export PDF' }).first().click()
   const report = page.getByRole('dialog', { name: 'Export PDF' })
@@ -151,7 +151,7 @@ test('shares a trend as an image and exports the journal as a PDF', async ({ pag
   const pdf = page.waitForEvent('download')
   await report.getByRole('button', { name: 'Export' }).click()
   const file = await pdf
-  expect(file.suggestedFilename()).toMatch(/^tidebook-report-\d{4}-\d{2}-\d{2}\.pdf$/)
+  expect(file.suggestedFilename()).toMatch(/^gliplog-report-\d{4}-\d{2}-\d{2}\.pdf$/)
   const bytes = await (await import('node:fs/promises')).readFile((await file.path())!)
   expect(bytes.subarray(0, 8).toString('latin1')).toBe('%PDF-1.4')
 })
@@ -274,7 +274,7 @@ test('weights switch between kilograms and pounds without rounding drift', async
   await expect(page.getByText('81.3 kg')).toBeVisible()
 })
 
-test('settings names the trademark holders and says Tidebook is not affiliated', async ({
+test('settings names the trademark holders and says Gliplog is not affiliated', async ({
   page,
 }) => {
   await page.goto('./#/settings')
@@ -409,21 +409,21 @@ test('the top bar scrolls away when reading and returns on scrolling up', async 
   await acceptDisclaimer(page)
   const bar = page.locator('.v-app-bar')
   await page.evaluate(() => window.scrollTo(0, 0))
-  await expect(bar).not.toHaveClass(/tb-app-bar--hidden/)
+  await expect(bar).not.toHaveClass(/gl-app-bar--hidden/)
   await scrollInSteps(page, 150, 4)
-  await expect(bar).toHaveClass(/tb-app-bar--hidden/)
+  await expect(bar).toHaveClass(/gl-app-bar--hidden/)
   await scrollInSteps(page, -80, 1)
-  await expect(bar).not.toHaveClass(/tb-app-bar--hidden/)
+  await expect(bar).not.toHaveClass(/gl-app-bar--hidden/)
 
   // Hidden again, then a tap on plain page background brings it back.
   await page.evaluate(() => window.scrollTo(0, 0))
   await scrollInSteps(page, 150, 4)
-  await expect(bar).toHaveClass(/tb-app-bar--hidden/)
+  await expect(bar).toHaveClass(/gl-app-bar--hidden/)
   await page
-    .locator('.tb-page')
+    .locator('.gl-page')
     .first()
     .click({ position: { x: 4, y: 200 } })
-  await expect(bar).not.toHaveClass(/tb-app-bar--hidden/)
+  await expect(bar).not.toHaveClass(/gl-app-bar--hidden/)
 })
 
 /*

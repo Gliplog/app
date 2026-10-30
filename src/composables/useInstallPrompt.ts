@@ -25,7 +25,7 @@ export function detectPlatform(ua: string, maxTouchPoints: number): InstallPlatf
 }
 
 /**
- * Install state and the platform-appropriate way to add Tidebook to the home screen. Only
+ * Install state and the platform-appropriate way to add Gliplog to the home screen. Only
  * Chromium browsers offer a programmatic prompt; Safari and Firefox need instructions.
  */
 export function useInstallPrompt() {

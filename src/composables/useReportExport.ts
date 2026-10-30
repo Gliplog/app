@@ -40,7 +40,7 @@ export function useReportExport() {
       })
       const { renderJournalReport } = await import('@/services/report/journalReport')
       const pdf = new Blob([renderJournalReport(data)], { type: 'application/pdf' })
-      const result = await saveFile(`tidebook-report-${fileDate(now)}.pdf`, pdf)
+      const result = await saveFile(`gliplog-report-${fileDate(now)}.pdf`, pdf)
       if (result === 'downloaded') notify.show('Report saved to your downloads', 'success')
       return result !== 'cancelled'
     } catch {

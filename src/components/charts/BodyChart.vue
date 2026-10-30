@@ -72,9 +72,9 @@ const rows = computed(() =>
         <tbody>
           <tr v-for="(row, i) in rows" :key="`${row.at}-${i}`">
             <td>{{ formatDate(row.at) }}</td>
-            <td class="text-end tb-num">
+            <td class="text-end gl-num">
               {{ fmt(row.value) }}
-              <span v-if="row.note" class="d-block text-body-small tb-faint">{{ row.note }}</span>
+              <span v-if="row.note" class="d-block text-body-small gl-faint">{{ row.note }}</span>
             </td>
           </tr>
         </tbody>

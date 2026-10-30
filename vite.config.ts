@@ -11,12 +11,12 @@ const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 
 }
 
 /*
- * The app is served from the `app` repository of the Tidebook organisation on GitHub Pages
- * (https://tidebook.github.io/app/); the marketing site owns the root of that origin.
- * TIDEBOOK_BASE overrides it, e.g. "/" for a custom domain. Always starts and ends with "/".
+ * The app is served from the `app` repository of the Gliplog organisation on GitHub Pages
+ * (https://gliplog.github.io/app/); the marketing site owns the root of that origin.
+ * GLIPLOG_BASE overrides it, e.g. "/" for a custom domain. Always starts and ends with "/".
  */
 function webBase(): string {
-  return normalizeBase(process.env.TIDEBOOK_BASE ?? '/app/')
+  return normalizeBase(process.env.GLIPLOG_BASE ?? '/app/')
 }
 
 function normalizeBase(value: string): string {
@@ -45,7 +45,7 @@ const CONTENT_SECURITY_POLICY = [
 
 function contentSecurityPolicy(): Plugin {
   return {
-    name: 'tidebook-csp',
+    name: 'gliplog-csp',
     apply: 'build',
     transformIndexHtml: () => [
       {
@@ -81,8 +81,8 @@ export default defineConfig(({ command, mode }) => {
         includeAssets: ['favicon.svg', 'favicon.ico', 'apple-touch-icon-180x180.png', 'layers.css'],
         manifest: {
           id: base,
-          name: 'Tidebook: GLP-1 Journal',
-          short_name: 'Tidebook',
+          name: 'Gliplog: GLP-1 Journal',
+          short_name: 'Gliplog',
           description:
             'A private, offline journal for GLP-1 doses, weight and BMI. All data stays on this device.',
           lang: 'en',

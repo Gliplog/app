@@ -38,6 +38,6 @@ jobs:
           fi
       - uses: actions/upload-artifact@v7
         with:
-          name: tidebook-debug-apk
+          name: gliplog-debug-apk
           path: android/app/build/outputs/apk/debug/*.apk
           retention-days: 14

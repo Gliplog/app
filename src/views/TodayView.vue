@@ -112,15 +112,15 @@ const daysSinceStart = computed(() =>
 </script>
 
 <template>
-  <div class="tb-page today">
+  <div class="gl-page today">
     <header class="mb-4">
-      <p class="tb-eyebrow">Today</p>
-      <h1 class="tb-display text-headline-large">Your journal</h1>
+      <p class="gl-eyebrow">Today</p>
+      <h1 class="gl-display text-headline-large">Your journal</h1>
     </header>
 
-    <v-card v-if="isEmpty" class="tb-card-soft mb-4">
-      <v-card-text class="tb-stack">
-        <p class="text-title-large tb-display">Start with what you take</p>
+    <v-card v-if="isEmpty" class="gl-card-soft mb-4">
+      <v-card-text class="gl-stack">
+        <p class="text-title-large gl-display">Start with what you take</p>
         <p>Add your medicine and a weigh-in to get started. Everything stays on this device.</p>
         <div class="d-flex flex-wrap ga-2">
           <v-btn color="primary" variant="flat" :prepend-icon="mdiPlus" @click="addMedication">
@@ -156,55 +156,55 @@ const daysSinceStart = computed(() =>
         />
         <v-card v-else :key="`empty:${current.id}`">
           <v-card-item>
-            <p class="tb-eyebrow">Estimated levels</p>
+            <p class="gl-eyebrow">Estimated levels</p>
             <v-card-title class="text-wrap">{{ profile?.name ?? current.name }}</v-card-title>
           </v-card-item>
           <v-card-text>
-            <p class="tb-muted">Log a dose of {{ current.name }} to see an estimate here.</p>
+            <p class="gl-muted">Log a dose of {{ current.name }} to see an estimate here.</p>
           </v-card-text>
         </v-card>
       </v-fade-transition>
 
       <v-card v-if="latest || journal.medications.length">
         <v-card-item>
-          <p class="tb-eyebrow">Weight</p>
+          <p class="gl-eyebrow">Weight</p>
           <v-card-title>
-            <span v-if="latest" class="tb-num">{{
+            <span v-if="latest" class="gl-num">{{
               formatWeight(latest.kg, settings.weightUnit)
             }}</span>
             <span v-else>No weigh-ins yet</span>
           </v-card-title>
           <v-card-subtitle v-if="latest">{{ formatDateTime(latest.measuredAt) }}</v-card-subtitle>
         </v-card-item>
-        <v-card-text class="tb-stack">
+        <v-card-text class="gl-stack">
           <dl v-if="latest" class="stats">
             <div v-if="lastPoint && journal.progress.length > 1">
-              <dt class="tb-faint">Since you started</dt>
-              <dd class="tb-num">
+              <dt class="gl-faint">Since you started</dt>
+              <dd class="gl-num">
                 {{ formatWeightChange(lastPoint.changeKg, settings.weightUnit) }}
-                <span class="tb-muted">({{ formatPercentChange(lastPoint.changePercent) }})</span>
+                <span class="gl-muted">({{ formatPercentChange(lastPoint.changePercent) }})</span>
               </dd>
             </div>
             <div v-if="body.currentBmi.value !== null">
-              <dt class="tb-faint">BMI</dt>
-              <dd class="tb-num">
+              <dt class="gl-faint">BMI</dt>
+              <dd class="gl-num">
                 {{ roundTo(body.currentBmi.value, 1) }}
-                <span v-if="body.band.value" class="tb-muted">· {{ body.band.value.label }}</span>
+                <span v-if="body.band.value" class="gl-muted">· {{ body.band.value.label }}</span>
               </dd>
             </div>
             <div v-if="goalText">
-              <dt class="tb-faint">Goal</dt>
+              <dt class="gl-faint">Goal</dt>
               <dd>{{ goalText }}</dd>
             </div>
             <div v-if="daysSinceStart !== null && baseline?.basis !== 'no-doses'">
-              <dt class="tb-faint">Day</dt>
-              <dd class="tb-num">{{ daysSinceStart + 1 }}</dd>
+              <dt class="gl-faint">Day</dt>
+              <dd class="gl-num">{{ daysSinceStart + 1 }}</dd>
             </div>
           </dl>
-          <p v-if="latest && body.currentBmi.value === null" class="text-body-small tb-muted">
+          <p v-if="latest && body.currentBmi.value === null" class="text-body-small gl-muted">
             Add your height in Settings to see your BMI.
           </p>
-          <div class="tb-actions">
+          <div class="gl-actions">
             <v-btn variant="text" :to="{ name: 'progress' }">See progress</v-btn>
             <v-btn variant="tonal" :prepend-icon="mdiScaleBathroom" @click="weightDialog = true">
               Log weight
@@ -215,12 +215,12 @@ const daysSinceStart = computed(() =>
 
       <v-card v-if="journal.medications.length">
         <v-card-item>
-          <p class="tb-eyebrow">Blood sugar</p>
+          <p class="gl-eyebrow">Blood sugar</p>
           <v-card-title>
-            <span v-if="latestA1c" class="tb-num"
+            <span v-if="latestA1c" class="gl-num"
               >HbA1c {{ formatA1c(latestA1c.value, settings.a1cUnit) }}</span
             >
-            <span v-else-if="latestGlucose" class="tb-num">{{
+            <span v-else-if="latestGlucose" class="gl-num">{{
               formatGlucose(latestGlucose.value, settings.glucoseUnit)
             }}</span>
             <span v-else>No readings yet</span>
@@ -229,23 +229,23 @@ const daysSinceStart = computed(() =>
             formatDateTime(latestA1c.measuredAt)
           }}</v-card-subtitle>
         </v-card-item>
-        <v-card-text class="tb-stack">
+        <v-card-text class="gl-stack">
           <dl v-if="latestA1c && latestGlucose" class="stats">
             <div>
-              <dt class="tb-faint">
+              <dt class="gl-faint">
                 Glucose · {{ GLUCOSE_CONTEXT_LABELS[latestGlucose.context].toLowerCase() }}
               </dt>
-              <dd class="tb-num">{{ formatGlucose(latestGlucose.value, settings.glucoseUnit) }}</dd>
+              <dd class="gl-num">{{ formatGlucose(latestGlucose.value, settings.glucoseUnit) }}</dd>
             </div>
           </dl>
-          <p v-else-if="latestGlucose" class="tb-muted">
+          <p v-else-if="latestGlucose" class="gl-muted">
             {{ GLUCOSE_CONTEXT_LABELS[latestGlucose.context] }},
             {{ formatDateTime(latestGlucose.measuredAt) }}
           </p>
-          <p v-else-if="!latestA1c" class="tb-muted">
+          <p v-else-if="!latestA1c" class="gl-muted">
             Log an HbA1c result or a glucose reading to follow them over time.
           </p>
-          <div class="tb-actions">
+          <div class="gl-actions">
             <v-btn variant="tonal" :prepend-icon="mdiWaterOutline" @click="glucoseDialog = true">
               Log blood sugar
             </v-btn>
@@ -255,17 +255,17 @@ const daysSinceStart = computed(() =>
 
       <v-card v-if="journal.medications.length">
         <v-card-item>
-          <p class="tb-eyebrow">Side effects</p>
+          <p class="gl-eyebrow">Side effects</p>
           <v-card-title>Last {{ RECENT_DAYS }} days</v-card-title>
         </v-card-item>
-        <v-card-text class="tb-stack">
+        <v-card-text class="gl-stack">
           <ul v-if="recentSymptoms.length" class="symptom-list" aria-label="Side effects this week">
-            <li v-for="s in recentSymptoms" :key="s.key" class="tb-badge tb-badge--info">
-              {{ s.name }} <span class="tb-num">× {{ s.count }}</span>
+            <li v-for="s in recentSymptoms" :key="s.key" class="gl-badge gl-badge--info">
+              {{ s.name }} <span class="gl-num">× {{ s.count }}</span>
             </li>
           </ul>
-          <p v-else class="tb-muted">Nothing logged this week.</p>
-          <div class="tb-actions">
+          <p v-else class="gl-muted">Nothing logged this week.</p>
+          <div class="gl-actions">
             <v-btn variant="text" :to="{ name: 'progress', hash: '#side-effects' }"
               >See summary</v-btn
             >
@@ -278,7 +278,7 @@ const daysSinceStart = computed(() =>
 
       <v-card v-if="journal.medications.length">
         <v-card-item>
-          <p class="tb-eyebrow">Your medications</p>
+          <p class="gl-eyebrow">Your medications</p>
           <v-card-title>In use</v-card-title>
         </v-card-item>
         <v-list density="comfortable" class="bg-transparent">

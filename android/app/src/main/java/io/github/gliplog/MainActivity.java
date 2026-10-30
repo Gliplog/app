@@ -1,4 +1,4 @@
-package io.github.tidebook;
+package io.github.gliplog;
 
 import com.getcapacitor.BridgeActivity;
 

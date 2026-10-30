@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tidebook: PostToolUse feedback after Edit and Write. Registered in .claude/settings.json.
+# gliplog: PostToolUse feedback after Edit and Write. Registered in .claude/settings.json.
 # Never edits files; a failed check returns decision=block so the reason reaches Claude.
 set -u
 command -v jq >/dev/null 2>&1 || exit 0

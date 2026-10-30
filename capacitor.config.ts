@@ -7,8 +7,8 @@ import type { CapacitorConfig } from '@capacitor/cli'
  * published on Google Play.
  */
 const config: CapacitorConfig = {
-  appId: 'io.github.tidebook',
-  appName: 'Tidebook',
+  appId: 'io.github.gliplog',
+  appName: 'Gliplog',
   webDir: 'dist-android',
   server: {
     androidScheme: 'https',

@@ -1,5 +1,5 @@
 /**
- * Units Tidebook works in. Doses are always milligrams, the unit every GLP-1 label uses. Body
+ * Units Gliplog works in. Doses are always milligrams, the unit every GLP-1 label uses. Body
  * weight is stored in kilograms and height in centimetres, unrounded, so switching the display
  * unit never loses precision; conversion happens only for display and entry.
  */

@@ -37,7 +37,7 @@
     </application>
 
     <!--
-        Tidebook never touches the network. Removing INTERNET at merge time means no library can
+        Gliplog never touches the network. Removing INTERNET at merge time means no library can
         add it back, and the store listings show the app has no network access. Backups stay off
         so health data never leaves the device through Google's cloud backup; the in-app backup
         file is the user's copy.

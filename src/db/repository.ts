@@ -3,7 +3,7 @@ import type {
   GlucoseRow,
   MedicationRow,
   SymptomRow,
-  TidebookDb,
+  GliplogDb,
   WeightRow,
 } from './database'
 import { nowIso, systemClock, type Clock } from '@/services/time'
@@ -19,7 +19,7 @@ export type NewGlucose = DistributiveOmit<GlucoseRow, 'id' | 'createdAt'>
  * All reads and writes of user data. Views and stores call this, never Dexie tables directly,
  * so storage rules (ids, timestamps, cascade deletes) live in one place.
  */
-export function createRepository(db: TidebookDb, clock: Clock = systemClock) {
+export function createRepository(db: GliplogDb, clock: Clock = systemClock) {
   return {
     async listMedications(): Promise<MedicationRow[]> {
       return db.medications.orderBy('createdAt').reverse().toArray()

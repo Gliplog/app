@@ -256,7 +256,7 @@ const userRows = computed(() => props.user.filter((p) => p.weeks > 0))
 
 <template>
   <div>
-    <p class="text-body-small tb-muted">{{ axisName }}</p>
+    <p class="text-body-small gl-muted">{{ axisName }}</p>
     <v-chart
       class="cohort-chart"
       :option="option"
@@ -278,19 +278,19 @@ const userRows = computed(() => props.user.filter((p) => p.weeks > 0))
         </thead>
         <tbody>
           <tr v-for="row in userRows" :key="`you-${row.weeks}`">
-            <td class="tb-num">{{ roundTo(row.weeks, 1) }}</td>
+            <td class="gl-num">{{ roundTo(row.weeks, 1) }}</td>
             <td class="font-weight-bold">You</td>
-            <td class="text-end tb-num">{{ fmt(row.change) }}</td>
+            <td class="text-end gl-num">{{ fmt(row.change) }}</td>
           </tr>
           <tr v-for="r in summary.readouts" :key="`${r.trialId}-${r.armLabel}`">
-            <td class="tb-num">{{ r.weeks }}</td>
+            <td class="gl-num">{{ r.weeks }}</td>
             <td>
               {{ r.trialName }} · {{ r.armLabel }}
-              <span v-if="r.printedKg !== null" class="d-block text-body-small tb-faint"
+              <span v-if="r.printedKg !== null" class="d-block text-body-small gl-faint"
                 >Printed as {{ formatWeightChange(r.printedKg, 'kg') }}</span
               >
             </td>
-            <td class="text-end tb-num">{{ fmt(r.change) }}</td>
+            <td class="text-end gl-num">{{ fmt(r.change) }}</td>
           </tr>
         </tbody>
       </v-table>

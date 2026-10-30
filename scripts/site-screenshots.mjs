@@ -1,14 +1,14 @@
 /*
- * Captures the Today screenshots for the project site (tidebook.github.io) from the production
- * build, light and dark. Run `npm run screenshots:site` after a change to the Today screen; the
- * site-screenshots skill has the full steps.
+ * Captures the Today and Progress screenshots for the project site (gliplog.github.io) from the
+ * production build, light and dark. Run `npm run screenshots:site` after a change to either
+ * screen; the site-screenshots skill has the full steps.
  *
  * The data is a made-up 20-week Wegovy course, never real records. It goes in through Settings,
  * Restore, the same path a user takes, so the shot shows exactly what restored data renders as.
  * Dates are relative to now, so "next dose in 2 days" stays true whenever this runs.
  *
  * Usage: node scripts/site-screenshots.mjs [output dir]
- * The default output is ../tidebook.github.io/site/assets/screens, the site's sibling checkout.
+ * The default output is ../gliplog.github.io/site/assets/screens, the site's sibling checkout.
  */
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -17,7 +17,7 @@ import { chromium } from '@playwright/test'
 import sharp from 'sharp'
 import { preview } from 'vite'
 
-const OUT = resolve(process.argv[2] ?? '../tidebook.github.io/site/assets/screens')
+const OUT = resolve(process.argv[2] ?? '../gliplog.github.io/site/assets/screens')
 const PORT = 4175
 
 // The site's phone frames are 540 x 1099: a 360-wide phone at 1.5x.
@@ -90,7 +90,7 @@ function sampleBackup() {
     createdAt: created,
   }))
   return {
-    format: 'tidebook-backup',
+    format: 'gliplog-backup',
     version: 2,
     exportedAt: iso(now),
     medications: [
@@ -130,10 +130,20 @@ function sampleBackup() {
   }
 }
 
-const work = mkdtempSync(join(tmpdir(), 'tidebook-shots-'))
+const work = mkdtempSync(join(tmpdir(), 'gliplog-shots-'))
 const backupPath = join(work, 'sample-backup.json')
 writeFileSync(backupPath, JSON.stringify(sampleBackup()))
 mkdirSync(OUT, { recursive: true })
+
+/** Each shot is the top of a tab, once the content that makes it worth showing has rendered. */
+const SHOTS = [
+  {
+    name: 'today',
+    tab: 'Today',
+    ready: (page) => page.getByRole('img', { name: /Estimated amount in the body now/ }),
+  },
+  { name: 'progress', tab: 'Progress', ready: (page) => page.getByText('Since you started') },
+]
 
 const server = await preview({ preview: { port: PORT, strictPort: true } })
 const browser = await chromium.launch()
@@ -158,16 +168,18 @@ try {
     await page.getByRole('button', { name: 'Restore backup' }).click()
     await page.getByText('Backup restored').waitFor()
     await page.addStyleTag({ content: '.v-snackbar { display: none !important; }' })
-    await page.getByRole('link', { name: 'Today', exact: true }).first().click()
-    await page.getByRole('img', { name: /Estimated amount in the body now/ }).waitFor()
-    // Fonts and the chart's first paint settle after the image is in the tree.
-    await page.waitForTimeout(1500)
-    const png = await page.screenshot({
-      clip: { x: 0, y: 0, width: VIEWPORT.width, height: SIZE.height / SCALE },
-    })
-    const file = join(OUT, `today-${scheme}.webp`)
-    await sharp(png).resize(SIZE.width, SIZE.height).webp({ quality: 82 }).toFile(file)
-    console.log(`wrote ${file}`)
+    for (const shot of SHOTS) {
+      await page.getByRole('link', { name: shot.tab, exact: true }).first().click()
+      await shot.ready(page).waitFor()
+      // Fonts and the chart's first paint settle after the content is in the tree.
+      await page.waitForTimeout(1500)
+      const png = await page.screenshot({
+        clip: { x: 0, y: 0, width: VIEWPORT.width, height: SIZE.height / SCALE },
+      })
+      const file = join(OUT, `${shot.name}-${scheme}.webp`)
+      await sharp(png).resize(SIZE.width, SIZE.height).webp({ quality: 82 }).toFile(file)
+      console.log(`wrote ${file}`)
+    }
     await context.close()
   }
 } finally {

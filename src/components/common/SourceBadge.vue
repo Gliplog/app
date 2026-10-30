@@ -15,7 +15,7 @@ const badge = computed(() => ({ text: SOURCE_KIND_LABELS[props.kind], tone: TONE
 </script>
 
 <template>
-  <span :class="['tb-badge', `tb-badge--${badge.tone}`]">
-    <span class="tb-badge__dot" />{{ badge.text }}
+  <span :class="['gl-badge', `gl-badge--${badge.tone}`]">
+    <span class="gl-badge__dot" />{{ badge.text }}
   </span>
 </template>

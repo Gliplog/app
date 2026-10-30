@@ -73,19 +73,19 @@ const tableRows = computed(() => {
   <div class="pk-chart">
     <dl class="pk-chart__stats">
       <div>
-        <dt class="tb-faint">Now</dt>
-        <dd class="tb-num">{{ fmt(summary.now) }}</dd>
+        <dt class="gl-faint">Now</dt>
+        <dd class="gl-num">{{ fmt(summary.now) }}</dd>
       </div>
       <div v-if="summary.peak">
-        <dt class="tb-faint">{{ preview ? 'Peak with this dose' : 'Peak' }}</dt>
-        <dd class="tb-num">
+        <dt class="gl-faint">{{ preview ? 'Peak with this dose' : 'Peak' }}</dt>
+        <dd class="gl-num">
           {{ fmt(summary.peak.amount) }}
-          <span class="tb-faint">· {{ formatShort(summary.peak.at) }}</span>
+          <span class="gl-faint">· {{ formatShort(summary.peak.at) }}</span>
         </dd>
       </div>
       <div v-if="summary.clearsAt">
-        <dt class="tb-faint">Below 10% of peak</dt>
-        <dd class="tb-num">{{ formatShort(summary.clearsAt) }}</dd>
+        <dt class="gl-faint">Below 10% of peak</dt>
+        <dd class="gl-num">{{ formatShort(summary.clearsAt) }}</dd>
       </div>
     </dl>
     <v-chart
@@ -109,7 +109,7 @@ const tableRows = computed(() => {
         <tbody>
           <tr v-for="row in tableRows" :key="row.at">
             <td>{{ formatShort(row.at) }}</td>
-            <td class="text-end tb-num">{{ fmt(row.amount) }}</td>
+            <td class="text-end gl-num">{{ fmt(row.amount) }}</td>
           </tr>
         </tbody>
       </v-table>

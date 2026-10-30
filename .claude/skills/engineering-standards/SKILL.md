@@ -1,6 +1,6 @@
 ---
 name: engineering-standards
-description: 'Use when changing tidebook code structure, the domain layer, storage, stores, composables, tests, tooling, or deployment.'
+description: 'Use when changing gliplog code structure, the domain layer, storage, stores, composables, tests, tooling, or deployment.'
 ---
 
 # Engineering standards

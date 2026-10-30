@@ -5,7 +5,7 @@ import {
   type MedicationRow,
   type SettingRow,
   type SymptomRow,
-  type TidebookDb,
+  type GliplogDb,
   type WeightRow,
 } from './database'
 import { A1C_UNITS, GLUCOSE_CONTEXTS, GLUCOSE_UNITS } from '@/domain/glucose'
@@ -18,7 +18,7 @@ import { nowIso, systemClock, type Clock } from '@/services/time'
  * particular), since nothing is stored off the device. The file is plain JSON so a user can
  * inspect exactly what it contains.
  */
-const BACKUP_FORMAT = 'tidebook-backup'
+const BACKUP_FORMAT = 'gliplog-backup'
 /*
  * 2 added side effects and blood sugar. A version 1 file has neither and restores with both
  * empty; an app that only knows version 1 refuses a version 2 file rather than dropping them.
@@ -44,10 +44,7 @@ export class BackupFormatError extends Error {
   }
 }
 
-export async function exportBackup(
-  db: TidebookDb,
-  clock: Clock = systemClock,
-): Promise<BackupFile> {
+export async function exportBackup(db: GliplogDb, clock: Clock = systemClock): Promise<BackupFile> {
   const [medications, doses, weights, symptoms, glucose, settings] = await Promise.all([
     db.medications.toArray(),
     db.doses.toArray(),
@@ -178,11 +175,11 @@ export function parseBackup(text: string): BackupFile {
     throw new BackupFormatError('This file is not valid JSON.')
   }
   if (!isRecord(data) || data.format !== BACKUP_FORMAT) {
-    throw new BackupFormatError('This is not a Tidebook backup file.')
+    throw new BackupFormatError('This is not a Gliplog backup file.')
   }
   if (typeof data.version !== 'number' || data.version > BACKUP_VERSION) {
     throw new BackupFormatError(
-      'This backup was made by a newer version of Tidebook. Update the app first.',
+      'This backup was made by a newer version of Gliplog. Update the app first.',
     )
   }
   const { medications, doses, weights, settings } = data
@@ -222,7 +219,7 @@ export function parseBackup(text: string): BackupFile {
 }
 
 /** Replace everything on this device with the backup's contents, atomically. */
-export async function restoreBackup(db: TidebookDb, backup: BackupFile): Promise<void> {
+export async function restoreBackup(db: GliplogDb, backup: BackupFile): Promise<void> {
   await db.transaction('rw', db.tables, async () => {
     await Promise.all(db.tables.map((t) => t.clear()))
     await db.medications.bulkAdd(backup.medications)
@@ -235,5 +232,5 @@ export async function restoreBackup(db: TidebookDb, backup: BackupFile): Promise
 }
 
 export function backupFileName(exportedAt: string): string {
-  return `tidebook-backup-${exportedAt.slice(0, 10)}.json`
+  return `gliplog-backup-${exportedAt.slice(0, 10)}.json`
 }

@@ -96,7 +96,7 @@ function weightCard(): ShareCardContent | null {
       decimals: 1,
       guides: [],
     },
-    `Weight change since ${sinceText}, from weigh-ins logged in Tidebook.`,
+    `Weight change since ${sinceText}, from weigh-ins logged in Gliplog.`,
     false,
   )
 }
@@ -117,7 +117,7 @@ function bmiCard(): ShareCardContent | null {
       ['Change', changeText],
     ],
     { points: series, unitLabel: '', measure: 'BMI', decimals: 1, guides: [] },
-    'Body mass index from weigh-ins and height logged in Tidebook.',
+    'Body mass index from weigh-ins and height logged in Gliplog.',
   )
 }
 
@@ -150,7 +150,7 @@ function a1cCard(): ShareCardContent | null {
       decimals: decimalsFor(settings.a1cUnit),
       guides: [],
     },
-    'HbA1c results logged in Tidebook.',
+    'HbA1c results logged in Gliplog.',
   )
 }
 
@@ -187,7 +187,7 @@ function glucoseCard(): ShareCardContent | null {
       decimals: decimalsFor(settings.glucoseUnit),
       guides: [],
     },
-    'Glucose readings logged in Tidebook: fasting as a line, other times of day as points.',
+    'Glucose readings logged in Gliplog: fasting as a line, other times of day as points.',
   )
 }
 
@@ -212,7 +212,7 @@ const NAMES = { weight: 'weight', bmi: 'bmi', a1c: 'hba1c', glucose: 'glucose' }
   <ShareImageDialog
     v-model="open"
     title="Share as an image"
-    :file-stem="`tidebook-${NAMES[measure]}`"
+    :file-stem="`gliplog-${NAMES[measure]}`"
     :content="content"
   >
     <v-switch
@@ -220,7 +220,7 @@ const NAMES = { weight: 'weight', bmi: 'bmi', a1c: 'hba1c', glucose: 'glucose' }
       :label="measure === 'weight' ? 'Show my weight' : 'Show my numbers'"
       hide-details
     />
-    <p class="text-body-small tb-muted">
+    <p class="text-body-small gl-muted">
       {{
         showNumbers
           ? 'The image includes your values.'

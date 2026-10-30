@@ -27,15 +27,15 @@ function ratio(a, b) {
 }
 
 const PAIRS = [
-  ['tb-text-1', ['tb-bg', 'tb-surface', 'tb-surface-2']],
-  ['tb-text-2', ['tb-bg', 'tb-surface', 'tb-surface-2']],
-  ['tb-text-3', ['tb-bg', 'tb-surface']],
-  ['tb-brand', ['tb-bg', 'tb-surface']],
-  ['tb-accent', ['tb-surface', 'tb-accent-soft']],
-  ['tb-good-fg', ['tb-good-bg']],
-  ['tb-notice-fg', ['tb-notice-bg']],
-  ['tb-alert-fg', ['tb-alert-bg']],
-  ['tb-info-fg', ['tb-info-bg']],
+  ['gl-text-1', ['gl-bg', 'gl-surface', 'gl-surface-2']],
+  ['gl-text-2', ['gl-bg', 'gl-surface', 'gl-surface-2']],
+  ['gl-text-3', ['gl-bg', 'gl-surface']],
+  ['gl-brand', ['gl-bg', 'gl-surface']],
+  ['gl-accent', ['gl-surface', 'gl-accent-soft']],
+  ['gl-good-fg', ['gl-good-bg']],
+  ['gl-notice-fg', ['gl-notice-bg']],
+  ['gl-alert-fg', ['gl-alert-bg']],
+  ['gl-info-fg', ['gl-info-bg']],
 ]
 
 let failed = false

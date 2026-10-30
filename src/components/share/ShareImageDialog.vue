@@ -14,7 +14,7 @@ import { renderShareCard, type ShareCardContent } from './shareCard'
  */
 const props = defineProps<{
   title: string
-  /** File name without the date or extension: "tidebook-weight". */
+  /** File name without the date or extension: "gliplog-weight". */
   fileStem: string
   content: ShareCardContent | null
 }>()
@@ -79,7 +79,7 @@ async function share() {
       <v-card-item>
         <v-card-title :id="titleId">{{ title }}</v-card-title>
       </v-card-item>
-      <v-card-text class="tb-stack">
+      <v-card-text class="gl-stack">
         <div class="share-preview">
           <img
             v-if="previewUrl"
@@ -89,7 +89,7 @@ async function share() {
           />
           <v-progress-circular v-else indeterminate color="primary" />
         </div>
-        <div class="tb-stack tb-stack--tight">
+        <div class="gl-stack gl-stack--tight">
           <slot />
         </div>
       </v-card-text>
@@ -124,7 +124,7 @@ async function share() {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  border-radius: var(--tb-radius-md);
-  box-shadow: var(--tb-glass-shadow);
+  border-radius: var(--gl-radius-md);
+  box-shadow: var(--gl-glass-shadow);
 }
 </style>

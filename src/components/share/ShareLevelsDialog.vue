@@ -61,7 +61,7 @@ const content = computed<ShareCardContent | null>(() => {
   <ShareImageDialog
     v-model="open"
     title="Share estimated levels"
-    file-stem="tidebook-levels"
+    file-stem="gliplog-levels"
     :content="content"
   >
     <v-switch v-model="showName" label="Show medicine name" hide-details />

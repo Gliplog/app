@@ -40,9 +40,9 @@ export default defineConfigWithVueTs(
         // The app is offline and private: no network calls at all.
         {
           name: 'fetch',
-          message: 'Tidebook makes no network requests. Bundle data under src/data.',
+          message: 'Gliplog makes no network requests. Bundle data under src/data.',
         },
-        { name: 'XMLHttpRequest', message: 'Tidebook makes no network requests.' },
+        { name: 'XMLHttpRequest', message: 'Gliplog makes no network requests.' },
       ],
       'no-restricted-imports': [
         'error',

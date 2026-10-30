@@ -27,7 +27,7 @@
       "id": "semaglutide-tablet",
       "name": "Semaglutide tablet",
       "pk": null,
-      "pkUnavailableReason": "Only 0.4% to 2% of a semaglutide tablet is absorbed (prescribing label), and it varies day to day, so Tidebook can't estimate a level."
+      "pkUnavailableReason": "Only 0.4% to 2% of a semaglutide tablet is absorbed (prescribing label), and it varies day to day, so Gliplog can't estimate a level."
     },
     {
       "id": "tirzepatide-injection",

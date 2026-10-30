@@ -98,10 +98,10 @@ function doseSubtitle(d: DoseRow): string {
 </script>
 
 <template>
-  <div class="tb-page">
+  <div class="gl-page">
     <header class="mb-4">
-      <p class="tb-eyebrow">Everything you’ve logged</p>
-      <h1 class="tb-display text-headline-large">History</h1>
+      <p class="gl-eyebrow">Everything you’ve logged</p>
+      <h1 class="gl-display text-headline-large">History</h1>
     </header>
 
     <v-card>
@@ -111,11 +111,11 @@ function doseSubtitle(d: DoseRow): string {
         <v-tab value="glucose">Blood sugar ({{ journal.glucose.length }})</v-tab>
         <v-tab value="symptoms">Side effects ({{ journal.symptoms.length }})</v-tab>
       </v-tabs>
-      <v-card-text class="tb-stack">
+      <v-card-text class="gl-stack">
         <SortToggle v-model="direction" label="Order" />
 
         <template v-if="tab === 'doses'">
-          <p v-if="!journal.doses.length" class="tb-muted">No doses logged yet.</p>
+          <p v-if="!journal.doses.length" class="gl-muted">No doses logged yet.</p>
           <v-list v-else class="bg-transparent" density="comfortable">
             <v-list-item
               v-for="d in dosePages.current.value.items"
@@ -125,10 +125,10 @@ function doseSubtitle(d: DoseRow): string {
               @click="editDose(d)"
             >
               <v-list-item-title>
-                <span class="tb-num">{{ formatDose(d.doseMg) }}</span>
+                <span class="gl-num">{{ formatDose(d.doseMg) }}</span>
                 {{ journal.medicationById(d.medicationId)?.name }}
               </v-list-item-title>
-              <p v-if="d.notes" class="text-body-small tb-muted note">{{ d.notes }}</p>
+              <p v-if="d.notes" class="text-body-small gl-muted note">{{ d.notes }}</p>
             </v-list-item>
           </v-list>
           <ListPager
@@ -139,7 +139,7 @@ function doseSubtitle(d: DoseRow): string {
         </template>
 
         <template v-else-if="tab === 'symptoms'">
-          <p v-if="!journal.symptoms.length" class="tb-muted">No side effects logged.</p>
+          <p v-if="!journal.symptoms.length" class="gl-muted">No side effects logged.</p>
           <v-list v-else class="bg-transparent" density="comfortable">
             <v-list-item
               v-for="row in symptomPages.current.value.items"
@@ -149,7 +149,7 @@ function doseSubtitle(d: DoseRow): string {
               @click="editSymptom(row)"
             >
               <v-list-item-title>{{ symptomName(row) }}</v-list-item-title>
-              <p v-if="row.notes" class="text-body-small tb-muted note">{{ row.notes }}</p>
+              <p v-if="row.notes" class="text-body-small gl-muted note">{{ row.notes }}</p>
             </v-list-item>
           </v-list>
           <ListPager
@@ -160,7 +160,7 @@ function doseSubtitle(d: DoseRow): string {
         </template>
 
         <template v-else-if="tab === 'glucose'">
-          <p v-if="!journal.glucose.length" class="tb-muted">No blood sugar readings yet.</p>
+          <p v-if="!journal.glucose.length" class="gl-muted">No blood sugar readings yet.</p>
           <v-list v-else class="bg-transparent" density="comfortable">
             <v-list-item
               v-for="row in readingPages.current.value.items"
@@ -169,8 +169,8 @@ function doseSubtitle(d: DoseRow): string {
               :subtitle="readingSubtitle(row)"
               @click="editReading(row)"
             >
-              <v-list-item-title class="tb-num">{{ readingTitle(row) }}</v-list-item-title>
-              <p v-if="row.notes" class="text-body-small tb-muted note">{{ row.notes }}</p>
+              <v-list-item-title class="gl-num">{{ readingTitle(row) }}</v-list-item-title>
+              <p v-if="row.notes" class="text-body-small gl-muted note">{{ row.notes }}</p>
             </v-list-item>
           </v-list>
           <ListPager
@@ -181,7 +181,7 @@ function doseSubtitle(d: DoseRow): string {
         </template>
 
         <template v-else>
-          <p v-if="!journal.weights.length" class="tb-muted">No weigh-ins yet.</p>
+          <p v-if="!journal.weights.length" class="gl-muted">No weigh-ins yet.</p>
           <v-list v-else class="bg-transparent" density="comfortable">
             <v-list-item
               v-for="w in weightPages.current.value.items"
@@ -190,10 +190,10 @@ function doseSubtitle(d: DoseRow): string {
               :subtitle="formatDateTime(w.measuredAt)"
               @click="editWeight(w)"
             >
-              <v-list-item-title class="tb-num">
+              <v-list-item-title class="gl-num">
                 {{ formatWeight(w.kg, settings.weightUnit) }}
               </v-list-item-title>
-              <p v-if="w.notes" class="text-body-small tb-muted note">{{ w.notes }}</p>
+              <p v-if="w.notes" class="text-body-small gl-muted note">{{ w.notes }}</p>
             </v-list-item>
           </v-list>
           <ListPager

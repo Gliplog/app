@@ -26,14 +26,14 @@ async function accept() {
   <v-dialog :model-value="open" max-width="520" persistent :aria-labelledby="titleId">
     <v-card>
       <v-card-item>
-        <p class="tb-eyebrow">Before you start</p>
+        <p class="gl-eyebrow">Before you start</p>
         <v-card-title :id="titleId" class="text-wrap"
           >A private journal, not medical advice</v-card-title
         >
       </v-card-item>
       <v-card-text class="disclaimer">
         <p>
-          Tidebook tracks your GLP-1 medicine and weight, and shows published figures with their
+          Gliplog tracks your GLP-1 medicine and weight, and shows published figures with their
           sources. It doesn't recommend doses or replace your prescriber or pharmacist.
         </p>
         <p>Level charts are estimates and trial results are averages. Yours will differ.</p>

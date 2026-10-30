@@ -42,7 +42,7 @@ that must survive a reload goes into the database.
 
 ## Storage
 
-- IndexedDB via Dexie, database `tidebook`. Tables: `medications`, `doses`, `weights`,
+- IndexedDB via Dexie, database `gliplog`. Tables: `medications`, `doses`, `weights`,
   `symptoms` and `glucose` (both from version 2), `settings` (key/value; the profile is the
   `profile` key, sanitised on load).
 - HbA1c is stored in NGSP percent and glucose in mg/dL, unrounded, with the unit typed;
@@ -52,9 +52,9 @@ that must survive a reload goes into the database.
 - Deleting a medication deletes its doses in the same transaction. Stopping one keeps both.
 - `navigator.storage.persist()` is requested on launch (Settings shows the result). Safari may
   still evict data; a backup file (Settings, Save a backup) is the only guarantee. The app
-  shares the `tidebook.github.io` origin with the marketing site, which must never register a
+  shares the `gliplog.github.io` origin with the marketing site, which must never register a
   service worker or run scripts.
-- Backups are versioned JSON (`format: "tidebook-backup"`, version 2). `parseBackup` validates
+- Backups are versioned JSON (`format: "gliplog-backup"`, version 2). `parseBackup` validates
   untrusted input fully before `restoreBackup` replaces data atomically; a version 1 file
   restores with no side effects or blood sugar.
 
@@ -95,7 +95,7 @@ medicine and route share one curve.
 
 - `vite-plugin-pwa` (generateSW) precaches every built asset, including the ECharts chunk and
   fonts. `registerType: 'prompt'`: an update waits until the user reloads (`UpdatePrompt.vue`).
-- Base path comes from `TIDEBOOK_BASE` (default `/tidebook/`). The router uses hash history so
+- Base path comes from `GLIPLOG_BASE` (default `/gliplog/`). The router uses hash history so
   every URL resolves to `index.html` on GitHub Pages and offline.
 - A production-only meta CSP (`default-src 'self'`) is injected by `vite.config.ts`, because
   GitHub Pages cannot set headers. Styles need `'unsafe-inline'` for Vuetify's theme tag.

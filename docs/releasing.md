@@ -1,6 +1,6 @@
 # Releasing
 
-Tidebook ships in three places from one codebase: the PWA on GitHub Pages, Google Play, and
+Gliplog ships in three places from one codebase: the PWA on GitHub Pages, Google Play, and
 F-Droid. iOS is planned.
 
 ## Every release
@@ -18,12 +18,12 @@ Create one upload key and keep it out of the repository, backed up in two places
 means the app can never be updated under the same listing.
 
 ```bash
-keytool -genkeypair -v -keystore upload.jks -alias tidebook -keyalg RSA -keysize 4096 -validity 10000
-base64 -w0 upload.jks   # paste into the TIDEBOOK_KEYSTORE_BASE64 secret
+keytool -genkeypair -v -keystore upload.jks -alias gliplog -keyalg RSA -keysize 4096 -validity 10000
+base64 -w0 upload.jks   # paste into the GLIPLOG_KEYSTORE_BASE64 secret
 ```
 
-Repository secrets: `TIDEBOOK_KEYSTORE_BASE64`, `TIDEBOOK_KEYSTORE_PASSWORD`,
-`TIDEBOOK_KEY_ALIAS`, `TIDEBOOK_KEY_PASSWORD`. Enrol in Play App Signing so Google holds the
+Repository secrets: `GLIPLOG_KEYSTORE_BASE64`, `GLIPLOG_KEYSTORE_PASSWORD`,
+`GLIPLOG_KEY_ALIAS`, `GLIPLOG_KEY_PASSWORD`. Enrol in Play App Signing so Google holds the
 app signing key and this one is only the upload key.
 
 ## Google Play
@@ -31,7 +31,7 @@ app signing key and this one is only the upload key.
 - **Listing.** Title and short description come from `fastlane/metadata/android/en-US/`. Keep
   brand names out of the title, short description and icon; mention them only in the full
   description, with the trademark line.
-- **Privacy policy.** `https://tidebook.github.io/privacy.html`.
+- **Privacy policy.** `https://gliplog.github.io/privacy.html`.
 - **Data safety.** No data collected, no data shared. The app has no network permission, so no
   data is transmitted; data stays on the device and the user can delete it (Settings, Erase
   everything, or uninstall).
@@ -51,9 +51,9 @@ F-Droid builds from source, so nothing proprietary may be in the build: Capacito
 plugins are open source, there are no Google Play Services, and `dependenciesInfo` is off in
 `android/app/build.gradle` so no encrypted dependency report is added.
 
-1. Fork `fdroiddata` on GitLab and add `metadata/io.github.tidebook.yml` from
-   [fdroid/io.github.tidebook.yml](fdroid/io.github.tidebook.yml), with the release commit.
-2. Run `fdroid lint` and `fdroid build -v -l io.github.tidebook` in the fdroidserver container.
+1. Fork `fdroiddata` on GitLab and add `metadata/io.github.gliplog.yml` from
+   [fdroid/io.github.gliplog.yml](fdroid/io.github.gliplog.yml), with the release commit.
+2. Run `fdroid lint` and `fdroid build -v -l io.github.gliplog` in the fdroidserver container.
 3. Open the merge request. Later releases are picked up from tags (`UpdateCheckMode: Tags`).
 
 The listing text, icon and screenshots come from `fastlane/metadata/android/en-US/`. Add phone

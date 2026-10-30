@@ -37,7 +37,7 @@ export function patchRippleSource(code: string): string {
 export function vuetifyRipplePatch({ required = false } = {}): Plugin {
   let patched = false
   return {
-    name: 'tidebook-vuetify-ripple-patch',
+    name: 'gliplog-vuetify-ripple-patch',
     enforce: 'pre',
     transform(code, id) {
       if (!RIPPLE_MODULE.test(id)) return null

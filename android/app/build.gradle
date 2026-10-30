@@ -9,14 +9,14 @@ def (major, minor, patch) = appVersion.tokenize('.-')[0..2].collect { it as int 
 def appVersionCode = major * 10000 + minor * 100 + patch
 
 // Release signing comes from the environment so the keystore and passwords never enter the
-// repository. Without TIDEBOOK_KEYSTORE the release build is left unsigned.
-def releaseKeystore = System.getenv('TIDEBOOK_KEYSTORE')
+// repository. Without GLIPLOG_KEYSTORE the release build is left unsigned.
+def releaseKeystore = System.getenv('GLIPLOG_KEYSTORE')
 
 android {
-    namespace = "io.github.tidebook"
+    namespace = "io.github.gliplog"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "io.github.tidebook"
+        applicationId "io.github.gliplog"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode appVersionCode
@@ -32,9 +32,9 @@ android {
         if (releaseKeystore) {
             release {
                 storeFile file(releaseKeystore)
-                storePassword System.getenv('TIDEBOOK_KEYSTORE_PASSWORD')
-                keyAlias System.getenv('TIDEBOOK_KEY_ALIAS')
-                keyPassword System.getenv('TIDEBOOK_KEY_PASSWORD')
+                storePassword System.getenv('GLIPLOG_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('GLIPLOG_KEY_ALIAS')
+                keyPassword System.getenv('GLIPLOG_KEY_PASSWORD')
             }
         }
     }

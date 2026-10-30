@@ -41,11 +41,11 @@ const basisNote = computed(() => {
 </script>
 
 <template>
-  <div class="tb-page">
+  <div class="gl-page">
     <header class="page-header mb-4">
       <div>
-        <p class="tb-eyebrow">Over time</p>
-        <h1 class="tb-display text-headline-large">Progress</h1>
+        <p class="gl-eyebrow">Over time</p>
+        <h1 class="gl-display text-headline-large">Progress</h1>
       </div>
       <v-btn
         v-if="hasAnything"
@@ -64,33 +64,33 @@ const basisNote = computed(() => {
     <div class="progress-grid">
       <v-card v-if="baseline">
         <v-card-item>
-          <p class="tb-eyebrow">Since you started</p>
-          <v-card-title class="tb-num">
+          <p class="gl-eyebrow">Since you started</p>
+          <v-card-title class="gl-num">
             {{ last ? formatWeightChange(last.changeKg, settings.weightUnit) : '0' }}
-            <span v-if="last" class="tb-muted text-title-medium">
+            <span v-if="last" class="gl-muted text-title-medium">
               {{ formatPercentChange(last.changePercent) }}
             </span>
           </v-card-title>
         </v-card-item>
-        <v-card-text class="tb-stack">
+        <v-card-text class="gl-stack">
           <dl class="stats">
             <div>
-              <dt class="tb-faint">Start</dt>
-              <dd class="tb-num">
+              <dt class="gl-faint">Start</dt>
+              <dd class="gl-num">
                 {{ formatWeight(baseline.kg, settings.weightUnit) }}
-                <span class="tb-faint">· {{ formatDate(baseline.at) }}</span>
+                <span class="gl-faint">· {{ formatDate(baseline.at) }}</span>
               </dd>
             </div>
             <div v-if="last">
-              <dt class="tb-faint">Latest</dt>
-              <dd class="tb-num">{{ formatWeight(last.kg, settings.weightUnit) }}</dd>
+              <dt class="gl-faint">Latest</dt>
+              <dd class="gl-num">{{ formatWeight(last.kg, settings.weightUnit) }}</dd>
             </div>
             <div v-if="last && baseline.basis !== 'no-doses'">
-              <dt class="tb-faint">Weeks since first dose</dt>
-              <dd class="tb-num">{{ roundTo(last.weeks, 1) }}</dd>
+              <dt class="gl-faint">Weeks since first dose</dt>
+              <dd class="gl-num">{{ roundTo(last.weeks, 1) }}</dd>
             </div>
           </dl>
-          <p class="text-body-small tb-muted">{{ basisNote }}</p>
+          <p class="text-body-small gl-muted">{{ basisNote }}</p>
         </v-card-text>
       </v-card>
 
@@ -98,14 +98,14 @@ const basisNote = computed(() => {
     </div>
 
     <section v-if="journal.medications.length" id="side-effects" class="mt-6">
-      <h2 class="tb-display text-title-large mb-4">Side effects</h2>
+      <h2 class="gl-display text-title-large mb-4">Side effects</h2>
       <div class="progress-grid">
         <SymptomSummaryCard :now="now" @export="reportOpen = true" />
       </div>
     </section>
 
     <section v-if="journal.levelGroups.length" class="mt-6">
-      <h2 class="tb-display text-title-large mb-4">Estimated levels</h2>
+      <h2 class="gl-display text-title-large mb-4">Estimated levels</h2>
       <div class="progress-grid">
         <PkPanel
           v-for="g in journal.levelGroups"

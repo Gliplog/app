@@ -19,9 +19,9 @@ export default defineConfig({
     /*
      * WebKit is the engine behind every browser on iOS and iPadOS. It needs system libraries
      * (`npx playwright install --with-deps webkit`, which uses sudo), so it runs in CI and
-     * locally only when TIDEBOOK_E2E_WEBKIT=1.
+     * locally only when GLIPLOG_E2E_WEBKIT=1.
      */
-    ...(process.env.CI || process.env.TIDEBOOK_E2E_WEBKIT
+    ...(process.env.CI || process.env.GLIPLOG_E2E_WEBKIT
       ? [{ name: 'iphone', use: { ...devices['iPhone 15'] } }]
       : []),
   ],

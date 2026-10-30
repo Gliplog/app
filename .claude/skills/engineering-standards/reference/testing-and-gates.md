@@ -33,7 +33,7 @@ so native-only paths (`src/services/nativeFileTransfer.ts`) need a check on a de
   reload with stored data, manifest and service-worker scope, and the absence of third-party
   requests.
 - E2E projects: `phone` (Pixel 7, Chromium), `tablet` (iPad landscape, Chromium), and `iphone`
-  (iPhone 15, WebKit). `iphone` runs in CI, or locally with `TIDEBOOK_E2E_WEBKIT=1` after
+  (iPhone 15, WebKit). `iphone` runs in CI, or locally with `GLIPLOG_E2E_WEBKIT=1` after
   `sudo npx playwright install-deps webkit`. The service-worker specs skip on WebKit because
   Playwright does not drive WebKit service workers reliably; check installs on a real iPhone.
 - Inject time through `Clock`; never sleep in a test.

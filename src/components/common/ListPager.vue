@@ -11,7 +11,7 @@ const page = defineModel<number>({ required: true })
 
 <template>
   <nav v-if="current.pageCount > 1" class="list-pager" :aria-label="`${noun} pages`">
-    <p class="text-body-small tb-muted tb-num" aria-live="polite">
+    <p class="text-body-small gl-muted gl-num" aria-live="polite">
       {{ current.first }}–{{ current.last }} of {{ current.total }} {{ noun }}
     </p>
     <v-pagination

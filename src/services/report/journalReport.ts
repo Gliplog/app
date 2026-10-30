@@ -119,7 +119,7 @@ function bezier(p0: Point, p1: Point, p2: Point, p3: Point, steps = 16): Point[]
   })
 }
 
-/** The Tidebook mark from the geometry of src/assets/brand/tidebook-mark.svg (512 grid). */
+/** The Gliplog mark from the geometry of src/assets/brand/gliplog-mark.svg (512 grid). */
 function drawMark(page: PdfPage, x: number, y: number, size: number) {
   const k = size / 512
   const p = (gx: number, gy: number): Point => [x + gx * k, y + gy * k]
@@ -128,11 +128,11 @@ function drawMark(page: PdfPage, x: number, y: number, size: number) {
   page.rect(x, y, size, size, { fill: rgb(MARK_COLOURS.tileBottom) }, 112 * k)
   page.rect(x, y, size, size * 0.55, { fill: rgb(MARK_COLOURS.tileTop) }, 112 * k)
   page.rect(x, y + size * 0.3, size, size * 0.25, { fill: rgb(MARK_COLOURS.tileTop) })
-  const tide = [
+  const curve = [
     ...bezier(p(92, 330), p(150, 330), p(168, 160), p(228, 160)),
     ...bezier(p(228, 160), p(292, 160), p(316, 292), p(420, 300)).slice(1),
   ]
-  page.polyline(tide, { color: glyph, width: 40 * k })
+  page.polyline(curve, { color: glyph, width: 40 * k })
   const wave = [
     ...bezier(p(92, 404), p(156, 380), p(188, 428), p(256, 404)),
     ...bezier(p(256, 404), p(324, 380), p(356, 380), p(420, 404)).slice(1),
@@ -145,12 +145,12 @@ function drawMark(page: PdfPage, x: number, y: number, size: number) {
 function drawHeader(layout: Layout, data: JournalReportData) {
   const { page } = layout
   drawMark(page, MARGIN, TOP - 6, 26)
-  const word = page.text(MARGIN + 34, TOP + 13, 'Tide', {
+  const word = page.text(MARGIN + 34, TOP + 13, 'Glip', {
     font: 'bold',
     size: 15,
     color: ink['text-1'],
   })
-  page.text(MARGIN + 34 + word, TOP + 13, 'book', { font: 'bold', size: 15, color: ink.brand })
+  page.text(MARGIN + 34 + word, TOP + 13, 'log', { font: 'bold', size: 15, color: ink.brand })
   page.text(layout.size.width - MARGIN, TOP + 12, `Generated ${data.generated}`, {
     size: 8.5,
     color: ink['text-3'],
@@ -320,7 +320,7 @@ function drawFooters(layout: Layout) {
   pages.forEach((page, i) => {
     const y = size.height - 34
     page.line([MARGIN, y - 10], [size.width - MARGIN, y - 10], { color: ink.divider, width: 0.5 })
-    page.text(MARGIN, y, 'Tidebook · A personal journal, not medical advice.', {
+    page.text(MARGIN, y, 'Gliplog · A personal journal, not medical advice.', {
       size: 7.5,
       color: ink['text-3'],
     })
@@ -346,5 +346,5 @@ export function renderJournalReport(data: JournalReportData): Uint8Array<ArrayBu
   drawTable(layout, 'Side effects', data.symptoms, data.symptomNotes)
   drawTable(layout, 'Dose log', data.doses)
   drawFooters(layout)
-  return buildPdf(layout.pages, 'Tidebook report')
+  return buildPdf(layout.pages, 'Gliplog report')
 }

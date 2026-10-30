@@ -1,15 +1,15 @@
-# Tidebook
+# Gliplog
 
 A private, offline journal for GLP-1 medication: doses, weight, BMI, and how your progress sits
 beside the published clinical trials. Install it from the browser to your phone or tablet's home
 screen, or from the Android app stores; it then works with no connection. Everything you enter
 stays on your device.
 
-Live at [tidebook.github.io/app](https://tidebook.github.io/app/). The project site is
-[tidebook.github.io](https://tidebook.github.io/).
+Live at [gliplog.github.io/app](https://gliplog.github.io/app/). The project site is
+[gliplog.github.io](https://gliplog.github.io/).
 
-> Tidebook does arithmetic and shows sourced reference figures. It does not recommend doses and
-> is not medical advice. Brand names are the trademarks of their owners; Tidebook is not
+> Gliplog does arithmetic and shows sourced reference figures. It does not recommend doses and
+> is not medical advice. Brand names are the trademarks of their owners; Gliplog is not
 > affiliated with Novo Nordisk, Eli Lilly or any other manufacturer.
 
 ## Features
@@ -66,7 +66,7 @@ Settings shows the steps for the browser you are using.
 
 On iPhone and iPad, Safari and the installed app keep separate data; use a backup to move it.
 Make regular backups (Settings): browsers can clear site data under storage pressure. The app
-shares its origin with the project site, so clearing site data for `tidebook.github.io` erases
+shares its origin with the project site, so clearing site data for `gliplog.github.io` erases
 the app's data too.
 
 ## Development
@@ -86,13 +86,13 @@ Project conventions for contributors and coding agents are in [CLAUDE.md](CLAUDE
 
 ## Deploying to GitHub Pages
 
-This repository is `Tidebook/app`, served at `https://tidebook.github.io/app/`.
+This repository is `Gliplog/app`, served at `https://gliplog.github.io/app/`.
 
 1. In the repository settings, under Pages, set the source to **GitHub Actions**.
 2. Push to `main`. `.github/workflows/deploy.yml` runs the gate, builds with the repository name
    as the base path (`/app/`), and publishes.
 
-For a custom domain served from the root, set the repository variable `TIDEBOOK_BASE` to `/`.
+For a custom domain served from the root, set the repository variable `GLIPLOG_BASE` to `/`.
 
 ## Android, Google Play and F-Droid
 
@@ -110,7 +110,7 @@ cd android && ./gradlew assembleDebug    # needs JDK 21 and the Android SDK
   attaches both to a GitHub release.
 - `fastlane/metadata/android/` holds the store listing that F-Droid reads.
 
-The app id `io.github.tidebook` and the WebView origin `https://localhost` must never change
+The app id `io.github.gliplog` and the WebView origin `https://localhost` must never change
 after release. The release checklist, Play's health-app and Data safety answers, the F-Droid
 submission and the path to iOS are in [docs/releasing.md](docs/releasing.md).
 

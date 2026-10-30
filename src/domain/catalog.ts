@@ -3,7 +3,7 @@ import type { PkParameters } from './pk'
 /**
  * Where a number came from. `label` is a regulator-approved prescribing label, `trial` a
  * published clinical trial, `standard` a public-health standard (the WHO BMI bands), `model` an
- * assumption made by Tidebook where sources give only a range.
+ * assumption made by Gliplog where sources give only a range.
  */
 export type SourceKind = 'label' | 'trial' | 'standard' | 'model'
 

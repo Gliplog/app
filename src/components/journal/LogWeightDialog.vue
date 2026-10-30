@@ -92,10 +92,10 @@ async function remove() {
   <v-dialog v-model="open" max-width="480" scrollable :aria-labelledby="titleId">
     <v-card>
       <v-card-item>
-        <p class="tb-eyebrow">{{ weight ? 'Edit' : 'Log' }}</p>
+        <p class="gl-eyebrow">{{ weight ? 'Edit' : 'Log' }}</p>
         <v-card-title :id="titleId">Weigh-in</v-card-title>
       </v-card-item>
-      <v-card-text class="tb-stack">
+      <v-card-text class="gl-stack">
         <v-text-field
           v-model="form.value"
           label="Weight"
@@ -105,7 +105,7 @@ async function remove() {
           :error-messages="error"
           autofocus
         />
-        <p v-if="previous" class="text-body-small tb-faint">
+        <p v-if="previous" class="text-body-small gl-faint">
           Last time: {{ formatWeight(previous.kg, unit) }}
         </p>
         <v-text-field v-model="form.measuredAt" label="When" type="datetime-local" />

@@ -1,13 +1,13 @@
 /*
  * Global element styles and Vuetify component overrides. Everything here sits in the
- * `tb-theme` layer (see layers.css), so it beats Vuetify's component styles without
+ * `gl-theme` layer (see layers.css), so it beats Vuetify's component styles without
  * `!important` and still loses to utility classes. Components must not restyle what this file
  * owns: app bar, navigation, cards, dialogs, fields, buttons.
  */
-@layer tb-theme {
+@layer gl-theme {
   html,
   body {
-    font-family: var(--tb-font);
+    font-family: var(--gl-font);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     letter-spacing: -0.005em;
@@ -18,8 +18,8 @@
 
   body {
     margin: 0;
-    background-color: var(--tb-bg);
-    color: var(--tb-text-1);
+    background-color: var(--gl-bg);
+    color: var(--gl-text-1);
   }
 
   h1,
@@ -33,23 +33,23 @@
   code,
   kbd,
   pre {
-    font-family: var(--tb-font-mono);
+    font-family: var(--gl-font-mono);
   }
 
   ::selection {
-    background: var(--tb-brand-soft);
+    background: var(--gl-brand-soft);
   }
 
   /* tabindex="-1" marks programmatic focus targets (Vuetify focuses the dialog container on
      open); they are not keyboard stops, so a ring there frames the whole dialog. */
   :where(a, [tabindex]:not([tabindex='-1']), button):focus-visible {
     outline: none;
-    box-shadow: var(--tb-shadow-focus);
-    border-radius: var(--tb-radius-xs);
+    box-shadow: var(--gl-shadow-focus);
+    border-radius: var(--gl-radius-xs);
   }
 
   a {
-    color: var(--tb-brand);
+    color: var(--gl-brand);
   }
 
   /*
@@ -58,12 +58,12 @@
    * iOS ignores and which forces a repaint on every scroll elsewhere.
    */
   .v-application {
-    font-family: var(--tb-font);
+    font-family: var(--gl-font);
     background:
-      radial-gradient(120% 60% at 0% 0%, var(--tb-backdrop-1), transparent 60%),
-      radial-gradient(90% 50% at 100% 8%, var(--tb-backdrop-2), transparent 60%), var(--tb-bg);
+      radial-gradient(120% 60% at 0% 0%, var(--gl-backdrop-1), transparent 60%),
+      radial-gradient(90% 50% at 100% 8%, var(--gl-backdrop-2), transparent 60%), var(--gl-bg);
     background-repeat: no-repeat;
-    color: var(--tb-text-1);
+    color: var(--gl-text-1);
   }
 
   /*
@@ -74,18 +74,18 @@
   .v-app-bar.v-toolbar,
   .v-bottom-navigation,
   .v-navigation-drawer {
-    background-color: var(--tb-glass);
-    color: var(--tb-text-1);
-    -webkit-backdrop-filter: var(--tb-glass-blur);
-    backdrop-filter: var(--tb-glass-blur);
+    background-color: var(--gl-glass);
+    color: var(--gl-text-1);
+    -webkit-backdrop-filter: var(--gl-glass-blur);
+    backdrop-filter: var(--gl-glass-blur);
   }
 
   .v-app-bar.v-toolbar {
-    border-bottom: 1px solid var(--tb-glass-edge);
-    box-shadow: var(--tb-glass-sheen);
+    border-bottom: 1px solid var(--gl-glass-edge);
+    box-shadow: var(--gl-glass-sheen);
     transition-property: translate, box-shadow;
-    transition-duration: var(--tb-dur-base);
-    transition-timing-function: var(--tb-ease-standard);
+    transition-duration: var(--gl-dur-base);
+    transition-timing-function: var(--gl-ease-standard);
   }
 
   /*
@@ -94,18 +94,18 @@
    * content never scrolls under the clock. `translate` composes with the inline `transform`
    * Vuetify's layout writes, so neither overrides the other.
    */
-  .v-app-bar.v-toolbar.tb-app-bar--hidden {
+  .v-app-bar.v-toolbar.gl-app-bar--hidden {
     translate: 0 calc(-100% + var(--safe-area-inset-top, env(safe-area-inset-top)));
     box-shadow: none;
   }
 
   .v-bottom-navigation {
-    border-top: 1px solid var(--tb-glass-edge);
-    box-shadow: var(--tb-glass-sheen);
+    border-top: 1px solid var(--gl-glass-edge);
+    box-shadow: var(--gl-glass-sheen);
   }
 
   .v-navigation-drawer {
-    border-right: 1px solid var(--tb-glass-edge);
+    border-right: 1px solid var(--gl-glass-edge);
   }
 
   /*
@@ -113,14 +113,14 @@
    * full height of the bar reads as a lozenge. The active tab is a soft brand tile.
    */
   .v-bottom-navigation .v-bottom-navigation__content > .v-btn {
-    border-radius: var(--tb-radius-xs);
+    border-radius: var(--gl-radius-xs);
     height: calc(100% - 12px);
     margin: 6px 3px;
   }
 
   .v-bottom-navigation .v-btn--active {
-    color: var(--tb-brand);
-    background-color: var(--tb-brand-soft);
+    color: var(--gl-brand);
+    background-color: var(--gl-brand-soft);
   }
 
   .v-bottom-navigation .v-btn--active > .v-btn__overlay,
@@ -129,16 +129,16 @@
   }
 
   .v-navigation-drawer .v-list-item {
-    border-radius: var(--tb-radius-xs);
+    border-radius: var(--gl-radius-xs);
   }
 
   .v-list-item--active {
-    background-color: var(--tb-brand-softer);
-    color: var(--tb-brand);
+    background-color: var(--gl-brand-softer);
+    color: var(--gl-brand);
   }
 
   .v-navigation-drawer .v-list-item--active {
-    background-color: var(--tb-brand-soft);
+    background-color: var(--gl-brand-soft);
   }
 
   /*
@@ -153,25 +153,25 @@
     .v-card--variant-text,
     .v-card--variant-plain
   ) {
-    background-color: var(--tb-glass-card);
-    color: var(--tb-text-1);
-    border: 1px solid var(--tb-glass-edge);
-    border-radius: var(--tb-radius-lg);
-    box-shadow: var(--tb-glass-sheen), var(--tb-glass-shadow);
+    background-color: var(--gl-glass-card);
+    color: var(--gl-text-1);
+    border: 1px solid var(--gl-glass-edge);
+    border-radius: var(--gl-radius-lg);
+    box-shadow: var(--gl-glass-sheen), var(--gl-glass-shadow);
   }
 
   .v-card.v-card--variant-outlined {
-    border-color: var(--tb-divider);
-    border-radius: var(--tb-radius-lg);
+    border-color: var(--gl-divider);
+    border-radius: var(--gl-radius-lg);
   }
 
   .v-card.v-card--variant-tonal {
-    background-color: var(--tb-surface-2);
-    border-radius: var(--tb-radius-lg);
+    background-color: var(--gl-surface-2);
+    border-radius: var(--gl-radius-lg);
   }
 
   .v-card-title {
-    font-family: var(--tb-font-display);
+    font-family: var(--gl-font-display);
     font-weight: 600;
     letter-spacing: -0.015em;
   }
@@ -180,22 +180,22 @@
    * Cards stacked on one another (the medication stack) are solid paper: glass would let the
    * cards behind show through the one in front, so depth comes from the peeking edges instead.
    */
-  .v-card.tb-card-stacked {
-    background-color: var(--tb-surface);
+  .v-card.gl-card-stacked {
+    background-color: var(--gl-surface);
   }
 
   /* Floating layers (dialogs, sheets, menus, snackbars) are denser glass that blurs the page. */
   .v-dialog > .v-overlay__content > .v-card,
   .v-bottom-sheet > .v-overlay__content > .v-card {
-    background-color: var(--tb-glass-strong);
-    -webkit-backdrop-filter: var(--tb-glass-blur);
-    backdrop-filter: var(--tb-glass-blur);
+    background-color: var(--gl-glass-strong);
+    -webkit-backdrop-filter: var(--gl-glass-blur);
+    backdrop-filter: var(--gl-glass-blur);
   }
 
   .v-dialog > .v-overlay__content > .v-card {
-    border-radius: var(--tb-radius-xl);
-    box-shadow: var(--tb-glass-sheen), var(--tb-shadow-lg);
-    border: 1px solid var(--tb-glass-line);
+    border-radius: var(--gl-radius-xl);
+    box-shadow: var(--gl-glass-sheen), var(--gl-shadow-lg);
+    border: 1px solid var(--gl-glass-line);
   }
 
   /*
@@ -216,22 +216,22 @@
 
   .v-menu > .v-overlay__content > .v-list,
   .v-menu > .v-overlay__content > .v-card {
-    border-radius: var(--tb-radius-sm);
-    background-color: var(--tb-glass-strong);
-    -webkit-backdrop-filter: var(--tb-glass-blur);
-    backdrop-filter: var(--tb-glass-blur);
-    border: 1px solid var(--tb-glass-line);
-    box-shadow: var(--tb-glass-sheen), var(--tb-shadow-md);
+    border-radius: var(--gl-radius-sm);
+    background-color: var(--gl-glass-strong);
+    -webkit-backdrop-filter: var(--gl-glass-blur);
+    backdrop-filter: var(--gl-glass-blur);
+    border: 1px solid var(--gl-glass-line);
+    box-shadow: var(--gl-glass-sheen), var(--gl-shadow-md);
   }
 
   /* Buttons: warm pill, calm press. */
   .v-btn {
     letter-spacing: -0.005em;
     font-weight: 600;
-    border-radius: var(--tb-radius-pill);
+    border-radius: var(--gl-radius-pill);
     transition:
-      background var(--tb-dur-fast) var(--tb-ease-standard),
-      transform var(--tb-dur-fast) var(--tb-ease-standard);
+      background var(--gl-dur-fast) var(--gl-ease-standard),
+      transform var(--gl-dur-fast) var(--gl-ease-standard);
   }
 
   .v-btn--icon {
@@ -244,7 +244,7 @@
   }
 
   .v-btn:focus-visible {
-    box-shadow: var(--tb-shadow-focus);
+    box-shadow: var(--gl-shadow-focus);
   }
 
   .v-chip {
@@ -254,22 +254,22 @@
 
   /* Fields: warm surface, soft inset, teal focus border. One focus indicator, not a border and a ring. */
   .v-field--variant-outlined {
-    background-color: var(--tb-surface);
-    border-radius: var(--tb-radius-md);
-    box-shadow: var(--tb-shadow-inset);
+    background-color: var(--gl-surface);
+    border-radius: var(--gl-radius-md);
+    box-shadow: var(--gl-shadow-inset);
   }
 
   .v-field--variant-outlined.v-field--disabled {
-    background-color: var(--tb-surface-2);
+    background-color: var(--gl-surface-2);
   }
 
   .v-field--variant-outlined .v-field__outline {
     --v-field-border-opacity: 1;
-    color: var(--tb-divider-strong);
+    color: var(--gl-divider-strong);
   }
 
   .v-field--focused.v-field--variant-outlined .v-field__outline {
-    color: var(--tb-brand);
+    color: var(--gl-brand);
   }
 
   .v-field--error.v-field--variant-outlined .v-field__outline {
@@ -284,7 +284,7 @@
   .v-input:is(.v-text-field, .v-select, .v-textarea, .v-autocomplete, .v-combobox):has(
       .v-field__field > .v-field-label
     ) {
-    padding-top: var(--tb-field-label-band);
+    padding-top: var(--gl-field-label-band);
   }
 
   .v-field--variant-outlined,
@@ -292,7 +292,7 @@
     overflow: visible;
   }
 
-  /* Left-aligned with the field's border, like every other label above a control (.tb-label). */
+  /* Left-aligned with the field's border, like every other label above a control (.gl-label). */
   .v-field--variant-outlined .v-field__field > .v-field-label {
     position: absolute;
     top: auto;
@@ -300,11 +300,11 @@
     left: 0;
     margin-inline-start: 0;
     transform: none;
-    font-size: var(--tb-label-size);
-    font-weight: var(--tb-label-weight);
+    font-size: var(--gl-label-size);
+    font-weight: var(--gl-label-weight);
     line-height: 1.2;
-    letter-spacing: var(--tb-label-tracking);
-    color: var(--tb-text-2);
+    letter-spacing: var(--gl-label-tracking);
+    color: var(--gl-text-2);
     opacity: 1;
     visibility: visible;
     max-width: 100%;
@@ -324,17 +324,17 @@
   }
 
   .v-snackbar__wrapper {
-    border-radius: var(--tb-radius-md);
-    background-color: var(--tb-glass-strong);
-    -webkit-backdrop-filter: var(--tb-glass-blur);
-    backdrop-filter: var(--tb-glass-blur);
-    color: var(--tb-text-1);
-    border: 1px solid var(--tb-glass-line);
-    box-shadow: var(--tb-glass-sheen), var(--tb-shadow-lg);
+    border-radius: var(--gl-radius-md);
+    background-color: var(--gl-glass-strong);
+    -webkit-backdrop-filter: var(--gl-glass-blur);
+    backdrop-filter: var(--gl-glass-blur);
+    color: var(--gl-text-1);
+    border: 1px solid var(--gl-glass-line);
+    box-shadow: var(--gl-glass-sheen), var(--gl-shadow-lg);
   }
 
   .v-alert {
-    border-radius: var(--tb-radius-md);
+    border-radius: var(--gl-radius-md);
   }
 
   /*
@@ -365,7 +365,7 @@
     .v-menu > .v-overlay__content > .v-list,
     .v-menu > .v-overlay__content > .v-card,
     .v-snackbar__wrapper {
-      background-color: var(--tb-surface);
+      background-color: var(--gl-surface);
     }
   }
 
@@ -378,7 +378,7 @@
     .v-menu > .v-overlay__content > .v-list,
     .v-menu > .v-overlay__content > .v-card,
     .v-snackbar__wrapper {
-      background-color: var(--tb-surface);
+      background-color: var(--gl-surface);
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
     }
@@ -390,12 +390,12 @@
       .v-card--variant-text,
       .v-card--variant-plain
     ) {
-      background-color: var(--tb-surface);
+      background-color: var(--gl-surface);
     }
   }
 }
 
-@layer tb-utilities {
+@layer gl-utilities {
   /*
    * Hover feedback only where a pointer can hover. Touch browsers keep :hover on the last
    * element a tap landed on, and a tap that stops a fling does not move it, so a tab left behind
@@ -412,23 +412,23 @@
   }
 
   /* Small-caps tracked label in terracotta: the warm accent above section titles. */
-  .tb-eyebrow {
-    font-family: var(--tb-font);
+  .gl-eyebrow {
+    font-family: var(--gl-font);
     font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--tb-accent);
+    color: var(--gl-accent);
   }
 
   /* The label above a control that is not a Vuetify field: a preset group, a toggle, a list. */
-  .tb-label {
+  .gl-label {
     display: block;
-    font-size: var(--tb-label-size);
-    font-weight: var(--tb-label-weight);
-    letter-spacing: var(--tb-label-tracking);
+    font-size: var(--gl-label-size);
+    font-weight: var(--gl-label-weight);
+    letter-spacing: var(--gl-label-tracking);
     line-height: 1.2;
-    color: var(--tb-text-2);
+    color: var(--gl-text-2);
     margin-bottom: 6px;
     padding: 0;
   }
@@ -438,73 +438,73 @@
    * margins of their own. 16px between controls and blocks; --tight (8px) for a label-like
    * line and what it describes; --loose (24px) between sections of one card.
    */
-  .tb-stack {
+  .gl-stack {
     display: flex;
     flex-direction: column;
     gap: 16px;
   }
 
-  .tb-stack--tight {
+  .gl-stack--tight {
     gap: 8px;
   }
 
-  .tb-stack--loose {
+  .gl-stack--loose {
     gap: 24px;
   }
 
   /* A row of actions inside a notice or panel: end-aligned, wrapping on narrow screens. */
-  .tb-actions {
+  .gl-actions {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: 8px;
   }
 
-  .tb-display {
-    font-family: var(--tb-font-display);
+  .gl-display {
+    font-family: var(--gl-font-display);
     font-weight: 700;
     letter-spacing: -0.022em;
   }
 
-  .tb-muted {
-    color: var(--tb-text-2);
+  .gl-muted {
+    color: var(--gl-text-2);
   }
 
-  .tb-faint {
-    color: var(--tb-text-3);
+  .gl-faint {
+    color: var(--gl-text-3);
   }
 
-  .tb-mono {
-    font-family: var(--tb-font-mono);
+  .gl-mono {
+    font-family: var(--gl-font-mono);
     font-variant-numeric: tabular-nums;
   }
 
-  .tb-num {
+  .gl-num {
     font-variant-numeric: tabular-nums;
   }
 
   /* Inset panel for grouped content inside a card. */
-  .tb-inset {
-    background-color: var(--tb-surface-2);
-    border: 1px solid var(--tb-divider);
-    border-radius: var(--tb-radius-md);
+  .gl-inset {
+    background-color: var(--gl-surface-2);
+    border: 1px solid var(--gl-divider);
+    border-radius: var(--gl-radius-md);
   }
 
-  .tb-card-soft {
-    background-color: var(--tb-brand-softer);
-    border-color: var(--tb-brand-soft);
+  .gl-card-soft {
+    background-color: var(--gl-brand-softer);
+    border-color: var(--gl-brand-soft);
   }
 
-  .tb-card-accent {
-    background-color: var(--tb-accent-soft);
-    border-color: var(--tb-accent-line);
+  .gl-card-accent {
+    background-color: var(--gl-accent-soft);
+    border-color: var(--gl-accent-line);
   }
 
   /*
    * Calm pill status label.
-   *   <span class="tb-badge tb-badge--good"><span class="tb-badge__dot" />Human data</span>
+   *   <span class="gl-badge gl-badge--good"><span class="gl-badge__dot" />Human data</span>
    */
-  .tb-badge {
+  .gl-badge {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -514,48 +514,48 @@
     line-height: 1;
     white-space: nowrap;
     padding: 5px 10px;
-    border-radius: var(--tb-radius-pill);
-    background: var(--tb-surface-2);
-    color: var(--tb-text-2);
+    border-radius: var(--gl-radius-pill);
+    background: var(--gl-surface-2);
+    color: var(--gl-text-2);
   }
 
-  .tb-badge__dot {
+  .gl-badge__dot {
     width: 7px;
     height: 7px;
-    border-radius: var(--tb-radius-pill);
+    border-radius: var(--gl-radius-pill);
     background: currentColor;
     flex: none;
   }
 
-  .tb-badge--brand {
-    background: var(--tb-brand-soft);
-    color: var(--tb-brand-strong);
+  .gl-badge--brand {
+    background: var(--gl-brand-soft);
+    color: var(--gl-brand-strong);
   }
-  .tb-badge--good {
-    background: var(--tb-good-bg);
-    color: var(--tb-good-fg);
+  .gl-badge--good {
+    background: var(--gl-good-bg);
+    color: var(--gl-good-fg);
   }
-  .tb-badge--notice {
-    background: var(--tb-notice-bg);
-    color: var(--tb-notice-fg);
+  .gl-badge--notice {
+    background: var(--gl-notice-bg);
+    color: var(--gl-notice-fg);
   }
-  .tb-badge--alert {
-    background: var(--tb-alert-bg);
-    color: var(--tb-alert-fg);
+  .gl-badge--alert {
+    background: var(--gl-alert-bg);
+    color: var(--gl-alert-fg);
   }
-  .tb-badge--info {
-    background: var(--tb-info-bg);
-    color: var(--tb-info-fg);
+  .gl-badge--info {
+    background: var(--gl-info-bg);
+    color: var(--gl-info-fg);
   }
 
-  .tb-page {
+  .gl-page {
     max-width: 1200px;
     margin: 0 auto;
     padding: 16px 16px 32px;
   }
 
   @media (min-width: 840px) {
-    .tb-page {
+    .gl-page {
       padding: 24px 24px 40px;
     }
   }

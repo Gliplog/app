@@ -56,12 +56,12 @@ function timingText(s: SymptomSummary): string {
 <template>
   <v-card>
     <v-card-item>
-      <p class="tb-eyebrow">Side effects</p>
+      <p class="gl-eyebrow">Side effects</p>
       <v-card-title>How you’ve felt</v-card-title>
     </v-card-item>
-    <v-card-text class="tb-stack">
+    <v-card-text class="gl-stack">
       <div>
-        <p :id="periodLabelId" class="tb-label">Period</p>
+        <p :id="periodLabelId" class="gl-label">Period</p>
         <v-btn-toggle
           v-model="period"
           role="group"
@@ -84,22 +84,22 @@ function timingText(s: SymptomSummary): string {
           <tr v-for="s in summary" :key="s.key">
             <th scope="row" class="font-weight-medium">
               {{ s.name }}
-              <span class="d-block text-body-small tb-faint">Last {{ formatDate(s.lastAt) }}</span>
+              <span class="d-block text-body-small gl-faint">Last {{ formatDate(s.lastAt) }}</span>
             </th>
-            <td class="text-end tb-num">{{ s.count }}</td>
+            <td class="text-end gl-num">{{ s.count }}</td>
             <td class="text-body-small">
               {{ severityText(s) }}
-              <span class="d-block tb-muted">{{ timingText(s) }}</span>
+              <span class="d-block gl-muted">{{ timingText(s) }}</span>
             </td>
           </tr>
         </tbody>
       </v-table>
-      <p v-else class="tb-muted">Nothing logged in this period.</p>
+      <p v-else class="gl-muted">Nothing logged in this period.</p>
       <SourceList
         :sources="SYMPTOM_SOURCES"
         note="The list follows the side effects reported in the labels’ clinical trials."
       />
-      <div v-if="summary.length" class="tb-actions">
+      <div v-if="summary.length" class="gl-actions">
         <v-btn variant="tonal" :prepend-icon="mdiFilePdfBox" @click="emit('export')">
           Export PDF
         </v-btn>

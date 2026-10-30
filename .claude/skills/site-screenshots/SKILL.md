@@ -1,21 +1,22 @@
 ---
 name: site-screenshots
-description: 'Use when retaking or adding app screenshots for the project site (tidebook.github.io), for example after a change to the Today screen.'
+description: 'Use when retaking or adding app screenshots for the project site (gliplog.github.io), for example after a change to the Today or Progress screen.'
 ---
 
 # Site screenshots
 
-The project site shows phone screenshots in `site/assets/screens/` of the `tidebook.github.io`
+The project site shows phone screenshots in `site/assets/screens/` of the `gliplog.github.io`
 repository, one light and one dark file per screen. They always come from this app's production
 build with sample data, never real records.
 
-## Retake the Today screenshots
+## Retake the Today and Progress screenshots
 
-1. Check out `Tidebook/tidebook.github.io` next to this repository (`../tidebook.github.io`).
+1. Check out `Gliplog/gliplog.github.io` next to this repository (`../gliplog.github.io`).
 2. Run `make screenshots`. It builds the app, serves it on port 4175, restores a sample backup
-   through Settings, and writes `today-light.webp` and `today-dark.webp` into the site.
+   through Settings, and writes `today-` and `progress-` `light.webp` and `dark.webp` into the site. The
+   `trials-` images are taken by hand.
    Pass another folder with `node scripts/site-screenshots.mjs <dir>` to review first.
-3. Look at both images. Check that the cards are in the order Today shows them, that nothing
+3. Look at all four images. Check that the cards are in the order each tab shows them, that nothing
    covers them, and that the dates read naturally.
 4. If the screen changed, update the `alt` text on the `<img>` in the site's `site/index.html`.
 5. In the site repository, run `make check`, then commit the images.

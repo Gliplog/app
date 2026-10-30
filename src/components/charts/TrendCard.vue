@@ -151,7 +151,7 @@ const convertedUnits = computed(
 <template>
   <v-card v-if="MEASURES.length">
     <v-card-item>
-      <p class="tb-eyebrow">Trend</p>
+      <p class="gl-eyebrow">Trend</p>
       <v-card-title>{{ TITLES[mode] }}</v-card-title>
       <template #append>
         <v-btn
@@ -162,7 +162,7 @@ const convertedUnits = computed(
         />
       </template>
     </v-card-item>
-    <v-card-text class="tb-stack">
+    <v-card-text class="gl-stack">
       <div v-if="MEASURES.length > 1">
         <p :id="labelId" class="d-sr-only">Measure</p>
         <v-btn-toggle
@@ -184,21 +184,21 @@ const convertedUnits = computed(
         :decimals="chart.decimals"
         :guides="chart.guides"
       />
-      <p v-if="mode === 'glucose' && !chart.points.length" class="text-body-small tb-muted">
+      <p v-if="mode === 'glucose' && !chart.points.length" class="text-body-small gl-muted">
         No fasting readings yet; readings from other times of day show as points.
       </p>
       <template v-if="mode === 'bmi'">
-        <p v-if="adult" class="text-body-small tb-muted">
+        <p v-if="adult" class="text-body-small gl-muted">
           Dashed lines are the WHO adult bands. BMI is a screening measure and doesn't tell muscle
           from fat.
         </p>
-        <p v-else class="text-body-small tb-muted">
+        <p v-else class="text-body-small gl-muted">
           Adult BMI bands don't apply under {{ ADULT_AGE }}.
         </p>
         <SourceList :sources="[BMI_SOURCE]" />
       </template>
       <SourceList v-if="convertedUnits" :sources="GLUCOSE_UNIT_SOURCES" />
-      <p v-if="mode === 'weight' && !body.heightCm.value" class="text-body-small tb-muted">
+      <p v-if="mode === 'weight' && !body.heightCm.value" class="text-body-small gl-muted">
         Add your height in Settings to track BMI.
       </p>
     </v-card-text>

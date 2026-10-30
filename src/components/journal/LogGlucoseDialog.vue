@@ -166,12 +166,12 @@ async function remove() {
   <v-dialog v-model="open" max-width="480" scrollable :aria-labelledby="titleId">
     <v-card>
       <v-card-item>
-        <p class="tb-eyebrow">{{ reading ? 'Edit' : 'Log' }}</p>
+        <p class="gl-eyebrow">{{ reading ? 'Edit' : 'Log' }}</p>
         <v-card-title :id="titleId">Blood sugar</v-card-title>
       </v-card-item>
-      <v-card-text class="tb-stack">
+      <v-card-text class="gl-stack">
         <div>
-          <p :id="kindLabelId" class="tb-label">Reading</p>
+          <p :id="kindLabelId" class="gl-label">Reading</p>
           <v-btn-toggle
             v-model="form.kind"
             role="group"
@@ -192,9 +192,9 @@ async function remove() {
           :error-messages="error"
           :hint="form.kind === 'a1c' ? 'From a lab report or a home test kit' : undefined"
         />
-        <p v-if="previous" class="text-body-small tb-faint">Last time: {{ previousText }}</p>
+        <p v-if="previous" class="text-body-small gl-faint">Last time: {{ previousText }}</p>
         <div v-if="form.kind === 'glucose'">
-          <p :id="contextLabelId" class="tb-label">When in the day</p>
+          <p :id="contextLabelId" class="gl-label">When in the day</p>
           <v-chip-group
             v-model="form.context"
             mandatory
@@ -213,7 +213,7 @@ async function remove() {
               {{ GLUCOSE_CONTEXT_LABELS[c] }}
             </v-chip>
           </v-chip-group>
-          <p class="text-body-small tb-muted">
+          <p class="text-body-small gl-muted">
             Fasting: before eating or drinking anything but water, usually first thing in the
             morning. Only fasting readings are set beside trial results.
           </p>

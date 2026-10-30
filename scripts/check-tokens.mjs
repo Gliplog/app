@@ -1,5 +1,5 @@
 // Styling gate: colours live only in src/styles/tokens.css and src/plugins/vuetify.ts.
-// Components and views use --tb-* tokens or Vuetify theme colours, never raw hex/rgb values or
+// Components and views use --gl-* tokens or Vuetify theme colours, never raw hex/rgb values or
 // Material colour names. Run by `npm run check:tokens` and `make check`.
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
@@ -9,10 +9,10 @@ const SCAN = ['src/components', 'src/views', 'src/App.vue', 'src/styles/theme.cs
 const RAW_COLOUR = /#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/
 const MATERIAL_NAME =
   /\bcolor="(red|pink|purple|indigo|blue|cyan|teal|green|lime|yellow|amber|orange|brown|grey|gray)"/
-const TOKEN_USE = /var\(--tb-([\w-]+)/g
+const TOKEN_USE = /var\(--gl-([\w-]+)/g
 
 const defined = new Set(
-  [...readFileSync(join(root, 'src/styles/tokens.css'), 'utf8').matchAll(/--tb-([\w-]+):/g)].map(
+  [...readFileSync(join(root, 'src/styles/tokens.css'), 'utf8').matchAll(/--gl-([\w-]+):/g)].map(
     (m) => m[1],
   ),
 )
@@ -34,7 +34,7 @@ for (const entry of SCAN) {
         // theme.css may use rgb(var(--v-theme-*)) to read Vuetify theme colours.
         const stripped = line.replace(/rgba?\(var\(--v-theme-[\w-]+\)[^)]*\)/g, '')
         if (RAW_COLOUR.test(stripped) && !/\/\/|\/\*|^\s*\*/.test(line.trim().slice(0, 2))) {
-          console.error(`${where}: raw colour; use a --tb-* token or a Vuetify theme colour`)
+          console.error(`${where}: raw colour; use a --gl-* token or a Vuetify theme colour`)
           failures++
         }
         if (MATERIAL_NAME.test(line)) {
@@ -46,7 +46,7 @@ for (const entry of SCAN) {
         for (const m of line.matchAll(TOKEN_USE)) {
           if (!defined.has(m[1])) {
             console.error(
-              `${where}: --tb-${m[1]} is not defined in tokens.css (it would fall back silently)`,
+              `${where}: --gl-${m[1]} is not defined in tokens.css (it would fall back silently)`,
             )
             failures++
           }
@@ -55,4 +55,4 @@ for (const entry of SCAN) {
   }
 }
 if (failures) process.exit(1)
-console.log('tokens: no raw colours, every --tb-* token exists')
+console.log('tokens: no raw colours, every --gl-* token exists')

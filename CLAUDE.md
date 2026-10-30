@@ -1,10 +1,10 @@
-# Tidebook
+# Gliplog
 
 A private, offline journal for GLP-1 medication (brand and compounded): doses, weight, BMI,
 side effects, HbA1c and glucose, trial comparisons and estimated levels. A static PWA on GitHub
-Pages at `https://tidebook.github.io/app/`, also shipped as a Capacitor Android app (Google Play and
+Pages at `https://gliplog.github.io/app/`, also shipped as a Capacitor Android app (Google Play and
 F-Droid). No backend, no accounts, no network requests; all data stays in IndexedDB on the
-device. The marketing site is the separate `Tidebook/tidebook.github.io` repository, which
+device. The marketing site is the separate `Gliplog/gliplog.github.io` repository, which
 shares this origin.
 
 ## Commands
@@ -19,7 +19,7 @@ All commands run on the Node version in `.nvmrc` (`nvm use`); never system Node.
 | `make check-all`   | Full gate before declaring done: adds Playwright e2e (offline, PWA) and `npm audit`              |
 | `make preview`     | Serve the production build at `http://localhost:4173/app/`                                       |
 | `make android`     | Build the Capacitor bundle (`dist-android/`) and sync it into `android/`                         |
-| `make screenshots` | Retake the Today screenshots in `../tidebook.github.io` with sample data                         |
+| `make screenshots` | Retake the Today and Progress screenshots in `../gliplog.github.io` with sample data             |
 
 ## Skills and rules
 
@@ -47,8 +47,8 @@ F-Droid, iOS later) are in `docs/releasing.md`.
   of the arm's starting weight; both are labelled on the chart and in its sources
   (`src/domain/cohort.ts`). PK curves only from human data or clearly labelled user-supplied
   values.
-- Tidebook does arithmetic and shows sourced references; it never recommends a dose.
+- Gliplog does arithmetic and shows sourced references; it never recommends a dose.
 - Copy is warm, plain and inclusive: no shame or judgement about weight, every profile field
   optional, gender never used in a calculation.
-- Brand names are trademarks of their owners; Tidebook is not affiliated with any maker, and
+- Brand names are trademarks of their owners; Gliplog is not affiliated with any maker, and
   says so in Settings.

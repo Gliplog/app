@@ -2,7 +2,7 @@ import { createVuetify } from 'vuetify'
 import { aliases, mdi } from 'vuetify/iconsets/mdi-svg'
 
 /*
- * Vuetify's built-in `light` and `dark` themes are overridden with the Tidebook palette so the
+ * Vuetify's built-in `light` and `dark` themes are overridden with the Gliplog palette so the
  * `system` default follows the device's colour scheme. The user can pin one in Settings.
  * Colours mirror the semantic tokens in styles/tokens.css.
  */
@@ -60,7 +60,7 @@ export const vuetify = createVuetify({
   },
   defaults: {
     // hideDetails 'auto': the message row exists only when there is a hint or error to show,
-    // so spacing between fields comes from the container (.tb-stack), never from empty rows.
+    // so spacing between fields comes from the container (.gl-stack), never from empty rows.
     // singleLine: labels sit still above the field (theme.css), so Vuetify must not animate
     // them into the outline's notch on focus; that notch is hidden, and the animation measured
     // it as an empty box and flung the label across the screen.

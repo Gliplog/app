@@ -87,7 +87,7 @@ export interface SettingRow {
   value: unknown
 }
 
-export type TidebookDb = Dexie & {
+export type GliplogDb = Dexie & {
   medications: EntityTable<MedicationRow, 'id'>
   doses: EntityTable<DoseRow, 'id'>
   weights: EntityTable<WeightRow, 'id'>
@@ -96,15 +96,15 @@ export type TidebookDb = Dexie & {
   settings: EntityTable<SettingRow, 'key'>
 }
 
-const DB_NAME = 'tidebook'
+const DB_NAME = 'gliplog'
 
 /*
  * Schema history. Never edit a released version: add a new `db.version(n + 1)` with an
  * `.upgrade()` that migrates existing rows, because users' only copy of their data is here.
  * Indexes list only fields that are queried; other fields are stored but not indexed.
  */
-export function createDatabase(name = DB_NAME): TidebookDb {
-  const db = new Dexie(name) as TidebookDb
+export function createDatabase(name = DB_NAME): GliplogDb {
+  const db = new Dexie(name) as GliplogDb
   db.version(1).stores({
     medications: 'id, status, productId, createdAt',
     doses: 'id, medicationId, takenAt',

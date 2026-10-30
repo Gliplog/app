@@ -125,12 +125,12 @@ async function remove() {
   <v-dialog v-model="open" max-width="560" scrollable :aria-labelledby="titleId">
     <v-card>
       <v-card-item>
-        <p class="tb-eyebrow">{{ symptom ? 'Edit' : 'Log' }}</p>
+        <p class="gl-eyebrow">{{ symptom ? 'Edit' : 'Log' }}</p>
         <v-card-title :id="titleId">Side effects</v-card-title>
       </v-card-item>
-      <v-card-text class="tb-stack">
+      <v-card-text class="gl-stack">
         <fieldset class="plain">
-          <legend class="tb-label">
+          <legend class="gl-label">
             {{ editing ? 'What you felt' : 'What did you feel? Choose any that apply' }}
           </legend>
           <div class="chips">
@@ -156,7 +156,7 @@ async function remove() {
           counter
         />
         <div>
-          <p :id="severityLabelId" class="tb-label">How strong</p>
+          <p :id="severityLabelId" class="gl-label">How strong</p>
           <v-btn-toggle
             v-model="form.severity"
             role="group"
@@ -168,9 +168,9 @@ async function remove() {
               {{ SEVERITY_LABELS[level] }}
             </v-btn>
           </v-btn-toggle>
-          <p class="text-body-small tb-muted mt-1">{{ SEVERITY_HINTS[form.severity] }}</p>
+          <p class="text-body-small gl-muted mt-1">{{ SEVERITY_HINTS[form.severity] }}</p>
         </div>
-        <div v-if="showPancreatitisNote" class="tb-inset tb-stack tb-stack--tight" role="note">
+        <div v-if="showPancreatitisNote" class="gl-inset gl-stack gl-stack--tight" role="note">
           <p class="text-body-medium">{{ PANCREATITIS_NOTE.text }}</p>
           <SourceList :sources="[PANCREATITIS_NOTE.source]" />
         </div>

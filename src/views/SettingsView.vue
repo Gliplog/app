@@ -66,8 +66,8 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const busy = ref(false)
 
 const version = __APP_VERSION__
-const PRIVACY_URL = 'https://tidebook.github.io/privacy.html'
-const SOURCE_URL = 'https://github.com/Tidebook/app'
+const PRIVACY_URL = 'https://gliplog.github.io/privacy.html'
+const SOURCE_URL = 'https://github.com/Gliplog/app'
 
 const themeModel = computed({
   get: () => settings.theme,
@@ -267,7 +267,7 @@ async function eraseEverything() {
 }
 
 async function promptInstall() {
-  if (await install.actions.promptInstall()) notify.show('Tidebook installed', 'success')
+  if (await install.actions.promptInstall()) notify.show('Gliplog installed', 'success')
 }
 
 const formatMb = (bytes: number | null) =>
@@ -275,20 +275,20 @@ const formatMb = (bytes: number | null) =>
 </script>
 
 <template>
-  <div class="tb-page settings">
+  <div class="gl-page settings">
     <header class="mb-4">
-      <p class="tb-eyebrow">Preferences</p>
-      <h1 class="tb-display text-headline-large">Settings</h1>
+      <p class="gl-eyebrow">Preferences</p>
+      <h1 class="gl-display text-headline-large">Settings</h1>
     </header>
 
     <div class="settings-grid">
       <v-card>
         <v-card-item>
-          <p class="tb-eyebrow">About you</p>
+          <p class="gl-eyebrow">About you</p>
           <v-card-title>Profile</v-card-title>
         </v-card-item>
-        <v-card-text class="tb-stack">
-          <p class="text-body-medium tb-muted">
+        <v-card-text class="gl-stack">
+          <p class="text-body-medium gl-muted">
             Optional, and stored only on this device. Height is used for BMI, birth month for age.
           </p>
           <div v-if="settings.heightUnit === 'cm'">
@@ -335,13 +335,13 @@ const formatMb = (bytes: number | null) =>
               :error="!!parsed.birthError"
             />
           </div>
-          <p v-if="age !== null" class="text-body-small tb-muted">
+          <p v-if="age !== null" class="text-body-small gl-muted">
             Age {{ age
             }}<template v-if="parsed.birthMonth">
               (born {{ formatBirthMonth(parsed.birthMonth) }})</template
             >.
             <template v-if="age < ADULT_AGE">
-              Adult BMI bands don't apply under {{ ADULT_AGE }}, so Tidebook won't show one.
+              Adult BMI bands don't apply under {{ ADULT_AGE }}, so Gliplog won't show one.
             </template>
           </p>
           <v-select v-model="form.gender" :items="genderItems" label="Gender" />
@@ -352,7 +352,7 @@ const formatMb = (bytes: number | null) =>
             maxlength="60"
             autocomplete="off"
           />
-          <p class="text-body-small tb-muted">
+          <p class="text-body-small gl-muted">
             Not used in any calculation. It's here so your record describes you.
           </p>
           <v-text-field
@@ -363,12 +363,12 @@ const formatMb = (bytes: number | null) =>
             inputmode="decimal"
             :error-messages="parsed.goalError"
           />
-          <div class="tb-actions">
+          <div class="gl-actions">
             <v-btn color="primary" variant="flat" :disabled="!profileValid" @click="saveProfile">
               Save profile
             </v-btn>
           </div>
-          <p v-if="settings.profile.heightCm" class="text-body-small tb-faint">
+          <p v-if="settings.profile.heightCm" class="text-body-small gl-faint">
             Saved height: {{ formatHeight(settings.profile.heightCm, settings.heightUnit) }}
           </p>
         </v-card-text>
@@ -376,12 +376,12 @@ const formatMb = (bytes: number | null) =>
 
       <v-card>
         <v-card-item>
-          <p class="tb-eyebrow">Display</p>
+          <p class="gl-eyebrow">Display</p>
           <v-card-title>Units and appearance</v-card-title>
         </v-card-item>
-        <v-card-text class="tb-stack">
+        <v-card-text class="gl-stack">
           <div>
-            <p id="weight-unit-label" class="tb-label">Weight unit</p>
+            <p id="weight-unit-label" class="gl-label">Weight unit</p>
             <v-btn-toggle
               v-model="weightUnitModel"
               role="group"
@@ -394,7 +394,7 @@ const formatMb = (bytes: number | null) =>
             </v-btn-toggle>
           </div>
           <div>
-            <p id="height-unit-label" class="tb-label">Height unit</p>
+            <p id="height-unit-label" class="gl-label">Height unit</p>
             <v-btn-toggle
               v-model="heightUnitModel"
               role="group"
@@ -407,7 +407,7 @@ const formatMb = (bytes: number | null) =>
             </v-btn-toggle>
           </div>
           <div>
-            <p id="glucose-unit-label" class="tb-label">Blood glucose unit</p>
+            <p id="glucose-unit-label" class="gl-label">Blood glucose unit</p>
             <v-btn-toggle
               v-model="glucoseUnitModel"
               role="group"
@@ -420,7 +420,7 @@ const formatMb = (bytes: number | null) =>
             </v-btn-toggle>
           </div>
           <div>
-            <p id="a1c-unit-label" class="tb-label">HbA1c unit</p>
+            <p id="a1c-unit-label" class="gl-label">HbA1c unit</p>
             <v-btn-toggle
               v-model="a1cUnitModel"
               role="group"
@@ -433,7 +433,7 @@ const formatMb = (bytes: number | null) =>
             </v-btn-toggle>
           </div>
           <div>
-            <p id="theme-label" class="tb-label">Theme</p>
+            <p id="theme-label" class="gl-label">Theme</p>
             <v-btn-toggle
               v-model="themeModel"
               role="group"
@@ -446,7 +446,7 @@ const formatMb = (bytes: number | null) =>
               <v-btn value="dark">Dark</v-btn>
             </v-btn-toggle>
           </div>
-          <p class="text-body-small tb-muted">
+          <p class="text-body-small gl-muted">
             Switching units never changes your saved weights or readings.
           </p>
         </v-card-text>
@@ -454,10 +454,10 @@ const formatMb = (bytes: number | null) =>
 
       <v-card>
         <v-card-item>
-          <p class="tb-eyebrow">Your data</p>
+          <p class="gl-eyebrow">Your data</p>
           <v-card-title>Backup and restore</v-card-title>
         </v-card-item>
-        <v-card-text class="tb-stack">
+        <v-card-text class="gl-stack">
           <p>
             Your data is only on this device. Clearing site data or uninstalling deletes it, so keep
             a backup.
@@ -469,7 +469,7 @@ const formatMb = (bytes: number | null) =>
                 : "You haven't made a backup yet."
             }}
           </v-alert>
-          <p v-else-if="settings.lastBackupAt" class="tb-muted">
+          <p v-else-if="settings.lastBackupAt" class="gl-muted">
             Last backup {{ formatDateTime(settings.lastBackupAt) }}
           </p>
           <div class="d-flex flex-wrap ga-2">
@@ -494,7 +494,7 @@ const formatMb = (bytes: number | null) =>
               @change="importData"
             />
           </div>
-          <p class="text-body-small tb-muted">
+          <p class="text-body-small gl-muted">
             On iPhone and iPad, Safari and the Home Screen app keep separate data. Use a backup to
             move between them.
           </p>
@@ -514,16 +514,16 @@ const formatMb = (bytes: number | null) =>
 
       <v-card>
         <v-card-item>
-          <p class="tb-eyebrow">Install</p>
+          <p class="gl-eyebrow">Install</p>
           <v-card-title>Add to Home Screen</v-card-title>
         </v-card-item>
-        <v-card-text class="tb-stack">
+        <v-card-text class="gl-stack">
           <p v-if="install.state.standalone" class="d-flex align-center ga-2">
             <v-icon :icon="mdiCheckCircleOutline" color="success" />
             Installed
           </p>
           <template v-else>
-            <p>Install Tidebook to open it full screen and use it offline.</p>
+            <p>Install Gliplog to open it full screen and use it offline.</p>
             <v-btn
               v-if="install.canPrompt.value"
               color="primary"
@@ -532,7 +532,7 @@ const formatMb = (bytes: number | null) =>
               class="align-self-start"
               @click="promptInstall"
             >
-              Install Tidebook
+              Install Gliplog
             </v-btn>
             <template v-else>
               <!-- Step wording matches the menu labels in each screenshot. -->
@@ -575,10 +575,10 @@ const formatMb = (bytes: number | null) =>
 
       <v-card>
         <v-card-item>
-          <p class="tb-eyebrow">Privacy</p>
+          <p class="gl-eyebrow">Privacy</p>
           <v-card-title>Nothing leaves this device</v-card-title>
         </v-card-item>
-        <v-card-text class="tb-stack">
+        <v-card-text class="gl-stack">
           <ul class="privacy-list">
             <li>
               <v-icon :icon="mdiShieldLockOutline" size="small" /> No account, server, tracking or
@@ -586,7 +586,7 @@ const formatMb = (bytes: number | null) =>
             </li>
             <li><v-icon :icon="mdiCloudOffOutline" size="small" /> Works offline.</li>
           </ul>
-          <p class="text-body-small tb-muted">
+          <p class="text-body-small gl-muted">
             Storage:
             {{
               storage.state.persisted
@@ -605,12 +605,12 @@ const formatMb = (bytes: number | null) =>
 
       <v-card>
         <v-card-item>
-          <p class="tb-eyebrow">About and terms</p>
-          <v-card-title>Tidebook {{ version }}</v-card-title>
+          <p class="gl-eyebrow">About and terms</p>
+          <v-card-title>Gliplog {{ version }}</v-card-title>
         </v-card-item>
         <v-card-text class="about">
           <p>
-            Tidebook is a free, private journal for GLP-1 medicine and weight. It shows published
+            Gliplog is a free, private journal for GLP-1 medicine and weight. It shows published
             figures with their sources. It doesn't recommend doses and isn't medical advice or a
             medical device. Ask your prescriber or pharmacist about your treatment.
           </p>
@@ -621,11 +621,11 @@ const formatMb = (bytes: number | null) =>
           <p>
             Ozempic, Wegovy and Rybelsus are trademarks of Novo Nordisk A/S. Mounjaro, Zepbound and
             Foundayo are trademarks of Eli Lilly and Company. Brand names are used only to identify
-            the medicines. Tidebook is not affiliated with, endorsed by or sponsored by Novo
-            Nordisk, Eli Lilly or any other manufacturer or pharmacy.
+            the medicines. Gliplog is not affiliated with, endorsed by or sponsored by Novo Nordisk,
+            Eli Lilly or any other manufacturer or pharmacy.
           </p>
           <p>
-            Tidebook is free software under the GNU Affero General Public License, version 3
+            Gliplog is free software under the GNU Affero General Public License, version 3
             (AGPL-3.0). It is provided as is, without warranty of any kind. You are responsible for
             how you use it.
           </p>
