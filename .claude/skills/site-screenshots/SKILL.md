@@ -1,6 +1,6 @@
 ---
 name: site-screenshots
-description: 'Use when retaking or adding app screenshots for the project site (gliplog.github.io), for example after a change to the Today or Progress screen.'
+description: 'Use when retaking or adding app screenshots for the project site (gliplog.com), for example after a change to the Today or Progress screen.'
 ---
 
 # Site screenshots

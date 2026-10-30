@@ -243,6 +243,19 @@
     gap: 8px;
   }
 
+  /*
+   * A toggle whose options wrap on a narrow screen instead of scrolling sideways. A group sizes
+   * its buttons to its own height, so with the height freed they keep a comfortable one here.
+   */
+  .gl-toggle-wrap {
+    flex-wrap: wrap;
+    height: auto;
+  }
+
+  .gl-toggle-wrap > .v-btn {
+    min-height: 40px;
+  }
+
   .v-btn:focus-visible {
     box-shadow: var(--gl-shadow-focus);
   }
@@ -488,6 +501,7 @@
     background-color: var(--gl-surface-2);
     border: 1px solid var(--gl-divider);
     border-radius: var(--gl-radius-md);
+    padding: 16px;
   }
 
   .gl-card-soft {

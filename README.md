@@ -5,8 +5,8 @@ beside the published clinical trials. Install it from the browser to your phone 
 screen, or from the Android app stores; it then works with no connection. Everything you enter
 stays on your device.
 
-Live at [gliplog.github.io/app](https://gliplog.github.io/app/). The project site is
-[gliplog.github.io](https://gliplog.github.io/).
+Live at [gliplog.com/app](https://gliplog.com/app/). The project site is
+[gliplog.com](https://gliplog.com/).
 
 > Gliplog does arithmetic and shows sourced reference figures. It does not recommend doses and
 > is not medical advice. Brand names are the trademarks of their owners; Gliplog is not
@@ -66,7 +66,7 @@ Settings shows the steps for the browser you are using.
 
 On iPhone and iPad, Safari and the installed app keep separate data; use a backup to move it.
 Make regular backups (Settings): browsers can clear site data under storage pressure. The app
-shares its origin with the project site, so clearing site data for `gliplog.github.io` erases
+shares its origin with the project site, so clearing site data for `gliplog.com` erases
 the app's data too.
 
 ## Development
@@ -86,7 +86,7 @@ Project conventions for contributors and coding agents are in [CLAUDE.md](CLAUDE
 
 ## Deploying to GitHub Pages
 
-This repository is `Gliplog/app`, served at `https://gliplog.github.io/app/`.
+This repository is `Gliplog/app`, served at `https://gliplog.com/app/`.
 
 1. In the repository settings, under Pages, set the source to **GitHub Actions**.
 2. Push to `main`. `.github/workflows/deploy.yml` runs the gate, builds with the repository name

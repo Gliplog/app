@@ -66,7 +66,7 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const busy = ref(false)
 
 const version = __APP_VERSION__
-const PRIVACY_URL = 'https://gliplog.github.io/privacy.html'
+const PRIVACY_URL = 'https://gliplog.com/privacy.html'
 const SOURCE_URL = 'https://github.com/Gliplog/app'
 
 const themeModel = computed({
@@ -288,9 +288,6 @@ const formatMb = (bytes: number | null) =>
           <v-card-title>Profile</v-card-title>
         </v-card-item>
         <v-card-text class="gl-stack">
-          <p class="text-body-medium gl-muted">
-            Optional, and stored only on this device. Height is used for BMI, birth month for age.
-          </p>
           <div v-if="settings.heightUnit === 'cm'">
             <v-text-field
               v-model="form.cm"
@@ -304,7 +301,7 @@ const formatMb = (bytes: number | null) =>
           <div v-else class="d-flex ga-3 align-start">
             <v-text-field
               v-model="form.feet"
-              label="Height"
+              label="Height, feet"
               suffix="ft"
               type="number"
               inputmode="numeric"
@@ -312,14 +309,14 @@ const formatMb = (bytes: number | null) =>
             />
             <v-text-field
               v-model="form.inches"
-              label="and"
+              label="Inches"
               suffix="in"
               type="number"
               inputmode="decimal"
               :error="!!parsed.heightError"
             />
           </div>
-          <div class="d-flex ga-3 align-start">
+          <div class="birth-row">
             <v-select
               v-model="form.birthMonth"
               :items="months"
@@ -447,7 +444,7 @@ const formatMb = (bytes: number | null) =>
             </v-btn-toggle>
           </div>
           <p class="text-body-small gl-muted">
-            Switching units never changes your saved weights or readings.
+            Switch units any time. Your entries convert automatically.
           </p>
         </v-card-text>
       </v-card>
@@ -643,6 +640,14 @@ const formatMb = (bytes: number | null) =>
   display: grid;
   gap: 16px;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
+  align-items: start;
+}
+
+/* The month gets the wider share so its label and the longest month name fit beside the year. */
+.birth-row {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 12px;
   align-items: start;
 }
 

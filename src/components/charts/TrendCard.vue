@@ -171,7 +171,7 @@ const convertedUnits = computed(
           mandatory
           density="comfortable"
           :aria-labelledby="labelId"
-          class="trend-toggle"
+          class="gl-toggle-wrap"
         >
           <v-btn v-for="m in MEASURES" :key="m.value" :value="m.value">{{ m.label }}</v-btn>
         </v-btn-toggle>
@@ -205,11 +205,3 @@ const convertedUnits = computed(
     <ShareTrendDialog v-model="shareOpen" :measure="mode" :now="now" />
   </v-card>
 </template>
-
-<style scoped>
-/* Four measures wrap on a narrow phone rather than scroll the card sideways. */
-.trend-toggle {
-  flex-wrap: wrap;
-  height: auto;
-}
-</style>

@@ -31,7 +31,7 @@ app signing key and this one is only the upload key.
 - **Listing.** Title and short description come from `fastlane/metadata/android/en-US/`. Keep
   brand names out of the title, short description and icon; mention them only in the full
   description, with the trademark line.
-- **Privacy policy.** `https://gliplog.github.io/privacy.html`.
+- **Privacy policy.** `https://gliplog.com/privacy.html`.
 - **Data safety.** No data collected, no data shared. The app has no network permission, so no
   data is transmitted; data stays on the device and the user can delete it (Settings, Erase
   everything, or uninstall).

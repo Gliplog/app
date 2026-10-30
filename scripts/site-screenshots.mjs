@@ -1,5 +1,5 @@
 /*
- * Captures the Today and Progress screenshots for the project site (gliplog.github.io) from the
+ * Captures the Today and Progress screenshots for the project site (gliplog.com) from the
  * production build, light and dark. Run `npm run screenshots:site` after a change to either
  * screen; the site-screenshots skill has the full steps.
  *

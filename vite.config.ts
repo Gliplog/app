@@ -12,7 +12,7 @@ const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 
 
 /*
  * The app is served from the `app` repository of the Gliplog organisation on GitHub Pages
- * (https://gliplog.github.io/app/); the marketing site owns the root of that origin.
+ * (https://gliplog.com/app/); the marketing site owns the root of that origin.
  * GLIPLOG_BASE overrides it, e.g. "/" for a custom domain. Always starts and ends with "/".
  */
 function webBase(): string {

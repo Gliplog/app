@@ -10,9 +10,11 @@ import {
 import {
   GridComponent,
   LegendComponent,
+  MarkLineComponent,
   TooltipComponent,
   type GridComponentOption,
   type LegendComponentOption,
+  type MarkLineComponentOption,
   type TooltipComponentOption,
 } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
@@ -29,13 +31,23 @@ import {
 import { formatPercentChange, formatWeightChange, roundTo } from '@/domain/units'
 import { useChartColors } from '@/composables/useChartColors'
 
-use([LineChart, ScatterChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer])
+use([
+  LineChart,
+  ScatterChart,
+  GridComponent,
+  LegendComponent,
+  MarkLineComponent,
+  TooltipComponent,
+  CanvasRenderer,
+])
 
 /**
  * One medicine's trial readouts merged over time, with the user's own path. The shaded band is
  * the range across active arms at each week a trial reported, joined by straight lines from no
  * change at week 0; every arm stays visible as a point. Shape tells the populations apart and a
- * hollow point marks a percent derived from kilograms, so nothing rests on colour alone.
+ * hollow point marks a percent derived from kilograms, so nothing rests on colour alone. Line
+ * weights, markers and type follow the levels chart so the two read as one family, and the
+ * user's line is labelled at its end so the eye need not go back to the legend.
  */
 const props = defineProps<{
   summary: CohortSummary
@@ -87,6 +99,7 @@ type Option = ComposeOption<
   | ScatterSeriesOption
   | GridComponentOption
   | LegendComponentOption
+  | MarkLineComponentOption
   | TooltipComponentOption
 >
 
@@ -97,6 +110,9 @@ const option = computed<Option>(() => {
   const lastReadout = readouts.length ? readouts[readouts.length - 1]!.weeks : 0
   const maxWeek = Math.ceil((Math.max(lastReadout, lastUser) + 2) / 12) * 12
   const active = readouts.filter((r) => !r.placebo)
+  const fontSize = 12
+  // A light ring separates overlapping markers from each other and from the band.
+  const ring = { borderColor: c.surface, borderWidth: 1.5 }
 
   const point = (r: CohortReadout) => ({
     value: [r.weeks, toDisplay(r.change)],
@@ -105,14 +121,14 @@ const option = computed<Option>(() => {
     itemStyle:
       r.printedKg !== null
         ? { color: c.surface, borderColor: c.trial, borderWidth: 2 }
-        : { color: c.trial },
+        : { color: c.trial, ...ring },
   })
 
   const series: (LineSeriesOption | ScatterSeriesOption)[] = []
   if (band.length) {
     // The low edge, then the range stacked on it; the fill between them is the band. 'all'
     // stacks a negative range on a negative edge, which same-sign stacking would split apart.
-    const edge = { width: 1, color: c.trial, opacity: 0.55 }
+    const edge = { width: 1, color: c.trial, opacity: 0.5 }
     series.push(
       {
         name: RANGE,
@@ -132,7 +148,7 @@ const option = computed<Option>(() => {
         silent: true,
         symbol: 'none',
         lineStyle: edge,
-        areaStyle: { color: c.trial, opacity: 0.16 },
+        areaStyle: { color: c.trial, opacity: 0.14 },
         data: band.map((b) => [b.weeks, toDisplay(b.high) - toDisplay(b.low)]),
       },
     )
@@ -142,24 +158,28 @@ const option = computed<Option>(() => {
       name: NO_DIABETES,
       type: 'scatter',
       symbol: 'diamond',
-      symbolSize: 12,
-      itemStyle: { color: c.trial },
+      symbolSize: 11,
+      itemStyle: { color: c.trial, ...ring },
+      emphasis: { scale: 1.4 },
       data: active.filter((r) => r.population === 'obesity').map(point),
     },
     {
       name: T2D,
       type: 'scatter',
       symbol: 'triangle',
-      symbolSize: 12,
-      itemStyle: { color: c.trial },
+      symbolSize: 11,
+      itemStyle: { color: c.trial, ...ring },
+      emphasis: { scale: 1.4 },
       data: active.filter((r) => r.population === 't2d').map(point),
     },
     {
       name: PLACEBO,
       type: 'scatter',
-      symbol: 'emptyCircle',
+      // A filled circle in the surface colour: ECharts fills 'emptyCircle' white, even in dark.
+      symbol: 'circle',
       symbolSize: 8,
-      itemStyle: { color: c.placebo, borderWidth: 1.5 },
+      itemStyle: { color: c.surface, borderColor: c.placebo, borderWidth: 1.5 },
+      emphasis: { scale: 1.4 },
       data: readouts
         .filter((r) => r.placebo)
         .map((r) => ({ value: [r.weeks, toDisplay(r.change)], name: describe(r) })),
@@ -170,10 +190,18 @@ const option = computed<Option>(() => {
       name: YOU,
       type: 'line',
       symbol: 'circle',
-      symbolSize: 6,
+      symbolSize: 7,
       z: 5,
-      lineStyle: { width: 3, color: c.logged, cap: 'round', join: 'round' },
-      itemStyle: { color: c.logged },
+      lineStyle: { width: 2.5, color: c.logged, cap: 'round', join: 'round' },
+      itemStyle: { color: c.logged, ...ring },
+      endLabel: {
+        show: true,
+        formatter: YOU,
+        color: c.logged,
+        fontFamily: c.font,
+        fontSize,
+        fontWeight: 700,
+      },
       data: props.user.map((p) => ({
         value: [roundTo(p.weeks, 2), toDisplay(p.change)],
         name: `You<br/>Week ${roundTo(p.weeks, 1)}: ${fmt(p.change)}`,
@@ -181,26 +209,50 @@ const option = computed<Option>(() => {
     })
   }
 
-  const legend = [
+  // Week 0 is everyone's start, so the zero line is the reference every point is read against.
+  series.push({
+    name: 'Start',
+    type: 'line',
+    data: [],
+    silent: true,
+    markLine: {
+      silent: true,
+      symbol: 'none',
+      label: { show: false },
+      lineStyle: { color: c.now, type: 'dashed', width: 1 },
+      data: [{ yAxis: 0 }],
+    },
+  })
+
+  const legend: NonNullable<LegendComponentOption['data']> = [
     ...(props.user.length > 1 ? [YOU] : []),
     ...(active.some((r) => r.population === 'obesity') ? [NO_DIABETES] : []),
     ...(active.some((r) => r.population === 't2d') ? [T2D] : []),
     ...(readouts.some((r) => r.placebo) ? [PLACEBO] : []),
+    ...(band.length
+      ? [{ name: RANGE, icon: 'roundRect', itemStyle: { color: c.trial, opacity: 0.35 } }]
+      : []),
   ]
 
   return {
     animationDuration: 600,
     animationEasing: 'cubicOut',
-    textStyle: { fontFamily: c.font, color: c.text },
-    // Room for the legend to wrap onto a second row on a phone.
-    grid: { left: 8, right: 16, top: 64, bottom: 28, containLabel: true },
+    textStyle: { fontFamily: c.font, color: c.text, fontSize },
+    // Room for the legend to wrap onto a second row on a phone, and for the "You" end label.
+    grid: {
+      left: 8,
+      right: props.user.length > 1 ? 40 : 16,
+      top: 64,
+      bottom: 28,
+      containLabel: true,
+    },
     legend: {
       top: 0,
       left: 0,
-      itemWidth: 14,
+      itemWidth: 18,
       itemHeight: 10,
-      itemGap: 14,
-      textStyle: { color: c.axis, fontFamily: c.font, fontSize: 11 },
+      itemGap: 16,
+      textStyle: { color: c.text, fontFamily: c.font, fontSize },
       data: legend,
     },
     tooltip: {
@@ -219,9 +271,9 @@ const option = computed<Option>(() => {
       name: 'Weeks since first dose',
       nameLocation: 'middle',
       nameGap: 26,
-      nameTextStyle: { color: c.axis, fontFamily: c.font, fontSize: 11 },
+      nameTextStyle: { color: c.axis, fontFamily: c.font, fontSize },
       axisLine: { lineStyle: { color: c.grid } },
-      axisLabel: { color: c.axis },
+      axisLabel: { color: c.axis, fontSize },
       splitLine: { show: false },
     },
     yAxis: {
@@ -229,6 +281,7 @@ const option = computed<Option>(() => {
       max: (v: { max: number }) => Math.max(0, Math.ceil(v.max)),
       axisLabel: {
         color: c.axis,
+        fontSize,
         formatter: (v: number) => `${roundTo(v, 1)}${props.measure === 'weight' ? '%' : ''}`,
       },
       splitLine: { lineStyle: { color: c.grid } },

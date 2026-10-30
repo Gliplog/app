@@ -52,7 +52,7 @@ that must survive a reload goes into the database.
 - Deleting a medication deletes its doses in the same transaction. Stopping one keeps both.
 - `navigator.storage.persist()` is requested on launch (Settings shows the result). Safari may
   still evict data; a backup file (Settings, Save a backup) is the only guarantee. The app
-  shares the `gliplog.github.io` origin with the marketing site, which must never register a
+  shares the `gliplog.com` origin with the marketing site, which must never register a
   service worker or run scripts.
 - Backups are versioned JSON (`format: "gliplog-backup"`, version 2). `parseBackup` validates
   untrusted input fully before `restoreBackup` replaces data atomically; a version 1 file

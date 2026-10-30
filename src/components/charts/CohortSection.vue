@@ -235,7 +235,7 @@ const trialCount = computed(() =>
         mandatory
         density="comfortable"
         :aria-labelledby="ids.product"
-        class="wrap-toggle"
+        class="gl-toggle-wrap"
       >
         <v-btn v-for="p in products" :key="p.id" :value="p.id">{{ p.name }}</v-btn>
       </v-btn-toggle>
@@ -256,7 +256,7 @@ const trialCount = computed(() =>
               mandatory
               density="comfortable"
               :aria-labelledby="ids.measure"
-              class="wrap-toggle"
+              class="gl-toggle-wrap"
             >
               <v-btn v-for="m in measures" :key="m" :value="m">{{ MEASURE_LABELS[m] }}</v-btn>
             </v-btn-toggle>
@@ -269,7 +269,7 @@ const trialCount = computed(() =>
               mandatory
               density="comfortable"
               :aria-labelledby="ids.population"
-              class="wrap-toggle"
+              class="gl-toggle-wrap"
             >
               <v-btn v-for="p in POPULATIONS" :key="p.value" :value="p.value">{{ p.label }}</v-btn>
             </v-btn-toggle>
@@ -328,13 +328,7 @@ const trialCount = computed(() =>
 .cohort-grid {
   display: grid;
   gap: 16px;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
   align-items: start;
-}
-
-/* Long medication names wrap rather than scroll the page sideways. */
-.wrap-toggle {
-  flex-wrap: wrap;
-  height: auto;
 }
 </style>
