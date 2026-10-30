@@ -4,6 +4,8 @@ import { useTheme } from 'vuetify'
 export interface ChartColors {
   logged: string
   preview: string
+  trial: string
+  placebo: string
   grid: string
   axis: string
   now: string
@@ -19,6 +21,8 @@ function readColors(): ChartColors {
   return {
     logged: read('--tb-chart-logged'),
     preview: read('--tb-chart-preview'),
+    trial: read('--tb-chart-trial'),
+    placebo: read('--tb-chart-placebo'),
     grid: read('--tb-chart-grid'),
     axis: read('--tb-chart-axis'),
     now: read('--tb-chart-now'),

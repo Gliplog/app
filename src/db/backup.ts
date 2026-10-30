@@ -1,11 +1,15 @@
 import {
   INJECTION_SITES,
   type DoseRow,
+  type GlucoseRow,
   type MedicationRow,
   type SettingRow,
+  type SymptomRow,
   type TidebookDb,
   type WeightRow,
 } from './database'
+import { A1C_UNITS, GLUCOSE_CONTEXTS, GLUCOSE_UNITS } from '@/domain/glucose'
+import { SEVERITIES, SYMPTOMS } from '@/domain/symptoms'
 import { WEIGHT_UNITS } from '@/domain/units'
 import { nowIso, systemClock, type Clock } from '@/services/time'
 
@@ -15,7 +19,11 @@ import { nowIso, systemClock, type Clock } from '@/services/time'
  * inspect exactly what it contains.
  */
 const BACKUP_FORMAT = 'tidebook-backup'
-const BACKUP_VERSION = 1
+/*
+ * 2 added side effects and blood sugar. A version 1 file has neither and restores with both
+ * empty; an app that only knows version 1 refuses a version 2 file rather than dropping them.
+ */
+const BACKUP_VERSION = 2
 
 export interface BackupFile {
   format: typeof BACKUP_FORMAT
@@ -24,6 +32,8 @@ export interface BackupFile {
   medications: MedicationRow[]
   doses: DoseRow[]
   weights: WeightRow[]
+  symptoms: SymptomRow[]
+  glucose: GlucoseRow[]
   settings: SettingRow[]
 }
 
@@ -38,10 +48,12 @@ export async function exportBackup(
   db: TidebookDb,
   clock: Clock = systemClock,
 ): Promise<BackupFile> {
-  const [medications, doses, weights, settings] = await Promise.all([
+  const [medications, doses, weights, symptoms, glucose, settings] = await Promise.all([
     db.medications.toArray(),
     db.doses.toArray(),
     db.weights.toArray(),
+    db.symptoms.toArray(),
+    db.glucose.toArray(),
     db.settings.toArray(),
   ])
   return {
@@ -51,6 +63,8 @@ export async function exportBackup(
     medications,
     doses,
     weights,
+    symptoms,
+    glucose,
     settings,
   }
 }
@@ -123,6 +137,38 @@ function checkWeight(w: unknown, i: number): asserts w is WeightRow {
     throw new BackupFormatError(`Weight ${i + 1} is missing required fields or has invalid values.`)
 }
 
+function checkSymptom(s: unknown, i: number): asserts s is SymptomRow {
+  const ok =
+    isRecord(s) &&
+    typeof s.id === 'string' &&
+    isIso(s.occurredAt) &&
+    SYMPTOMS.includes(s.symptom as never) &&
+    typeof s.otherText === 'string' &&
+    SEVERITIES.includes(s.severity as never) &&
+    typeof s.notes === 'string'
+  if (!ok)
+    throw new BackupFormatError(
+      `Side effect ${i + 1} is missing required fields or has invalid values.`,
+    )
+}
+
+function checkGlucose(g: unknown, i: number): asserts g is GlucoseRow {
+  const ok =
+    isRecord(g) &&
+    typeof g.id === 'string' &&
+    isIso(g.measuredAt) &&
+    isPositive(g.value) &&
+    typeof g.notes === 'string' &&
+    ((g.kind === 'a1c' && A1C_UNITS.includes(g.enteredUnit as never) && g.context === null) ||
+      (g.kind === 'glucose' &&
+        GLUCOSE_UNITS.includes(g.enteredUnit as never) &&
+        GLUCOSE_CONTEXTS.includes(g.context as never)))
+  if (!ok)
+    throw new BackupFormatError(
+      `Blood sugar reading ${i + 1} is missing required fields or has invalid values.`,
+    )
+}
+
 /** Validate untrusted JSON before anything touches the database. */
 export function parseBackup(text: string): BackupFile {
   let data: unknown
@@ -140,10 +186,15 @@ export function parseBackup(text: string): BackupFile {
     )
   }
   const { medications, doses, weights, settings } = data
+  // Version 1 files predate these tables.
+  const symptoms = data.version < 2 ? [] : data.symptoms
+  const glucose = data.version < 2 ? [] : data.glucose
   if (
     !Array.isArray(medications) ||
     !Array.isArray(doses) ||
     !Array.isArray(weights) ||
+    !Array.isArray(symptoms) ||
+    !Array.isArray(glucose) ||
     !Array.isArray(settings)
   ) {
     throw new BackupFormatError('The backup is incomplete.')
@@ -152,6 +203,8 @@ export function parseBackup(text: string): BackupFile {
   const ids = new Set((medications as MedicationRow[]).map((m) => m.id))
   doses.forEach((d, i) => checkDose(d, i, ids))
   weights.forEach(checkWeight)
+  symptoms.forEach(checkSymptom)
+  glucose.forEach(checkGlucose)
   const validSettings = settings.filter(
     (s): s is SettingRow => isRecord(s) && typeof s.key === 'string',
   )
@@ -162,22 +215,21 @@ export function parseBackup(text: string): BackupFile {
     medications: medications as MedicationRow[],
     doses: doses as DoseRow[],
     weights: weights as WeightRow[],
+    symptoms: symptoms as SymptomRow[],
+    glucose: glucose as GlucoseRow[],
     settings: validSettings,
   }
 }
 
 /** Replace everything on this device with the backup's contents, atomically. */
 export async function restoreBackup(db: TidebookDb, backup: BackupFile): Promise<void> {
-  await db.transaction('rw', [db.medications, db.doses, db.weights, db.settings], async () => {
-    await Promise.all([
-      db.medications.clear(),
-      db.doses.clear(),
-      db.weights.clear(),
-      db.settings.clear(),
-    ])
+  await db.transaction('rw', db.tables, async () => {
+    await Promise.all(db.tables.map((t) => t.clear()))
     await db.medications.bulkAdd(backup.medications)
     await db.doses.bulkAdd(backup.doses)
     await db.weights.bulkAdd(backup.weights)
+    await db.symptoms.bulkAdd(backup.symptoms)
+    await db.glucose.bulkAdd(backup.glucose)
     await db.settings.bulkPut(backup.settings)
   })
 }

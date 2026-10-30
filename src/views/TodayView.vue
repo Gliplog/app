@@ -2,23 +2,28 @@
 import { computed, ref } from 'vue'
 import { findPkProfile } from '@/data'
 import type { MedicationRow } from '@/db/database'
-import { dueState } from '@/domain/schedule'
-import {
-  formatDose,
-  formatPercentChange,
-  formatWeight,
-  formatWeightChange,
-  roundTo,
-} from '@/domain/units'
+import { formatPercentChange, formatWeight, formatWeightChange, roundTo } from '@/domain/units'
 import { useJournalStore } from '@/stores/journal'
 import { useSettingsStore } from '@/stores/settings'
 import { useNow } from '@/composables/useNow'
 import { useBodyMetrics } from '@/composables/useBodyMetrics'
-import { formatDateTime, formatRelativeDays, formatWeekday, daysBetween } from '@/services/time'
-import { mdiChevronRight, mdiNeedle, mdiPlus, mdiScaleBathroom } from '@/plugins/icons'
+import { formatDateTime, daysBetween } from '@/services/time'
+import {
+  mdiChevronRight,
+  mdiPlus,
+  mdiScaleBathroom,
+  mdiStethoscope,
+  mdiWaterOutline,
+} from '@/plugins/icons'
+import { formatA1c, formatGlucose, GLUCOSE_CONTEXT_LABELS } from '@/domain/glucose'
+import { summarizeSymptoms } from '@/domain/symptoms'
+import { toEpochMs } from '@/services/time'
+import MedicationStack from '@/components/journal/MedicationStack.vue'
 import MedicationDialog from '@/components/journal/MedicationDialog.vue'
 import LogDoseDialog from '@/components/journal/LogDoseDialog.vue'
 import LogWeightDialog from '@/components/journal/LogWeightDialog.vue'
+import LogSymptomDialog from '@/components/journal/LogSymptomDialog.vue'
+import LogGlucoseDialog from '@/components/journal/LogGlucoseDialog.vue'
 import PkPanel from '@/components/charts/PkPanel.vue'
 
 const journal = useJournalStore()
@@ -31,6 +36,8 @@ const editing = ref<MedicationRow | null>(null)
 const doseDialog = ref(false)
 const doseFor = ref<string | undefined>()
 const weightDialog = ref(false)
+const symptomDialog = ref(false)
+const glucoseDialog = ref(false)
 
 function addMedication() {
   editing.value = null
@@ -47,32 +54,15 @@ function logDose(med?: MedicationRow) {
   doseDialog.value = true
 }
 
-const current = computed(() => journal.currentMedication)
+/** The front card of the stack; the levels panel below follows it. */
+const current = computed(() => journal.focusedMedication)
+const focusedId = computed({
+  get: () => current.value?.id,
+  set: (id) => {
+    if (id) journal.focusMedication(id)
+  },
+})
 const currentProduct = computed(() => journal.productOf(current.value))
-const lastDose = computed(() => (current.value ? journal.lastDoseOf(current.value.id) : undefined))
-
-const due = computed(() => {
-  const med = current.value
-  if (!med) return null
-  const at = journal.nextDueOf(med)
-  return at === null ? null : { at, state: dueState(at, now.value) }
-})
-
-const dueText = computed(() => {
-  const d = due.value
-  if (!d) return 'No dose logged yet'
-  switch (d.state.kind) {
-    case 'later':
-      return `Next dose ${formatWeekday(d.at)}, in ${d.state.days} day${d.state.days === 1 ? '' : 's'}`
-    case 'soon':
-      return `Next dose in about ${d.state.hours} hour${d.state.hours === 1 ? '' : 's'}`
-    case 'due':
-      return 'Your next dose is due'
-    case 'late':
-      return `Due ${formatRelativeDays(d.state.days)}`
-  }
-  return ''
-})
 
 const latest = computed(() => journal.latestWeight)
 const baseline = computed(() => journal.baseline)
@@ -91,9 +81,30 @@ const goalText = computed(() => {
 const group = computed(() => (current.value ? journal.levelGroupOf(current.value) : undefined))
 const profile = computed(() => findPkProfile(currentProduct.value?.pkProfile))
 
+/** Names the medications pooled into one curve, so a shared estimate never looks like a bug. */
+const groupCaption = computed(() => {
+  const g = group.value
+  if (!g || g.medicationCount < 2) return undefined
+  const names = g.medicationIds.map((id) => journal.medicationById(id)?.name).filter(Boolean)
+  return `Includes doses of ${names.join(' and ')}: the body handles them as one medicine.`
+})
+
 const isEmpty = computed(
   () => journal.loaded && !journal.medications.length && !journal.weights.length,
 )
+
+/** The last week of side effects, most frequent first. */
+const RECENT_DAYS = 7
+const recentSymptoms = computed(() =>
+  summarizeSymptoms(
+    journal.symptoms.map((s) => ({ ...s, at: toEpochMs(s.occurredAt) })),
+    journal.doses.map((d) => toEpochMs(d.takenAt)),
+    now.value - RECENT_DAYS * 86_400_000,
+  ),
+)
+
+const latestA1c = computed(() => journal.glucose.find((g) => g.kind === 'a1c'))
+const latestGlucose = computed(() => journal.glucose.find((g) => g.kind === 'glucose'))
 
 const daysSinceStart = computed(() =>
   baseline.value ? daysBetween(baseline.value.startAt, now.value) : null,
@@ -123,40 +134,13 @@ const daysSinceStart = computed(() =>
     </v-card>
 
     <div class="today-grid">
-      <v-card v-if="current">
-        <v-card-item>
-          <p class="tb-eyebrow">Medication</p>
-          <v-card-title class="text-wrap">{{ current.name }}</v-card-title>
-          <v-card-subtitle v-if="currentProduct">
-            {{ currentProduct.molecule }} ·
-            {{
-              current.intervalDays === 1
-                ? 'daily'
-                : current.intervalDays === 7
-                  ? 'weekly'
-                  : `every ${current.intervalDays} days`
-            }}
-          </v-card-subtitle>
-        </v-card-item>
-        <v-card-text class="tb-stack">
-          <p class="text-title-medium">{{ dueText }}</p>
-          <p v-if="lastDose" class="tb-muted">
-            Last: <span class="tb-num">{{ formatDose(lastDose.doseMg) }}</span
-            >,
-            {{ formatDateTime(lastDose.takenAt) }}
-          </p>
-          <div class="tb-actions">
-            <v-btn
-              color="primary"
-              variant="flat"
-              :prepend-icon="mdiNeedle"
-              @click="logDose(current)"
-            >
-              Log dose
-            </v-btn>
-          </div>
-        </v-card-text>
-      </v-card>
+      <MedicationStack
+        v-if="journal.activeMedications.length"
+        v-model="focusedId"
+        :medications="journal.activeMedications"
+        :now="now"
+        @log-dose="logDose"
+      />
 
       <v-card v-if="latest || journal.medications.length">
         <v-card-item>
@@ -206,20 +190,93 @@ const daysSinceStart = computed(() =>
         </v-card-text>
       </v-card>
 
-      <PkPanel
-        v-if="current && group"
-        :profile="profile"
-        :override="current.pkOverride"
-        :doses="group.doses"
-        :preview="null"
-        :now="now"
-        :title="profile?.name ?? current.name"
-        :caption="
-          group.medicationCount > 1
-            ? `Includes doses from ${group.medicationCount} medications with the same medicine.`
-            : undefined
-        "
-      />
+      <v-fade-transition v-if="current" mode="out-in">
+        <PkPanel
+          v-if="group"
+          :key="group.key"
+          :profile="profile"
+          :override="current.pkOverride"
+          :doses="group.doses"
+          :preview="null"
+          :now="now"
+          :title="profile?.name ?? current.name"
+          :caption="groupCaption"
+        />
+        <v-card v-else :key="`empty:${current.id}`">
+          <v-card-item>
+            <p class="tb-eyebrow">Estimated levels</p>
+            <v-card-title class="text-wrap">{{ profile?.name ?? current.name }}</v-card-title>
+          </v-card-item>
+          <v-card-text>
+            <p class="tb-muted">Log a dose of {{ current.name }} to see an estimate here.</p>
+          </v-card-text>
+        </v-card>
+      </v-fade-transition>
+
+      <v-card v-if="journal.medications.length">
+        <v-card-item>
+          <p class="tb-eyebrow">Side effects</p>
+          <v-card-title>Last {{ RECENT_DAYS }} days</v-card-title>
+        </v-card-item>
+        <v-card-text class="tb-stack">
+          <ul v-if="recentSymptoms.length" class="symptom-list" aria-label="Side effects this week">
+            <li v-for="s in recentSymptoms" :key="s.key" class="tb-badge tb-badge--info">
+              {{ s.name }} <span class="tb-num">× {{ s.count }}</span>
+            </li>
+          </ul>
+          <p v-else class="tb-muted">
+            Nothing logged this week. Noting how you feel helps when you talk with your prescriber.
+          </p>
+          <div class="tb-actions">
+            <v-btn variant="text" :to="{ name: 'progress', hash: '#side-effects' }"
+              >See summary</v-btn
+            >
+            <v-btn variant="tonal" :prepend-icon="mdiStethoscope" @click="symptomDialog = true">
+              Log side effect
+            </v-btn>
+          </div>
+        </v-card-text>
+      </v-card>
+
+      <v-card v-if="journal.medications.length">
+        <v-card-item>
+          <p class="tb-eyebrow">Blood sugar</p>
+          <v-card-title>
+            <span v-if="latestA1c" class="tb-num"
+              >HbA1c {{ formatA1c(latestA1c.value, settings.a1cUnit) }}</span
+            >
+            <span v-else-if="latestGlucose" class="tb-num">{{
+              formatGlucose(latestGlucose.value, settings.glucoseUnit)
+            }}</span>
+            <span v-else>No readings yet</span>
+          </v-card-title>
+          <v-card-subtitle v-if="latestA1c">{{
+            formatDateTime(latestA1c.measuredAt)
+          }}</v-card-subtitle>
+        </v-card-item>
+        <v-card-text class="tb-stack">
+          <dl v-if="latestA1c && latestGlucose" class="stats">
+            <div>
+              <dt class="tb-faint">
+                Glucose · {{ GLUCOSE_CONTEXT_LABELS[latestGlucose.context].toLowerCase() }}
+              </dt>
+              <dd class="tb-num">{{ formatGlucose(latestGlucose.value, settings.glucoseUnit) }}</dd>
+            </div>
+          </dl>
+          <p v-else-if="latestGlucose" class="tb-muted">
+            {{ GLUCOSE_CONTEXT_LABELS[latestGlucose.context] }},
+            {{ formatDateTime(latestGlucose.measuredAt) }}
+          </p>
+          <p v-else-if="!latestA1c" class="tb-muted">
+            Log an HbA1c result or a glucose reading to follow them over time.
+          </p>
+          <div class="tb-actions">
+            <v-btn variant="tonal" :prepend-icon="mdiWaterOutline" @click="glucoseDialog = true">
+              Log blood sugar
+            </v-btn>
+          </div>
+        </v-card-text>
+      </v-card>
 
       <v-card v-if="journal.medications.length">
         <v-card-item>
@@ -258,6 +315,8 @@ const daysSinceStart = computed(() =>
     <MedicationDialog v-model="medDialog" :medication="editing" />
     <LogDoseDialog v-model="doseDialog" :dose="null" :medication-id="doseFor" />
     <LogWeightDialog v-model="weightDialog" :weight="null" />
+    <LogSymptomDialog v-model="symptomDialog" :symptom="null" />
+    <LogGlucoseDialog v-model="glucoseDialog" :reading="null" />
   </div>
 </template>
 
@@ -284,5 +343,14 @@ const daysSinceStart = computed(() =>
 .stats dd {
   margin: 0;
   font-weight: 600;
+}
+
+.symptom-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 </style>

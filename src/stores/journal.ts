@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { repository } from '@/db'
-import type { DoseRow, MedicationRow, WeightRow } from '@/db/database'
-import type { NewDose, NewMedication, NewWeight } from '@/db/repository'
+import type { DoseRow, GlucoseRow, MedicationRow, SymptomRow, WeightRow } from '@/db/database'
+import type { NewDose, NewGlucose, NewMedication, NewSymptom, NewWeight } from '@/db/repository'
 import { findPkProfile, findProduct } from '@/data'
 import type { CatalogProduct } from '@/domain/catalog'
 import {
@@ -17,7 +17,8 @@ import { nextDueAt } from '@/domain/schedule'
 import { toEpochMs } from '@/services/time'
 
 /**
- * The user's journal: medications, the doses logged against them, and weigh-ins. The whole
+ * The user's journal: medications, the doses logged against them, weigh-ins, side effects and
+ * blood sugar readings. The whole
  * dataset is small enough to hold in memory, so the store loads everything once and reloads
  * after each write.
  */
@@ -27,17 +28,25 @@ export const useJournalStore = defineStore('journal', () => {
   const doses = ref<DoseRow[]>([])
   /** Newest first. */
   const weights = ref<WeightRow[]>([])
+  /** Newest first. */
+  const symptoms = ref<SymptomRow[]>([])
+  /** HbA1c results and glucose readings, newest first. */
+  const glucose = ref<GlucoseRow[]>([])
   const loaded = ref(false)
 
   async function load() {
-    const [m, d, w] = await Promise.all([
+    const [m, d, w, s, g] = await Promise.all([
       repository.listMedications(),
       repository.listDoses(),
       repository.listWeights(),
+      repository.listSymptoms(),
+      repository.listGlucose(),
     ])
     medications.value = m
     doses.value = d
     weights.value = w
+    symptoms.value = s
+    glucose.value = g
     loaded.value = true
   }
 
@@ -74,6 +83,23 @@ export const useJournalStore = defineStore('journal', () => {
     const recent = doses.value.find((d) => active.has(d.medicationId))
     return recent ? medicationById(recent.medicationId) : activeMedications.value[0]
   })
+
+  /**
+   * The medication the user chose to look at on Today, which Progress follows for its trial
+   * comparison. Held in memory only: a fresh launch opens on the medication in use now.
+   */
+  const focusedMedicationId = ref<string | null>(null)
+
+  /** The focused medication while it is still active, else the one in use now. */
+  const focusedMedication = computed<MedicationRow | undefined>(() => {
+    const id = focusedMedicationId.value
+    const chosen = id ? activeMedications.value.find((m) => m.id === id) : undefined
+    return chosen ?? currentMedication.value
+  })
+
+  function focusMedication(id: string) {
+    focusedMedicationId.value = id
+  }
 
   /** PK for a medication: the catalog's human data, else the user's own values. */
   function pkFor(med: MedicationRow): { params: PkParameters; userSupplied: boolean } | null {
@@ -182,14 +208,49 @@ export const useJournalStore = defineStore('journal', () => {
     await load()
   }
 
+  async function addSymptoms(inputs: NewSymptom[]): Promise<SymptomRow[]> {
+    const rows = await repository.addSymptoms(inputs)
+    await load()
+    return rows
+  }
+
+  async function updateSymptom(id: string, changes: Partial<NewSymptom>) {
+    await repository.updateSymptom(id, changes)
+    await load()
+  }
+
+  async function deleteSymptom(id: string) {
+    await repository.deleteSymptom(id)
+    await load()
+  }
+
+  async function addGlucose(input: NewGlucose): Promise<GlucoseRow> {
+    const row = await repository.addGlucose(input)
+    await load()
+    return row
+  }
+
+  async function updateGlucose(id: string, changes: NewGlucose) {
+    await repository.updateGlucose(id, changes)
+    await load()
+  }
+
+  async function deleteGlucose(id: string) {
+    await repository.deleteGlucose(id)
+    await load()
+  }
+
   return {
     medications,
     doses,
     weights,
+    symptoms,
+    glucose,
     loaded,
     activeMedications,
     archivedMedications,
     currentMedication,
+    focusedMedication,
     levelGroups,
     latestWeight,
     baseline,
@@ -202,6 +263,7 @@ export const useJournalStore = defineStore('journal', () => {
     nextDueOf,
     pkFor,
     levelGroupOf,
+    focusMedication,
     addMedication,
     updateMedication,
     deleteMedication,
@@ -211,5 +273,11 @@ export const useJournalStore = defineStore('journal', () => {
     addWeight,
     updateWeight,
     deleteWeight,
+    addSymptoms,
+    updateSymptom,
+    deleteSymptom,
+    addGlucose,
+    updateGlucose,
+    deleteGlucose,
   }
 })

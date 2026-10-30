@@ -6,6 +6,7 @@ export {
   mdiCellphoneArrowDown,
   mdiChartLine,
   mdiCheckCircleOutline,
+  mdiChevronLeft,
   mdiChevronRight,
   mdiCloudOffOutline,
   mdiCogOutline,
@@ -19,6 +20,8 @@ export {
   mdiShieldLockOutline,
   mdiSortCalendarAscending,
   mdiSortCalendarDescending,
+  mdiStethoscope,
   mdiTrayArrowUp,
+  mdiWaterOutline,
   mdiWaves,
 } from '@mdi/js'

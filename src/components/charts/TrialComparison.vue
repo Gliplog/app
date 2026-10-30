@@ -1,17 +1,21 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { POPULATION_LABELS } from '@/domain/catalog'
-import type { TrialComparison } from '@/domain/progress'
+import type { ProgressPoint, TrialComparison } from '@/domain/progress'
 import { formatPercentChange, formatWeightChange, roundTo, type WeightUnit } from '@/domain/units'
 import SourceList from '@/components/common/SourceList.vue'
+import CohortChart from './CohortChart.vue'
 
 /**
- * The user's change beside one trial's published endpoint results, as labelled bars. The trial
- * reports one week, so only that week is shown: no curve is invented between baseline and
- * endpoint. Rows carry their value as text, so identity never rests on colour or length.
+ * The user's change beside one trial cohort's published endpoint results: a chart of the user's
+ * journey with each arm at its endpoint week, then labelled bars at that week. The trial reports
+ * one week, so no curve is invented between baseline and endpoint. Rows carry their value as
+ * text, so identity never rests on colour or length.
  */
 const props = defineProps<{
   comparison: TrialComparison
+  /** The user's progress from week 0 of this medicine, for the chart. */
+  series: ProgressPoint[]
   weightUnit: WeightUnit
   /** What the user's row says when it has no value yet ("Log a dose to compare"). */
   missingText: string
@@ -62,7 +66,7 @@ const barWidth = (change: number | null) =>
 <template>
   <v-card>
     <v-card-item>
-      <p class="tb-eyebrow">Clinical trial</p>
+      <p class="tb-eyebrow">Trial cohort</p>
       <v-card-title class="text-wrap">{{ trial.name }} · {{ trial.weeks }} weeks</v-card-title>
     </v-card-item>
     <v-card-text class="tb-stack">
@@ -73,6 +77,8 @@ const barWidth = (change: number | null) =>
         </span>
       </div>
       <p class="text-body-medium tb-muted">{{ trial.design }}.</p>
+
+      <CohortChart :trial="trial" :series="series" :weight-unit="weightUnit" />
 
       <ul class="bars" :aria-label="`Average weight change at week ${trial.weeks}, and yours`">
         <li

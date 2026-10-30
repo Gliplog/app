@@ -36,6 +36,7 @@ export function createAppRouter() {
   return createRouter({
     history: createWebHashHistory(),
     routes,
-    scrollBehavior: () => ({ top: 0 }),
+    // A section link ("See summary") lands below the app bar; anything else starts at the top.
+    scrollBehavior: (to) => (to.hash ? { el: to.hash, top: 72, behavior: 'smooth' } : { top: 0 }),
   })
 }

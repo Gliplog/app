@@ -1,5 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie'
+import type { A1cUnit, GlucoseContext, GlucoseUnit } from '@/domain/glucose'
 import type { PkParameters } from '@/domain/pk'
+import type { Severity, Symptom } from '@/domain/symptoms'
 import type { WeightUnit } from '@/domain/units'
 
 /** A medication the user takes or has taken. Timestamps are UTC ISO-8601. */
@@ -53,6 +55,33 @@ export interface WeightRow {
   createdAt: string
 }
 
+/** A side effect the user felt, for their own record and to share with a prescriber. */
+export interface SymptomRow {
+  id: string
+  occurredAt: string
+  symptom: Symptom
+  /** The user's words when `symptom` is `other`; empty otherwise. */
+  otherText: string
+  severity: Severity
+  notes: string
+  createdAt: string
+}
+
+/**
+ * An HbA1c result or a glucose reading. `value` is canonical and unrounded: HbA1c in NGSP
+ * percent, glucose in mg/dL.
+ */
+export type GlucoseRow = {
+  id: string
+  measuredAt: string
+  value: number
+  notes: string
+  createdAt: string
+} & (
+  | { kind: 'a1c'; enteredUnit: A1cUnit; context: null }
+  | { kind: 'glucose'; enteredUnit: GlucoseUnit; context: GlucoseContext }
+)
+
 export interface SettingRow {
   key: string
   value: unknown
@@ -62,6 +91,8 @@ export type TidebookDb = Dexie & {
   medications: EntityTable<MedicationRow, 'id'>
   doses: EntityTable<DoseRow, 'id'>
   weights: EntityTable<WeightRow, 'id'>
+  symptoms: EntityTable<SymptomRow, 'id'>
+  glucose: EntityTable<GlucoseRow, 'id'>
   settings: EntityTable<SettingRow, 'key'>
 }
 
@@ -79,6 +110,11 @@ export function createDatabase(name = DB_NAME): TidebookDb {
     doses: 'id, medicationId, takenAt',
     weights: 'id, measuredAt',
     settings: 'key',
+  })
+  // Side effects and blood sugar: new tables only, so existing rows need no upgrade.
+  db.version(2).stores({
+    symptoms: 'id, occurredAt',
+    glucose: 'id, kind, measuredAt',
   })
   return db
 }

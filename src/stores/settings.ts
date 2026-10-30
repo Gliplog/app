@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { repository } from '@/db'
 import { isBirthMonth, type BirthMonth } from '@/domain/body'
+import { A1C_UNITS, GLUCOSE_UNITS, type A1cUnit, type GlucoseUnit } from '@/domain/glucose'
 import { HEIGHT_UNITS, WEIGHT_UNITS, type HeightUnit, type WeightUnit } from '@/domain/units'
 
 export type ThemePreference = 'system' | 'light' | 'dark'
@@ -40,6 +41,8 @@ const SETTING_KEYS = {
   theme: 'theme',
   weightUnit: 'weightUnit',
   heightUnit: 'heightUnit',
+  glucoseUnit: 'glucoseUnit',
+  a1cUnit: 'a1cUnit',
   profile: 'profile',
   lastBackupAt: 'lastBackupAt',
   disclaimerAcceptedAt: 'disclaimerAcceptedAt',
@@ -68,24 +71,31 @@ export const useSettingsStore = defineStore('settings', () => {
   const theme = ref<ThemePreference>('system')
   const weightUnit = ref<WeightUnit>('kg')
   const heightUnit = ref<HeightUnit>('cm')
+  const glucoseUnit = ref<GlucoseUnit>('mg/dL')
+  const a1cUnit = ref<A1cUnit>('%')
   const profile = ref<Profile>({ ...EMPTY_PROFILE })
   const lastBackupAt = ref<string | null>(null)
   const disclaimerAcceptedAt = ref<string | null>(null)
   const installHintDismissed = ref(false)
 
   async function load() {
-    const [themePref, wUnit, hUnit, stored, backup, disclaimer, hint] = await Promise.all([
-      repository.getSetting<ThemePreference>(SETTING_KEYS.theme),
-      repository.getSetting<WeightUnit>(SETTING_KEYS.weightUnit),
-      repository.getSetting<HeightUnit>(SETTING_KEYS.heightUnit),
-      repository.getSetting<unknown>(SETTING_KEYS.profile),
-      repository.getSetting<string>(SETTING_KEYS.lastBackupAt),
-      repository.getSetting<string>(SETTING_KEYS.disclaimerAcceptedAt),
-      repository.getSetting<boolean>(SETTING_KEYS.installHintDismissed),
-    ])
+    const [themePref, wUnit, hUnit, gUnit, aUnit, stored, backup, disclaimer, hint] =
+      await Promise.all([
+        repository.getSetting<ThemePreference>(SETTING_KEYS.theme),
+        repository.getSetting<WeightUnit>(SETTING_KEYS.weightUnit),
+        repository.getSetting<HeightUnit>(SETTING_KEYS.heightUnit),
+        repository.getSetting<GlucoseUnit>(SETTING_KEYS.glucoseUnit),
+        repository.getSetting<A1cUnit>(SETTING_KEYS.a1cUnit),
+        repository.getSetting<unknown>(SETTING_KEYS.profile),
+        repository.getSetting<string>(SETTING_KEYS.lastBackupAt),
+        repository.getSetting<string>(SETTING_KEYS.disclaimerAcceptedAt),
+        repository.getSetting<boolean>(SETTING_KEYS.installHintDismissed),
+      ])
     theme.value = themePref === 'light' || themePref === 'dark' ? themePref : 'system'
     weightUnit.value = wUnit && WEIGHT_UNITS.includes(wUnit) ? wUnit : 'kg'
     heightUnit.value = hUnit && HEIGHT_UNITS.includes(hUnit) ? hUnit : 'cm'
+    glucoseUnit.value = gUnit && GLUCOSE_UNITS.includes(gUnit) ? gUnit : 'mg/dL'
+    a1cUnit.value = aUnit && A1C_UNITS.includes(aUnit) ? aUnit : '%'
     profile.value = sanitizeProfile(stored)
     lastBackupAt.value = backup ?? null
     disclaimerAcceptedAt.value = disclaimer ?? null
@@ -106,6 +116,16 @@ export const useSettingsStore = defineStore('settings', () => {
   async function setHeightUnit(value: HeightUnit) {
     heightUnit.value = value
     await repository.setSetting(SETTING_KEYS.heightUnit, value)
+  }
+
+  async function setGlucoseUnit(value: GlucoseUnit) {
+    glucoseUnit.value = value
+    await repository.setSetting(SETTING_KEYS.glucoseUnit, value)
+  }
+
+  async function setA1cUnit(value: A1cUnit) {
+    a1cUnit.value = value
+    await repository.setSetting(SETTING_KEYS.a1cUnit, value)
   }
 
   /** Merges `changes` into the profile; invalid values are dropped, never stored. */
@@ -139,6 +159,8 @@ export const useSettingsStore = defineStore('settings', () => {
     theme,
     weightUnit,
     heightUnit,
+    glucoseUnit,
+    a1cUnit,
     profile,
     lastBackupAt,
     disclaimerAcceptedAt,
@@ -147,6 +169,8 @@ export const useSettingsStore = defineStore('settings', () => {
     setTheme,
     setWeightUnit,
     setHeightUnit,
+    setGlucoseUnit,
+    setA1cUnit,
     updateProfile,
     markBackedUp,
     acceptDisclaimer,

@@ -20,6 +20,7 @@ import {
   type HeightUnit,
   type WeightUnit,
 } from '@/domain/units'
+import type { A1cUnit, GlucoseUnit } from '@/domain/glucose'
 import {
   GENDER_LABELS,
   GENDERS,
@@ -84,6 +85,16 @@ const weightUnitModel = computed({
 const heightUnitModel = computed({
   get: () => settings.heightUnit,
   set: (value: HeightUnit) => void settings.setHeightUnit(value),
+})
+
+const glucoseUnitModel = computed({
+  get: () => settings.glucoseUnit,
+  set: (value: GlucoseUnit) => void settings.setGlucoseUnit(value),
+})
+
+const a1cUnitModel = computed({
+  get: () => settings.a1cUnit,
+  set: (value: A1cUnit) => void settings.setA1cUnit(value),
 })
 
 const months = monthNames().map((title, i) => ({ title, value: i + 1 }))
@@ -396,6 +407,32 @@ const formatMb = (bytes: number | null) =>
             </v-btn-toggle>
           </div>
           <div>
+            <p id="glucose-unit-label" class="tb-label">Blood glucose unit</p>
+            <v-btn-toggle
+              v-model="glucoseUnitModel"
+              role="group"
+              mandatory
+              density="comfortable"
+              aria-labelledby="glucose-unit-label"
+            >
+              <v-btn value="mg/dL">mg/dL</v-btn>
+              <v-btn value="mmol/L">mmol/L</v-btn>
+            </v-btn-toggle>
+          </div>
+          <div>
+            <p id="a1c-unit-label" class="tb-label">HbA1c unit</p>
+            <v-btn-toggle
+              v-model="a1cUnitModel"
+              role="group"
+              mandatory
+              density="comfortable"
+              aria-labelledby="a1c-unit-label"
+            >
+              <v-btn value="%">Percent (%)</v-btn>
+              <v-btn value="mmol/mol">mmol/mol</v-btn>
+            </v-btn-toggle>
+          </div>
+          <div>
             <p id="theme-label" class="tb-label">Theme</p>
             <v-btn-toggle
               v-model="themeModel"
@@ -409,7 +446,9 @@ const formatMb = (bytes: number | null) =>
               <v-btn value="dark">Dark</v-btn>
             </v-btn-toggle>
           </div>
-          <p class="text-body-small tb-muted">Switching units never changes your saved weights.</p>
+          <p class="text-body-small tb-muted">
+            Switching units never changes your saved weights or readings.
+          </p>
         </v-card-text>
       </v-card>
 

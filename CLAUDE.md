@@ -1,8 +1,8 @@
 # Tidebook
 
 A private, offline journal for GLP-1 medication (brand and compounded): doses, weight, BMI,
-trial comparisons and estimated levels. A static PWA on GitHub Pages at
-`https://tidebook.github.io/app/`, also shipped as a Capacitor Android app (Google Play and
+side effects, HbA1c and glucose, trial comparisons and estimated levels. A static PWA on GitHub
+Pages at `https://tidebook.github.io/app/`, also shipped as a Capacitor Android app (Google Play and
 F-Droid). No backend, no accounts, no network requests; all data stays in IndexedDB on the
 device. The marketing site is the separate `Tidebook/tidebook.github.io` repository, which
 shares this origin.

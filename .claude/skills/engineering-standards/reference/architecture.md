@@ -7,11 +7,14 @@ Part of the `engineering-standards` skill.
 ```
 src/
   domain/        pure logic: units (weight, height, formatting), body (age, BMI, WHO bands),
-                 progress (baseline, change series, trial comparison), schedule (next dose,
-                 syringe units), pk, levels (pooling and the curve model), listing, catalog types
+                 progress (baseline, change series, trial comparison, cohort overlay), schedule
+                 (next dose, syringe units), pk, levels (pooling and the curve model), glucose
+                 (HbA1c and glucose units, glycemic comparison), symptoms (side-effect list and
+                 summary), listing, catalog types
   data/          medications.json, its JSON Schema, typed loader (index.ts)
   db/            Dexie database (schema history), repository, backup export/restore
-  stores/        Pinia: journal (medications, doses, weights), settings (units, theme, profile),
+  stores/        Pinia: journal (medications, doses, weights, side effects, blood sugar, the
+                 focused medication), settings (units, theme, profile),
                  notify, confirm
   composables/   useBodyMetrics, useChartColors, useInstallPrompt, useStoragePersistence, useNow,
                  usePaging, useHideOnScroll
@@ -39,7 +42,10 @@ that must survive a reload goes into the database.
 ## Storage
 
 - IndexedDB via Dexie, database `tidebook`. Tables: `medications`, `doses`, `weights`,
-  `settings` (key/value; the profile is the `profile` key, sanitised on load).
+  `symptoms` and `glucose` (both from version 2), `settings` (key/value; the profile is the
+  `profile` key, sanitised on load).
+- HbA1c is stored in NGSP percent and glucose in mg/dL, unrounded, with the unit typed;
+  Settings chooses the display units, as for weight.
 - Ids are `crypto.randomUUID()`; timestamps are UTC ISO strings. A birth month is a `YYYY-MM`
   calendar string, never an instant.
 - Deleting a medication deletes its doses in the same transaction. Stopping one keeps both.
@@ -47,14 +53,20 @@ that must survive a reload goes into the database.
   still evict data; a backup file (Settings, Save a backup) is the only guarantee. The app
   shares the `tidebook.github.io` origin with the marketing site, which must never register a
   service worker or run scripts.
-- Backups are versioned JSON (`format: "tidebook-backup"`). `parseBackup` validates untrusted
-  input fully before `restoreBackup` replaces data atomically.
+- Backups are versioned JSON (`format: "tidebook-backup"`, version 2). `parseBackup` validates
+  untrusted input fully before `restoreBackup` replaces data atomically; a version 1 file
+  restores with no side effects or blood sugar.
 
 ## Progress and trials
 
 `domain/progress.ts` picks the baseline (last weigh-in at or before the first dose, else the
 first after it, flagged), measures weeks from the first dose, and compares the latest weigh-in
 up to a trial's endpoint week with each arm's published mean, in the trial's own measure.
+Progress measures week 0 from the first dose of the chosen medicine (its level group), so a
+switch from semaglutide to tirzepatide is compared with SURMOUNT from the first tirzepatide
+dose. The cohort chart (`cohortOverlay`) draws the user's journey and each arm only at its
+endpoint week; nothing is drawn between published points. `domain/glucose.ts` compares HbA1c
+and fasting glucose the same way, against the arms' label values.
 
 ## PK model
 

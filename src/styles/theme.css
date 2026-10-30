@@ -176,6 +176,14 @@
     letter-spacing: -0.015em;
   }
 
+  /*
+   * Cards stacked on one another (the medication stack) are solid paper: glass would let the
+   * cards behind show through the one in front, so depth comes from the peeking edges instead.
+   */
+  .v-card.tb-card-stacked {
+    background-color: var(--tb-surface);
+  }
+
   /* Floating layers (dialogs, sheets, menus, snackbars) are denser glass that blurs the page. */
   .v-dialog > .v-overlay__content > .v-card,
   .v-bottom-sheet > .v-overlay__content > .v-card {

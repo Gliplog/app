@@ -23,7 +23,11 @@ describe('groupLevels', () => {
       ],
     )
     expect(groups).toHaveLength(1)
-    expect(groups[0]).toMatchObject({ key: 'semaglutide-injection', medicationCount: 2 })
+    expect(groups[0]).toMatchObject({
+      key: 'semaglutide-injection',
+      medicationIds: ['ozempic', 'compounded'],
+      medicationCount: 2,
+    })
     expect(groups[0]!.doses.map((d) => d.amount)).toEqual([0.25, 0.5])
   })
 

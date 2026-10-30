@@ -17,6 +17,12 @@ Part of the `front-end` skill.
 | `journal/MedicationDialog.vue`             | Add or edit a medication: product, interval, compounded vial strength, own half-life    |
 | `journal/LogDoseDialog.vue`                | Log or edit a dose: label strengths, syringe units for a vial, site rotation            |
 | `journal/LogWeightDialog.vue`              | Log or edit a weigh-in in kg or lb                                                      |
+| `journal/LogSymptomDialog.vue`             | Log one or more side effects at one strength, or edit one entry                         |
+| `journal/LogGlucoseDialog.vue`             | Log or edit an HbA1c result or a glucose reading (with when in the day)                 |
+| `journal/MedicationStack.vue`              | Today's stacked medication cards: swipe, arrows, dots or arrow keys; back cards inert   |
+| `journal/SymptomSummaryCard.vue`           | Side effects by period, strength and days after a dose; copies a text summary           |
+| `charts/CohortChart.vue`                   | Your change by week with each trial arm at its endpoint week only, and a table          |
+| `charts/GlycemicComparison.vue`            | Your HbA1c or fasting glucose change beside one trial's arms, with starting values      |
 | `charts/BodyChart.vue`                     | Weight or BMI over time with labelled dashed guides (goal, WHO bands) and a table view  |
 | `charts/TrialComparison.vue`               | Your change beside one trial's endpoint arms as labelled bars, with source and caveats  |
 | `charts/PkPanel.vue`                       | Chooses catalog or user-supplied PK, shows sources and caveats, or why no curve exists  |
@@ -30,7 +36,8 @@ Part of the `front-end` skill.
 - Every number with a source shows a `SourceBadge` or a `SourceList`.
 - Level curves pool every dose of a medicine and route across medications
   (`journal.levelGroups`), so Today and Progress agree. Progress shows one `PkPanel` per group,
-  never several medicines on one axis.
+  never several medicines on one axis. Today's levels panel follows the front card of the
+  medication stack (`journal.focusedMedication`), and Progress starts its cohort switcher there.
 - Trial cards show the two most relevant trials and fold the rest behind a button.
 - Lists page in memory, ten to a page (`usePaging`, `domain/listing.ts`), newest first with a
   sort toggle. Charts and totals always use every row, not the page.

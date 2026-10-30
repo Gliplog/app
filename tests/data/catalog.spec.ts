@@ -68,4 +68,27 @@ describe('medication catalog', () => {
     expect(arm('surmount-1', 'Tirzepatide 15 mg')).toBe(-20.9)
     expect(arm('surpass-2', 'Semaglutide 1 mg')).toBe(-5.7)
   })
+
+  it('gives every arm of a trial with glycemic results its HbA1c, and fasting glucose only when printed', () => {
+    for (const t of catalog.trials) {
+      for (const a of t.arms) {
+        expect(a.hba1c !== undefined, `${t.id} / ${a.label}`).toBe(t.glycemic !== undefined)
+        expect(a.fastingGlucoseMgDl !== undefined, `${t.id} / ${a.label}`).toBe(
+          t.glycemic?.fastingGlucoseLabel !== undefined,
+        )
+      }
+    }
+  })
+
+  it('keeps glycemic endpoints as printed (spot checks against section 14 tables)', () => {
+    const arm = (trial: string, label: string) =>
+      catalog.trials.find((t) => t.id === trial)!.arms.find((a) => a.label === label)!
+    expect(arm('sustain-1', 'Semaglutide 1 mg').hba1c).toEqual({ baseline: 8.1, change: -1.6 })
+    expect(arm('sustain-1', 'Placebo').fastingGlucoseMgDl).toEqual({ baseline: 174, change: -15 })
+    expect(arm('surpass-2', 'Tirzepatide 15 mg').hba1c).toEqual({ baseline: 8.3, change: -2.3 })
+    expect(arm('surpass-1', 'Placebo').fastingGlucoseMgDl).toEqual({ baseline: 155, change: 4 })
+    expect(arm('step-2', 'Semaglutide 2.4 mg').hba1c).toEqual({ baseline: 8.1, change: -1.6 })
+    expect(arm('surmount-2', 'Tirzepatide 10 mg').hba1c).toEqual({ baseline: 8, change: -2.1 })
+    expect(arm('attain-2', 'Orforglipron 17.2 mg').hba1c).toEqual({ baseline: 8.1, change: -1.7 })
+  })
 })

@@ -34,6 +34,8 @@ export interface MedicationLevels {
   pk: { params: PkParameters; userSupplied: boolean } | null
   /** Oldest first, in mg. */
   doses: DoseEvent[]
+  /** Every medication whose doses are pooled here, in order of first dose. */
+  medicationIds: string[]
   medicationCount: number
   latestAt: number
 }
@@ -66,13 +68,15 @@ export function groupLevels(
   for (const [key, entries] of byKey) {
     entries.sort((a, b) => a.dose.at - b.dose.at)
     const latest = entries[entries.length - 1]!
+    const medicationIds = [...new Set(entries.map((e) => e.med.id))]
     groups.push({
       key,
       pkProfile: latest.med.pkProfile,
       label: latest.med.label,
       pk: latest.med.pk,
       doses: entries.map((e) => ({ at: e.dose.at, amount: e.dose.doseMg })),
-      medicationCount: new Set(entries.map((e) => e.med.id)).size,
+      medicationIds,
+      medicationCount: medicationIds.length,
       latestAt: latest.dose.at,
     })
   }

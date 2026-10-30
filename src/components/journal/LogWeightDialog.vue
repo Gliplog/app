@@ -96,17 +96,15 @@ async function remove() {
         <v-card-title :id="titleId">Weigh-in</v-card-title>
       </v-card-item>
       <v-card-text class="tb-stack">
-        <div class="weight-entry">
-          <v-text-field
-            v-model="form.value"
-            label="Weight"
-            type="number"
-            inputmode="decimal"
-            :suffix="unit"
-            :error-messages="error"
-            autofocus
-          />
-        </div>
+        <v-text-field
+          v-model="form.value"
+          label="Weight"
+          type="number"
+          inputmode="decimal"
+          :suffix="unit"
+          :error-messages="error"
+          autofocus
+        />
         <p v-if="previous" class="text-body-small tb-faint">
           Last time: {{ formatWeight(previous.kg, unit) }}
         </p>
@@ -135,10 +133,3 @@ async function remove() {
     </v-card>
   </v-dialog>
 </template>
-
-<style scoped>
-/* A weight is at most five or six characters; a full-width field reads as a text box. */
-.weight-entry {
-  max-width: 240px;
-}
-</style>

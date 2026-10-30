@@ -85,6 +85,12 @@ export const POPULATION_LABELS: Record<Population, string> = {
   t2d: 'Adults with type 2 diabetes',
 }
 
+/** A mean change at the endpoint week from the arm's mean baseline. */
+interface EndpointChange {
+  baseline: number
+  change: number
+}
+
 export interface TrialArm {
   label: string
   /** Null for placebo or a non-GLP-1 comparator. */
@@ -94,6 +100,17 @@ export interface TrialArm {
   baselineKg: number
   /** Mean change at `weeks`: percent of baseline weight, or kilograms (see `measure`). */
   change: number
+  /** HbA1c in percent (NGSP) at the same week, as the label prints it. */
+  hba1c?: EndpointChange
+  /** Fasting plasma or serum glucose in mg/dL, where the label prints it. */
+  fastingGlucoseMgDl?: EndpointChange
+}
+
+/** Where a trial's glycemic results come from; they are often in a different table. */
+interface TrialGlycemic {
+  source: SourceRef
+  /** The label's own name for its fasting glucose row ("Fasting serum glucose"). */
+  fastingGlucoseLabel?: string
 }
 
 export interface Trial {
@@ -109,6 +126,8 @@ export interface Trial {
   arms: TrialArm[]
   /** How the label analysed it: who is counted and how missing weights were handled. */
   analysis: string
+  /** HbA1c (and sometimes fasting glucose) at the endpoint, when the label prints them. */
+  glycemic?: TrialGlycemic
   source: SourceRef
 }
 

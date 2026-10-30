@@ -1,9 +1,19 @@
-import type { DoseRow, MedicationRow, TidebookDb, WeightRow } from './database'
+import type {
+  DoseRow,
+  GlucoseRow,
+  MedicationRow,
+  SymptomRow,
+  TidebookDb,
+  WeightRow,
+} from './database'
 import { nowIso, systemClock, type Clock } from '@/services/time'
 
 export type NewMedication = Omit<MedicationRow, 'id' | 'createdAt' | 'updatedAt'>
 export type NewDose = Omit<DoseRow, 'id' | 'createdAt'>
 export type NewWeight = Omit<WeightRow, 'id' | 'createdAt'>
+export type NewSymptom = Omit<SymptomRow, 'id' | 'createdAt'>
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never
+export type NewGlucose = DistributiveOmit<GlucoseRow, 'id' | 'createdAt'>
 
 /**
  * All reads and writes of user data. Views and stores call this, never Dexie tables directly,
@@ -75,6 +85,44 @@ export function createRepository(db: TidebookDb, clock: Clock = systemClock) {
       await db.weights.delete(id)
     },
 
+    async listSymptoms(): Promise<SymptomRow[]> {
+      return db.symptoms.orderBy('occurredAt').reverse().toArray()
+    },
+
+    /** Logs several side effects felt at one time, one row each, in one transaction. */
+    async addSymptoms(inputs: NewSymptom[]): Promise<SymptomRow[]> {
+      const createdAt = nowIso(clock)
+      const rows = inputs.map((input) => ({ ...input, id: crypto.randomUUID(), createdAt }))
+      await db.symptoms.bulkAdd(rows)
+      return rows
+    },
+
+    async updateSymptom(id: string, changes: Partial<NewSymptom>): Promise<void> {
+      await db.symptoms.update(id, changes)
+    },
+
+    async deleteSymptom(id: string): Promise<void> {
+      await db.symptoms.delete(id)
+    },
+
+    async listGlucose(): Promise<GlucoseRow[]> {
+      return db.glucose.orderBy('measuredAt').reverse().toArray()
+    },
+
+    async addGlucose(input: NewGlucose): Promise<GlucoseRow> {
+      const row = { ...input, id: crypto.randomUUID(), createdAt: nowIso(clock) } as GlucoseRow
+      await db.glucose.add(row)
+      return row
+    },
+
+    async updateGlucose(id: string, changes: NewGlucose): Promise<void> {
+      await db.glucose.update(id, changes)
+    },
+
+    async deleteGlucose(id: string): Promise<void> {
+      await db.glucose.delete(id)
+    },
+
     async getSetting<T>(key: string): Promise<T | undefined> {
       const row = await db.settings.get(key)
       return row?.value as T | undefined
@@ -84,15 +132,10 @@ export function createRepository(db: TidebookDb, clock: Clock = systemClock) {
       await db.settings.put({ key, value })
     },
 
-    /** Removes every record on this device: medications, doses, weights and settings. */
+    /** Removes every record on this device: every table, settings included. */
     async eraseAll(): Promise<void> {
-      await db.transaction('rw', [db.medications, db.doses, db.weights, db.settings], async () => {
-        await Promise.all([
-          db.medications.clear(),
-          db.doses.clear(),
-          db.weights.clear(),
-          db.settings.clear(),
-        ])
+      await db.transaction('rw', db.tables, async () => {
+        await Promise.all(db.tables.map((t) => t.clear()))
       })
     },
   }

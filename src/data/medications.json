@@ -466,16 +466,31 @@
           "label": "Placebo",
           "doseMg": null,
           "baselineKg": 105.2,
-          "change": -2.4
+          "change": -2.4,
+          "hba1c": {
+            "baseline": 5.7,
+            "change": -0.2
+          }
         },
         {
           "label": "Semaglutide 2.4 mg",
           "doseMg": 2.4,
           "baselineKg": 105.4,
-          "change": -14.9
+          "change": -14.9,
+          "hba1c": {
+            "baseline": 5.7,
+            "change": -0.4
+          }
         }
       ],
       "analysis": "Least-squares mean of everyone randomised, as printed in the label.",
+      "glycemic": {
+        "source": {
+          "kind": "label",
+          "citation": "WEGOVY (semaglutide) US prescribing information, section 14, Table 13 (Study 2)",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=ee06186f-2aa3-4990-a760-757579d8f77b"
+        }
+      },
       "source": {
         "kind": "label",
         "citation": "WEGOVY (semaglutide) US prescribing information, section 14",
@@ -496,16 +511,31 @@
           "label": "Placebo",
           "doseMg": null,
           "baselineKg": 100.5,
-          "change": -3.4
+          "change": -3.4,
+          "hba1c": {
+            "baseline": 8.1,
+            "change": -0.4
+          }
         },
         {
           "label": "Semaglutide 2.4 mg",
           "doseMg": 2.4,
           "baselineKg": 99.9,
-          "change": -9.6
+          "change": -9.6,
+          "hba1c": {
+            "baseline": 8.1,
+            "change": -1.6
+          }
         }
       ],
       "analysis": "Least-squares mean of everyone randomised, as printed in the label.",
+      "glycemic": {
+        "source": {
+          "kind": "label",
+          "citation": "WEGOVY (semaglutide) US prescribing information, section 14, Table 13 (Study 3)",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=ee06186f-2aa3-4990-a760-757579d8f77b"
+        }
+      },
       "source": {
         "kind": "label",
         "citation": "WEGOVY (semaglutide) US prescribing information, section 14",
@@ -526,16 +556,31 @@
           "label": "Placebo",
           "doseMg": null,
           "baselineKg": 103.7,
-          "change": -5.7
+          "change": -5.7,
+          "hba1c": {
+            "baseline": 5.8,
+            "change": -0.3
+          }
         },
         {
           "label": "Semaglutide 2.4 mg",
           "doseMg": 2.4,
           "baselineKg": 106.9,
-          "change": -16.0
+          "change": -16.0,
+          "hba1c": {
+            "baseline": 5.7,
+            "change": -0.5
+          }
         }
       ],
       "analysis": "Least-squares mean of everyone randomised, as printed in the label.",
+      "glycemic": {
+        "source": {
+          "kind": "label",
+          "citation": "WEGOVY (semaglutide) US prescribing information, section 14, Table 13 (Study 4)",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=ee06186f-2aa3-4990-a760-757579d8f77b"
+        }
+      },
       "source": {
         "kind": "label",
         "citation": "WEGOVY (semaglutide) US prescribing information, section 14",
@@ -556,22 +601,41 @@
           "label": "Placebo",
           "doseMg": null,
           "baselineKg": 112.4,
-          "change": -3.9
+          "change": -3.9,
+          "hba1c": {
+            "baseline": 5.7,
+            "change": 0.0
+          }
         },
         {
           "label": "Semaglutide 2.4 mg",
           "doseMg": 2.4,
           "baselineKg": 116.5,
-          "change": -15.5
+          "change": -15.5,
+          "hba1c": {
+            "baseline": 5.6,
+            "change": -0.3
+          }
         },
         {
           "label": "Semaglutide 7.2 mg",
           "doseMg": 7.2,
           "baselineKg": 112.4,
-          "change": -18.8
+          "change": -18.8,
+          "hba1c": {
+            "baseline": 5.7,
+            "change": -0.3
+          }
         }
       ],
       "analysis": "Least-squares mean of everyone randomised, as printed in the label.",
+      "glycemic": {
+        "source": {
+          "kind": "label",
+          "citation": "WEGOVY (semaglutide) US prescribing information, section 14, Table 17 (Study 8)",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=ee06186f-2aa3-4990-a760-757579d8f77b"
+        }
+      },
       "source": {
         "kind": "label",
         "citation": "WEGOVY (semaglutide) US prescribing information, section 14",
@@ -592,22 +656,41 @@
           "label": "Placebo",
           "doseMg": null,
           "baselineKg": 112.1,
-          "change": -3.8
+          "change": -3.8,
+          "hba1c": {
+            "baseline": 8.2,
+            "change": -0.2
+          }
         },
         {
           "label": "Semaglutide 2.4 mg",
           "doseMg": 2.4,
           "baselineKg": 107.0,
-          "change": -10.4
+          "change": -10.4,
+          "hba1c": {
+            "baseline": 8.1,
+            "change": -1.6
+          }
         },
         {
           "label": "Semaglutide 7.2 mg",
           "doseMg": 7.2,
           "baselineKg": 110.5,
-          "change": -13.2
+          "change": -13.2,
+          "hba1c": {
+            "baseline": 8,
+            "change": -1.7
+          }
         }
       ],
       "analysis": "Least-squares mean of everyone randomised, as printed in the label.",
+      "glycemic": {
+        "source": {
+          "kind": "label",
+          "citation": "WEGOVY (semaglutide) US prescribing information, section 14, Table 17 (Study 9)",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=ee06186f-2aa3-4990-a760-757579d8f77b"
+        }
+      },
       "source": {
         "kind": "label",
         "citation": "WEGOVY (semaglutide) US prescribing information, section 14",
@@ -628,16 +711,31 @@
           "label": "Placebo",
           "doseMg": null,
           "baselineKg": 104.8,
-          "change": -2.4
+          "change": -2.4,
+          "hba1c": {
+            "baseline": 5.7,
+            "change": -0.1
+          }
         },
         {
           "label": "Semaglutide tablet 25 mg",
           "doseMg": 25,
           "baselineKg": 106.4,
-          "change": -13.6
+          "change": -13.6,
+          "hba1c": {
+            "baseline": 5.7,
+            "change": -0.3
+          }
         }
       ],
       "analysis": "Least-squares mean of everyone randomised, as printed in the label.",
+      "glycemic": {
+        "source": {
+          "kind": "label",
+          "citation": "WEGOVY (semaglutide) US prescribing information, section 14, Table 16 (Study 7)",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=ee06186f-2aa3-4990-a760-757579d8f77b"
+        }
+      },
       "source": {
         "kind": "label",
         "citation": "WEGOVY (semaglutide) US prescribing information, section 14",
@@ -658,28 +756,51 @@
           "label": "Placebo",
           "doseMg": null,
           "baselineKg": 104.8,
-          "change": -3.1
+          "change": -3.1,
+          "hba1c": {
+            "baseline": 5.6,
+            "change": -0.1
+          }
         },
         {
           "label": "Tirzepatide 5 mg",
           "doseMg": 5,
           "baselineKg": 102.9,
-          "change": -15.0
+          "change": -15.0,
+          "hba1c": {
+            "baseline": 5.6,
+            "change": -0.4
+          }
         },
         {
           "label": "Tirzepatide 10 mg",
           "doseMg": 10,
           "baselineKg": 105.8,
-          "change": -19.5
+          "change": -19.5,
+          "hba1c": {
+            "baseline": 5.5,
+            "change": -0.4
+          }
         },
         {
           "label": "Tirzepatide 15 mg",
           "doseMg": 15,
           "baselineKg": 105.6,
-          "change": -20.9
+          "change": -20.9,
+          "hba1c": {
+            "baseline": 5.6,
+            "change": -0.4
+          }
         }
       ],
       "analysis": "Least-squares mean of everyone randomised, as printed in the label.",
+      "glycemic": {
+        "source": {
+          "kind": "label",
+          "citation": "ZEPBOUND (tirzepatide) US prescribing information, section 14, Table 3 (Study 1)",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=487cd7e7-434c-4925-99fa-aa80b1cc776b"
+        }
+      },
       "source": {
         "kind": "label",
         "citation": "ZEPBOUND (tirzepatide) US prescribing information, section 14",
@@ -700,22 +821,41 @@
           "label": "Placebo",
           "doseMg": null,
           "baselineKg": 101.7,
-          "change": -3.2
+          "change": -3.2,
+          "hba1c": {
+            "baseline": 8.0,
+            "change": -0.5
+          }
         },
         {
           "label": "Tirzepatide 10 mg",
           "doseMg": 10,
           "baselineKg": 100.9,
-          "change": -12.8
+          "change": -12.8,
+          "hba1c": {
+            "baseline": 8.0,
+            "change": -2.1
+          }
         },
         {
           "label": "Tirzepatide 15 mg",
           "doseMg": 15,
           "baselineKg": 99.6,
-          "change": -14.7
+          "change": -14.7,
+          "hba1c": {
+            "baseline": 8.1,
+            "change": -2.1
+          }
         }
       ],
       "analysis": "Least-squares mean of everyone randomised, as printed in the label.",
+      "glycemic": {
+        "source": {
+          "kind": "label",
+          "citation": "ZEPBOUND (tirzepatide) US prescribing information, section 14, Table 3 (Study 2)",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=487cd7e7-434c-4925-99fa-aa80b1cc776b"
+        }
+      },
       "source": {
         "kind": "label",
         "citation": "ZEPBOUND (tirzepatide) US prescribing information, section 14",
@@ -736,28 +876,68 @@
           "label": "Placebo",
           "doseMg": null,
           "baselineKg": 84.5,
-          "change": -1.0
+          "change": -1.0,
+          "hba1c": {
+            "baseline": 8.1,
+            "change": -0.1
+          },
+          "fastingGlucoseMgDl": {
+            "baseline": 155,
+            "change": 4
+          }
         },
         {
           "label": "Tirzepatide 5 mg",
           "doseMg": 5,
           "baselineKg": 87.0,
-          "change": -6.3
+          "change": -6.3,
+          "hba1c": {
+            "baseline": 8.0,
+            "change": -1.8
+          },
+          "fastingGlucoseMgDl": {
+            "baseline": 154,
+            "change": -40
+          }
         },
         {
           "label": "Tirzepatide 10 mg",
           "doseMg": 10,
           "baselineKg": 86.2,
-          "change": -7.0
+          "change": -7.0,
+          "hba1c": {
+            "baseline": 7.9,
+            "change": -1.7
+          },
+          "fastingGlucoseMgDl": {
+            "baseline": 153,
+            "change": -40
+          }
         },
         {
           "label": "Tirzepatide 15 mg",
           "doseMg": 15,
           "baselineKg": 85.5,
-          "change": -7.8
+          "change": -7.8,
+          "hba1c": {
+            "baseline": 7.9,
+            "change": -1.7
+          },
+          "fastingGlucoseMgDl": {
+            "baseline": 154,
+            "change": -39
+          }
         }
       ],
       "analysis": "Mean change in kilograms, as printed in the label.",
+      "glycemic": {
+        "source": {
+          "kind": "label",
+          "citation": "MOUNJARO (tirzepatide) US prescribing information, section 14.2, Table 4",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=d2d7da5d-ad07-4228-955f-cf7e355c8cc0"
+        },
+        "fastingGlucoseLabel": "Fasting serum glucose"
+      },
       "source": {
         "kind": "label",
         "citation": "MOUNJARO (tirzepatide) US prescribing information, section 14",
@@ -779,28 +959,68 @@
           "doseMg": 1,
           "baselineKg": 93.7,
           "change": -5.7,
-          "molecule": "semaglutide"
+          "molecule": "semaglutide",
+          "hba1c": {
+            "baseline": 8.3,
+            "change": -1.9
+          },
+          "fastingGlucoseMgDl": {
+            "baseline": 171,
+            "change": -49
+          }
         },
         {
           "label": "Tirzepatide 5 mg",
           "doseMg": 5,
           "baselineKg": 92.5,
-          "change": -7.6
+          "change": -7.6,
+          "hba1c": {
+            "baseline": 8.3,
+            "change": -2.0
+          },
+          "fastingGlucoseMgDl": {
+            "baseline": 174,
+            "change": -55
+          }
         },
         {
           "label": "Tirzepatide 10 mg",
           "doseMg": 10,
           "baselineKg": 94.8,
-          "change": -9.3
+          "change": -9.3,
+          "hba1c": {
+            "baseline": 8.3,
+            "change": -2.2
+          },
+          "fastingGlucoseMgDl": {
+            "baseline": 174,
+            "change": -59
+          }
         },
         {
           "label": "Tirzepatide 15 mg",
           "doseMg": 15,
           "baselineKg": 93.8,
-          "change": -11.2
+          "change": -11.2,
+          "hba1c": {
+            "baseline": 8.3,
+            "change": -2.3
+          },
+          "fastingGlucoseMgDl": {
+            "baseline": 172,
+            "change": -60
+          }
         }
       ],
       "analysis": "Mean change in kilograms, as printed in the label.",
+      "glycemic": {
+        "source": {
+          "kind": "label",
+          "citation": "MOUNJARO (tirzepatide) US prescribing information, section 14.3, Table 5",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=d2d7da5d-ad07-4228-955f-cf7e355c8cc0"
+        },
+        "fastingGlucoseLabel": "Fasting serum glucose"
+      },
       "source": {
         "kind": "label",
         "citation": "MOUNJARO (tirzepatide) US prescribing information, section 14",
@@ -821,22 +1041,54 @@
           "label": "Placebo",
           "doseMg": null,
           "baselineKg": 89.1,
-          "change": -1.2
+          "change": -1.2,
+          "hba1c": {
+            "baseline": 8,
+            "change": -0.1
+          },
+          "fastingGlucoseMgDl": {
+            "baseline": 174,
+            "change": -15
+          }
         },
         {
           "label": "Semaglutide 0.5 mg",
           "doseMg": 0.5,
           "baselineKg": 89.8,
-          "change": -3.8
+          "change": -3.8,
+          "hba1c": {
+            "baseline": 8.1,
+            "change": -1.4
+          },
+          "fastingGlucoseMgDl": {
+            "baseline": 174,
+            "change": -41
+          }
         },
         {
           "label": "Semaglutide 1 mg",
           "doseMg": 1,
           "baselineKg": 96.9,
-          "change": -4.7
+          "change": -4.7,
+          "hba1c": {
+            "baseline": 8.1,
+            "change": -1.6
+          },
+          "fastingGlucoseMgDl": {
+            "baseline": 179,
+            "change": -44
+          }
         }
       ],
       "analysis": "Mean change in kilograms, as printed in the label.",
+      "glycemic": {
+        "source": {
+          "kind": "label",
+          "citation": "OZEMPIC (semaglutide) injection US prescribing information, section 14.1, Table 3",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=adec4fd2-6858-4c99-91d4-531f5f2a2d79"
+        },
+        "fastingGlucoseLabel": "Fasting plasma glucose"
+      },
       "source": {
         "kind": "label",
         "citation": "OZEMPIC (semaglutide) injection US prescribing information, section 14",
@@ -857,16 +1109,40 @@
           "label": "Semaglutide 1 mg",
           "doseMg": 1,
           "baselineKg": 98.6,
-          "change": -5.6
+          "change": -5.6,
+          "hba1c": {
+            "baseline": 8.8,
+            "change": -1.9
+          },
+          "fastingGlucoseMgDl": {
+            "baseline": 196,
+            "change": -55
+          }
         },
         {
           "label": "Semaglutide 2 mg",
           "doseMg": 2,
           "baselineKg": 100.1,
-          "change": -6.4
+          "change": -6.4,
+          "hba1c": {
+            "baseline": 8.9,
+            "change": -2.1
+          },
+          "fastingGlucoseMgDl": {
+            "baseline": 193,
+            "change": -59
+          }
         }
       ],
       "analysis": "Mean change in kilograms, as printed in the label.",
+      "glycemic": {
+        "source": {
+          "kind": "label",
+          "citation": "OZEMPIC (semaglutide) injection US prescribing information, section 14.1, Table 7",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=adec4fd2-6858-4c99-91d4-531f5f2a2d79"
+        },
+        "fastingGlucoseLabel": "Fasting plasma glucose"
+      },
       "source": {
         "kind": "label",
         "citation": "OZEMPIC (semaglutide) injection US prescribing information, section 14",
@@ -887,28 +1163,51 @@
           "label": "Placebo",
           "doseMg": null,
           "baselineKg": 103.9,
-          "change": -2.1
+          "change": -2.1,
+          "hba1c": {
+            "baseline": 5.6,
+            "change": -0.1
+          }
         },
         {
           "label": "Orforglipron 5.5 mg",
           "doseMg": 5.5,
           "baselineKg": 103.2,
-          "change": -7.4
+          "change": -7.4,
+          "hba1c": {
+            "baseline": 5.6,
+            "change": -0.3
+          }
         },
         {
           "label": "Orforglipron 9 mg",
           "doseMg": 9,
           "baselineKg": 102.2,
-          "change": -8.3
+          "change": -8.3,
+          "hba1c": {
+            "baseline": 5.6,
+            "change": -0.3
+          }
         },
         {
           "label": "Orforglipron 17.2 mg",
           "doseMg": 17.2,
           "baselineKg": 103.1,
-          "change": -11.1
+          "change": -11.1,
+          "hba1c": {
+            "baseline": 5.6,
+            "change": -0.3
+          }
         }
       ],
       "analysis": "Least-squares mean of everyone randomised, as printed in the label.",
+      "glycemic": {
+        "source": {
+          "kind": "label",
+          "citation": "FOUNDAYO (orforglipron) US prescribing information, section 14, Table 7 (Trial 1)",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=8ac446c5-feba-474f-a103-23facb9b5c62"
+        }
+      },
       "source": {
         "kind": "label",
         "citation": "FOUNDAYO (orforglipron) US prescribing information, section 14",
@@ -929,28 +1228,51 @@
           "label": "Placebo",
           "doseMg": null,
           "baselineKg": 101.2,
-          "change": -2.5
+          "change": -2.5,
+          "hba1c": {
+            "baseline": 8,
+            "change": -0.4
+          }
         },
         {
           "label": "Orforglipron 5.5 mg",
           "doseMg": 5.5,
           "baselineKg": 102.3,
-          "change": -5.1
+          "change": -5.1,
+          "hba1c": {
+            "baseline": 8,
+            "change": -1.2
+          }
         },
         {
           "label": "Orforglipron 9 mg",
           "doseMg": 9,
           "baselineKg": 102.7,
-          "change": -7.0
+          "change": -7.0,
+          "hba1c": {
+            "baseline": 8.1,
+            "change": -1.4
+          }
         },
         {
           "label": "Orforglipron 17.2 mg",
           "doseMg": 17.2,
           "baselineKg": 99.8,
-          "change": -9.6
+          "change": -9.6,
+          "hba1c": {
+            "baseline": 8.1,
+            "change": -1.7
+          }
         }
       ],
       "analysis": "Least-squares mean of everyone randomised, as printed in the label.",
+      "glycemic": {
+        "source": {
+          "kind": "label",
+          "citation": "FOUNDAYO (orforglipron) US prescribing information, section 14, Table 7 (Trial 2)",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=8ac446c5-feba-474f-a103-23facb9b5c62"
+        }
+      },
       "source": {
         "kind": "label",
         "citation": "FOUNDAYO (orforglipron) US prescribing information, section 14",

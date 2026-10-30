@@ -29,6 +29,15 @@
       ]
     },
     "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "endpointChange": {
+      "type": "object",
+      "required": ["baseline", "change"],
+      "additionalProperties": false,
+      "properties": {
+        "baseline": { "type": "number", "exclusiveMinimum": 0 },
+        "change": { "type": "number" }
+      }
+    },
     "pkProfile": {
       "type": "object",
       "required": ["id", "name", "pk"],
@@ -166,11 +175,22 @@
               "doseMg": { "type": ["number", "null"] },
               "molecule": { "type": "string" },
               "baselineKg": { "type": "number", "exclusiveMinimum": 0 },
-              "change": { "type": "number" }
+              "change": { "type": "number" },
+              "hba1c": { "$ref": "#/definitions/endpointChange" },
+              "fastingGlucoseMgDl": { "$ref": "#/definitions/endpointChange" }
             }
           }
         },
         "analysis": { "type": "string", "minLength": 1 },
+        "glycemic": {
+          "type": "object",
+          "required": ["source"],
+          "additionalProperties": false,
+          "properties": {
+            "source": { "$ref": "#/definitions/labelOrTrial" },
+            "fastingGlucoseLabel": { "type": "string", "minLength": 1 }
+          }
+        },
         "source": { "$ref": "#/definitions/labelOrTrial" }
       }
     }

@@ -88,6 +88,67 @@ test('logs a medication, a dose and a weight, then shows the next dose, BMI and 
   )
 })
 
+test('the medication stack switches medicines and the levels chart follows', async ({ page }) => {
+  await page.goto('./')
+  await acceptDisclaimer(page)
+  await addMedication(page, 'Wegovy')
+  await addMedication(page, 'Zepbound')
+  await page.getByRole('button', { name: 'Log dose' }).click()
+  await choose(page.getByRole('dialog', { name: 'Zepbound' }), 'Dose', '2.5 mg')
+  await page.getByRole('dialog', { name: 'Zepbound' }).getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByText('2.5 mg logged')).toBeVisible()
+  await expect(page.getByText('Tirzepatide injection')).toBeVisible()
+
+  // Only the front card is reachable, so each control exists once.
+  await expect(page.getByRole('button', { name: 'Log dose' })).toHaveCount(1)
+  await page.getByRole('button', { name: 'Next medication' }).click()
+  await expect(page.getByText('Showing Wegovy, 2 of 2')).toBeAttached()
+  await expect(page.getByText('Log a dose of Wegovy to see an estimate here.')).toBeVisible()
+  await page
+    .getByRole('group', { name: 'Choose a medication' })
+    .getByRole('button', { name: 'Zepbound' })
+    .click()
+  await expect(page.getByText('Tirzepatide injection')).toBeVisible()
+
+  await page.getByRole('link', { name: 'Progress', exact: true }).first().click()
+  await expect(page.getByText('SURMOUNT-1 · 72 weeks')).toBeVisible()
+  await choose(page, 'Medication', 'Wegovy')
+  await expect(page.getByText('STEP 1 · 68 weeks')).toBeVisible()
+  await expect(page.getByText('Log a dose of Wegovy to compare').first()).toBeVisible()
+})
+
+test('logs side effects and blood sugar, in the units chosen in Settings', async ({ page }) => {
+  await page.goto('./')
+  await acceptDisclaimer(page)
+  await addMedication(page, 'Ozempic')
+
+  await page.getByRole('button', { name: 'Log side effect' }).click()
+  const effects = page.getByRole('dialog', { name: 'Side effects' })
+  await effects.getByRole('button', { name: 'Nausea' }).click()
+  await effects.getByRole('button', { name: 'Stomach pain' }).click()
+  await choose(effects, 'How strong', 'Severe')
+  await expect(effects.getByText(/possible sign of pancreatitis/)).toBeVisible()
+  await effects.getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByText('Side effects logged')).toBeVisible()
+  await expect(page.getByRole('list', { name: 'Side effects this week' })).toContainText('Nausea')
+
+  await page.getByRole('button', { name: 'Log blood sugar' }).click()
+  const sugar = page.getByRole('dialog', { name: 'Blood sugar' })
+  await sugar.getByLabel('HbA1c').fill('7.2')
+  await sugar.getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByText('Reading logged')).toBeVisible()
+  await expect(page.getByText('HbA1c 7.2%')).toBeVisible()
+
+  await page.getByRole('link', { name: 'Settings', exact: true }).first().click()
+  await choose(page, 'HbA1c unit', 'mmol/mol')
+  await page.getByRole('link', { name: 'Today', exact: true }).first().click()
+  await expect(page.getByText('HbA1c 55 mmol/mol')).toBeVisible()
+
+  await page.getByRole('link', { name: 'History', exact: true }).first().click()
+  await page.getByRole('tab', { name: /Side effects/ }).click()
+  await expect(page.getByText('Stomach pain')).toBeVisible()
+})
+
 test('a compounded vial shows the dose as syringe units', async ({ page }) => {
   await page.goto('./')
   await acceptDisclaimer(page)
