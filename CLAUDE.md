@@ -11,14 +11,15 @@ shares this origin.
 
 All commands run on the Node version in `.nvmrc` (`nvm use`); never system Node.
 
-| Command          | Purpose                                                                                          |
-| ---------------- | ------------------------------------------------------------------------------------------------ |
-| `make install`   | `npm ci`                                                                                         |
-| `make dev`       | Vite dev server (no service worker in dev)                                                       |
-| `make check`     | Fast gate: lint, format, typecheck, token and contrast checks, markdown, knip, unit tests, build |
-| `make check-all` | Full gate before declaring done: adds Playwright e2e (offline, PWA) and `npm audit`              |
-| `make preview`   | Serve the production build at `http://localhost:4173/app/`                                       |
-| `make android`   | Build the Capacitor bundle (`dist-android/`) and sync it into `android/`                         |
+| Command            | Purpose                                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------------------ |
+| `make install`     | `npm ci`                                                                                         |
+| `make dev`         | Vite dev server (no service worker in dev)                                                       |
+| `make check`       | Fast gate: lint, format, typecheck, token and contrast checks, markdown, knip, unit tests, build |
+| `make check-all`   | Full gate before declaring done: adds Playwright e2e (offline, PWA) and `npm audit`              |
+| `make preview`     | Serve the production build at `http://localhost:4173/app/`                                       |
+| `make android`     | Build the Capacitor bundle (`dist-android/`) and sync it into `android/`                         |
+| `make screenshots` | Retake the Today screenshots in `../tidebook.github.io` with sample data                         |
 
 ## Skills and rules
 
@@ -27,6 +28,7 @@ All commands run on the Node version in `.nvmrc` (`nvm use`); never system Node.
 | `.claude/skills/engineering-standards/SKILL.md` | Structure, domain logic, storage, stores, tests, tooling, deployment |
 | `.claude/skills/front-end/SKILL.md`             | Components, views, styling, theming, charts, copy                    |
 | `.claude/skills/medication-catalog/SKILL.md`    | Editing `src/data/medications.json`                                  |
+| `.claude/skills/site-screenshots/SKILL.md`      | Retaking app screenshots for the project site                        |
 
 Path-scoped rules in `.claude/rules/` cover comments, markdown, time, data and privacy, and the
 catalog. A post-edit hook lints edited TypeScript and Vue, checks markdown for em-dashes, runs
