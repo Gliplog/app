@@ -80,10 +80,11 @@ export async function preparePhoto(file: Blob): Promise<PreparedPhoto> {
 /**
  * The Android WebView saves a camera capture in the app's own Pictures folder before handing it
  * over. Gliplog keeps its own stripped copy, so the original (with its location data) is
- * deleted. Never throws: a leftover file is private to the app and removed on uninstall.
+ * deleted. Never throws: a leftover file is private to the app and removed on uninstall. iOS
+ * hands over a temporary file the system removes itself.
  */
 export async function clearNativeCaptures(): Promise<void> {
-  if (!__NATIVE__) return
+  if (__PLATFORM__ !== 'android') return
   try {
     const { Directory, Filesystem } = await import('@capacitor/filesystem')
     const { files } = await Filesystem.readdir({ path: 'Pictures', directory: Directory.External })

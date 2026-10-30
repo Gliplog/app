@@ -80,8 +80,17 @@ the app returns to the foreground. Alarms are inexact and `SCHEDULE_EXACT_ALARM`
 from the manifest. Text is generic unless the user turns on names. A tap routes to
 `#/?log=<medication id>`, which Today turns into Log dose for that medication.
 
-Both builds can also add a medication's schedule to a calendar (`domain/calendar.ts`,
-`components/reminders/AddToCalendarDialog.vue`): an `.ics` file made on the device (floating
+The bell on a medication's card and each row in Settings open Add reminder
+(`components/reminders/AddReminderDialog.vue`): Notify me or Add calendar invite. Notify me
+asks for permission only after explaining it, turns the reminder on at the last dose's time
+of day (to the quarter hour) once allowed, and when blocked opens Gliplog's notification
+settings through an app-local plugin (`android/.../NotificationSettingsPlugin.java`), checking
+again when the app returns to view. Permission checks go through
+`services/reminders/notificationAccess.ts`, which is "unsupported" on the web. The web build
+shows Notify me disabled with the reason.
+
+Both builds can add a medication's schedule to a calendar (`domain/calendar.ts`,
+`components/reminders/CalendarInviteForm.vue`): an `.ics` file made on the device (floating
 local time, a repeat rule and an alert), or links that open Google Calendar (repeating, local
 time with `ctz`) or Outlook on the web (one event in UTC; its link has no repeat parameter).
 The links send the event's title and times to that service only when the user taps one, so the
@@ -127,6 +136,14 @@ Each trial's own card, as printed, is folded below the merged chart.
 time to peak by bisection, which handles flip-flop kinetics. The output is an amount in the body
 in mg, not a concentration. Doses pool by PK profile (`domain/levels.ts`), so brands of the same
 medicine and route share one curve.
+
+## Native apps
+
+`vite build --mode android` and `--mode ios` set `__NATIVE__` and `__PLATFORM__`; copy that
+names the phone's system comes from `services/platform.ts`. Both apps share the reminder code;
+Android-only calls (notification channels, clearing the camera's capture file) check
+`__PLATFORM__`. Each has an app-local `NotificationSettings` plugin (Java and Swift) that opens
+Gliplog's notification settings. iOS is built and uploaded only by `.github/workflows/ios.yml`.
 
 ## PWA and hosting
 

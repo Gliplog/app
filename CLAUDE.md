@@ -3,8 +3,8 @@
 A private, offline journal for GLP-1 medication (brand and compounded): doses, weight, BMI,
 side effects, HbA1c and glucose, trial comparisons and estimated levels. A static PWA on GitHub
 Pages at `https://gliplog.com/app/`, also shipped as a Capacitor Android app (Google Play and
-F-Droid). No backend, no accounts, no network requests; all data stays in IndexedDB on the
-device. The marketing site is the separate `Gliplog/gliplog.github.io` repository, which
+F-Droid) and a Capacitor iOS app built only in GitHub Actions (`ios.yml`). No backend, no
+accounts, no network requests; all data stays in IndexedDB on the device. The marketing site is the separate `Gliplog/gliplog.github.io` repository, which
 shares this origin.
 
 ## Commands
@@ -19,6 +19,7 @@ All commands run on the Node version in `.nvmrc` (`nvm use`); never system Node.
 | `make check-all`   | Full gate before declaring done: adds Playwright e2e (offline, PWA) and `npm audit`              |
 | `make preview`     | Serve the production build at `http://localhost:4173/app/`                                       |
 | `make android`     | Build the Capacitor bundle (`dist-android/`) and sync it into `android/`                         |
+| `make ios`         | Build the iOS bundle (`dist-ios/`) and sync it into `ios/`; the app builds in CI, not locally    |
 | `make screenshots` | Retake the Today and Progress screenshots in `../gliplog.github.io` with sample data             |
 
 ## Skills and rules
@@ -33,7 +34,7 @@ All commands run on the Node version in `.nvmrc` (`nvm use`); never system Node.
 Path-scoped rules in `.claude/rules/` cover comments, markdown, time, data and privacy, and the
 catalog. A post-edit hook lints edited TypeScript and Vue, checks markdown for em-dashes, runs
 the catalog tests after JSON edits, and re-checks contrast after token edits. Releases (Play,
-F-Droid, iOS later) are in `docs/releasing.md`.
+F-Droid, App Store) are in `docs/releasing.md`.
 
 ## Non-negotiables
 

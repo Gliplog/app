@@ -577,8 +577,11 @@ test('adds the dose schedule to a calendar as a file or a link', async ({ page }
   await expect(page.getByText('0.25 mg logged')).toBeVisible()
 
   await page.getByRole('link', { name: 'Settings', exact: true }).first().click()
-  await page.getByRole('button', { name: 'Add Wegovy to calendar' }).click()
-  const dialog = page.getByRole('dialog', { name: 'Add to calendar' })
+  await page.getByRole('button', { name: 'Add reminder for Wegovy' }).click()
+  const dialog = page.getByRole('dialog')
+  await expect(page.getByRole('dialog', { name: 'Add reminder' })).toBeVisible()
+  await dialog.getByRole('button', { name: /^Add calendar invite/ }).click()
+  await expect(page.getByRole('dialog', { name: 'Calendar invite' })).toBeVisible()
   await dialog.getByLabel('Time of day').fill('08:30')
   await expect(dialog.getByText(/repeats every week\.$/)).toBeVisible()
 
@@ -595,7 +598,7 @@ test('adds the dose schedule to a calendar as a file or a link', async ({ page }
 
   await dialog.getByLabel('Show the medication name').check()
   const download = page.waitForEvent('download')
-  await dialog.getByRole('button', { name: 'Download calendar file' }).click()
+  await dialog.getByRole('button', { name: 'Download calendar invite' }).click()
   const file = await download
   expect(file.suggestedFilename()).toMatch(/^gliplog-dose-\d{4}-\d{2}-\d{2}\.ics$/)
   const ics = await (await import('node:fs/promises')).readFile((await file.path())!, 'utf8')
@@ -637,14 +640,20 @@ async function expectDecoded(img: Locator) {
     .toBeGreaterThan(0)
 }
 
-test('the bell on a medication card opens its reminder', async ({ page }) => {
+test('the bell on a medication card opens Add reminder', async ({ page }) => {
   await page.goto('./')
   await acceptDisclaimer(page)
   await addMedication(page, 'Wegovy')
-  await page.getByRole('button', { name: 'Add a reminder for Wegovy to your calendar' }).click()
-  const dialog = page.getByRole('dialog', { name: 'Add to calendar' })
-  await expect(dialog).toBeVisible()
-  await expect(dialog.getByText('Wegovy')).toBeVisible()
+  await page.getByRole('button', { name: 'Add reminder for Wegovy' }).click()
+  const dialog = page.getByRole('dialog')
+  await expect(page.getByRole('dialog', { name: 'Add reminder' })).toBeVisible()
+  // The web app cannot notify on its own, and says so instead of hiding the choice.
+  await expect(dialog.getByRole('button', { name: /^Notify me/ })).toBeDisabled()
+  await expect(dialog.getByText('Needs the Gliplog app for Android')).toBeVisible()
+  await dialog.getByRole('button', { name: /^Add calendar invite/ }).click()
+  await expect(dialog.getByText('Log a first dose of this medication')).toBeVisible()
+  await dialog.getByRole('button', { name: 'Back to reminder options' }).click()
+  await expect(page.getByRole('dialog', { name: 'Add reminder' })).toBeVisible()
 })
 
 test('pins photos to the weight line and shares a collage', async ({ page }) => {

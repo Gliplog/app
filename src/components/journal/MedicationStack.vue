@@ -36,8 +36,7 @@ const reminderOn = (med: MedicationRow) =>
   remindersSupported && settings.reminderFor(med.id).enabled
 
 function reminderLabel(med: MedicationRow): string {
-  if (!remindersSupported) return `Add a reminder for ${med.name} to your calendar`
-  return reminderOn(med) ? `Reminder for ${med.name}: on` : `Add a reminder for ${med.name}`
+  return reminderOn(med) ? `Reminder for ${med.name}: on` : `Add reminder for ${med.name}`
 }
 
 /** Cards drawn behind the front one; any further back are hidden until they come forward. */

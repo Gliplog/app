@@ -5,6 +5,7 @@ import {
   planReminders,
   reminderText,
   sanitizeReminderSettings,
+  suggestReminderTime,
   toTimeValue,
   type AtLocalTime,
 } from '@/domain/reminders'
@@ -111,5 +112,13 @@ describe('reminderText', () => {
   it('names the medication only when asked', () => {
     expect(reminderText('due', null).body).toBe('Your dose is due today. Tap to log it.')
     expect(reminderText('day-before', 'Wegovy').body).toBe('Your Wegovy dose is due tomorrow.')
+  })
+})
+
+describe('suggestReminderTime', () => {
+  it('rounds the last dose time to the nearest quarter hour', () => {
+    expect(suggestReminderTime(20, 10)).toEqual({ hour: 20, minute: 15 })
+    expect(suggestReminderTime(8, 53)).toEqual({ hour: 9, minute: 0 })
+    expect(suggestReminderTime(23, 58)).toEqual({ hour: 23, minute: 45 })
   })
 })

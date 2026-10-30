@@ -35,7 +35,7 @@ async function writeBlob(path: string, blob: Blob): Promise<string> {
 }
 
 /**
- * Write the file to the app's cache and open the Android share sheet on it (save to Files,
+ * Write the file to the app's cache and open the system share sheet on it (save to Files,
  * Drive, a messaging app). Text is written as UTF-8, a Blob as its raw bytes. Resolves
  * 'cancelled' when the user dismisses the sheet; other failures throw. Only imported by the
  * native build.

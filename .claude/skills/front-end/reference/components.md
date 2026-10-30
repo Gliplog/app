@@ -31,9 +31,10 @@ Part of the `front-end` skill.
 | `photos/PhotosCard.vue`                               | Progress photos: take or choose one, a paged grid newest first, Compare                 |
 | `photos/PhotoDialog.vue`                              | Save a new photo (pose, when, notes) or view, edit and delete one                       |
 | `photos/PhotoCompareDialog.vue`                       | Two photos side by side with dates and nearest weigh-ins (within three days)            |
-| `reminders/AddToCalendarDialog.vue`                   | A medication's schedule as a calendar file or a Google, Outlook or Microsoft 365 link   |
-| `reminders/ReminderDialog.vue`                        | Native: one medication's reminder from the bell on its Today card, calendar as fallback |
-| `reminders/MedicationReminderControls.vue`            | Reminder on/off (asks for permission), time, day before, next reminder; Settings shares |
+| `reminders/AddReminderDialog.vue`                     | Add reminder: Notify me or Add calendar invite, each pushed in place with a back arrow  |
+| `reminders/NotifyMePanel.vue`                         | Notify me: explain, then ask; on when allowed; blocked opens Android settings, rechecks |
+| `reminders/CalendarInviteForm.vue`                    | A schedule as a calendar file or a Google, Outlook or Microsoft 365 link                |
+| `reminders/MedicationReminderControls.vue`            | A reminder that is on: time of day, the day before, when the next one comes             |
 | `charts/photoPins.ts`                                 | A photo drawn as a map-style pin whose tip marks its date and weight on a line          |
 | `share/ShareCollageDialog.vue`                        | Collage of one pose's photos, picked evenly over a chosen span; post or story shape     |
 | `share/collageCard.ts`, `share/cardCanvas.ts`         | Collage drawing; backdrop, brand row, footer and tokens shared with the trend card      |

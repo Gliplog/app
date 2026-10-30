@@ -147,3 +147,15 @@ export function reminderText(
       }
   }
 }
+
+/**
+ * A first reminder time from when the user last took a dose, to the nearest quarter hour:
+ * someone who doses at 20:10 is reminded at 20:15, not at a default 9:00.
+ */
+export function suggestReminderTime(
+  hour: number,
+  minute: number,
+): { hour: number; minute: number } {
+  const total = Math.min(Math.round((hour * 60 + minute) / 15) * 15, 23 * 60 + 45)
+  return { hour: Math.floor(total / 60), minute: total % 60 }
+}

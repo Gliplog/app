@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useTheme } from 'vuetify'
 import { db, repository } from '@/db'
 import {
@@ -36,8 +36,16 @@ import { useConfirmStore } from '@/stores/confirm'
 import { useStoragePersistence } from '@/composables/useStoragePersistence'
 import { useInstallPrompt } from '@/composables/useInstallPrompt'
 import { remindersSupported } from '@/composables/useReminderSync'
-import AddToCalendarDialog from '@/components/reminders/AddToCalendarDialog.vue'
-import MedicationReminderControls from '@/components/reminders/MedicationReminderControls.vue'
+import AddReminderDialog from '@/components/reminders/AddReminderDialog.vue'
+import { toTimeValue } from '@/domain/reminders'
+import { describeInterval } from '@/domain/calendar'
+import {
+  checkNotificationAccess,
+  openNotificationSettings,
+  requestNotificationAccess,
+  type NotificationAccess,
+} from '@/services/reminders/notificationAccess'
+import { nativeApps, notificationSettingsSteps } from '@/services/platform'
 import type { MedicationRow } from '@/db/database'
 import { saveFile } from '@/services/fileTransfer'
 import {
@@ -49,7 +57,7 @@ import {
   systemClock,
 } from '@/services/time'
 import {
-  mdiCalendarPlus,
+  mdiBellOutline,
   mdiCellphoneArrowDown,
   mdiCheckCircleOutline,
   mdiCloudOffOutline,
@@ -295,39 +303,52 @@ async function eraseEverything() {
 
 /*
  * Reminders switched on can still be silenced: after a restore onto a new phone, or when
- * notifications are turned off in Android settings. Say so rather than fail quietly.
+ * notifications are turned off in the phone's settings. Say so rather than fail quietly, and
+ * check again when the user comes back from them.
  */
-const notificationsBlocked = ref(false)
+const access = ref<NotificationAccess | null>(null)
 const anyReminderOn = computed(() =>
   journal.activeMedications.some((m) => settings.reminderFor(m.id).enabled),
 )
+const notificationsBlocked = computed(
+  () => anyReminderOn.value && (access.value === 'denied' || access.value === 'prompt'),
+)
 
 async function checkNotifications() {
-  if (!__NATIVE__ || !anyReminderOn.value) {
-    notificationsBlocked.value = false
-    return
-  }
-  const { notificationsAllowed } = await import('@/services/reminders/nativeReminders')
-  notificationsBlocked.value = !(await notificationsAllowed())
+  access.value = anyReminderOn.value ? await checkNotificationAccess() : null
 }
 
-onMounted(checkNotifications)
+function onVisible() {
+  if (document.visibilityState === 'visible') void checkNotifications()
+}
+onMounted(() => {
+  void checkNotifications()
+  document.addEventListener('visibilitychange', onVisible)
+})
+onBeforeUnmount(() => document.removeEventListener('visibilitychange', onVisible))
 watch(anyReminderOn, checkNotifications)
 
-async function allowNotifications() {
-  if (!__NATIVE__) return
-  const { requestNotificationPermission } = await import('@/services/reminders/nativeReminders')
-  notificationsBlocked.value = !(await requestNotificationPermission())
-  if (notificationsBlocked.value)
-    notify.show('Notifications are off for Gliplog. Turn them on in Android settings.', 'error')
+async function fixNotifications() {
+  if (access.value === 'denied') {
+    if (!(await openNotificationSettings())) notify.show(notificationSettingsSteps, 'info')
+    return
+  }
+  access.value = await requestNotificationAccess()
 }
 
-const calendarOpen = ref(false)
-const calendarFor = ref<MedicationRow | null>(null)
+const reminderOpen = ref(false)
+const reminderFor = ref<MedicationRow | null>(null)
 
-function openCalendar(med: MedicationRow) {
-  calendarFor.value = med
-  calendarOpen.value = true
+function openReminder(med: MedicationRow) {
+  reminderFor.value = med
+  reminderOpen.value = true
+}
+
+/** What a medication's row says about its reminder. */
+function reminderStatus(med: MedicationRow): string {
+  const r = settings.reminderFor(med.id)
+  if (remindersSupported && r.enabled) return `Notify me at ${toTimeValue(r)}`
+  return remindersSupported ? 'No reminder' : `Dose ${describeInterval(med.intervalDays)}`
 }
 
 async function promptInstall() {
@@ -521,63 +542,57 @@ const formatMb = (bytes: number | null) =>
         <v-card-text v-if="!journal.activeMedications.length" class="gl-stack">
           <p>Add a medication on Today to set a reminder for it.</p>
         </v-card-text>
-        <v-card-text v-else-if="!remindersSupported" class="gl-stack">
-          <p>
-            Add your dose schedule to your calendar, and it will remind you. A web app can't send
-            reminders itself without a server, and Gliplog doesn't have one; the Android app can.
-          </p>
-          <div class="d-flex flex-wrap ga-2">
-            <v-btn
-              v-for="med in journal.activeMedications"
-              :key="med.id"
-              variant="tonal"
-              :prepend-icon="mdiCalendarPlus"
-              @click="openCalendar(med)"
-            >
-              Add {{ med.name }} to calendar
-            </v-btn>
-          </div>
-        </v-card-text>
         <v-card-text v-else class="gl-stack gl-stack--loose">
           <p>
-            A notification on the day your next dose is due, from your last logged dose. Tap it to
-            log the dose.
+            {{
+              remindersSupported
+                ? 'Get a notification on the day a dose is due, or add a calendar invite.'
+                : `Add a calendar invite, and your calendar will remind you. A web app can't send notifications on its own without a server; ${nativeApps} can.`
+            }}
           </p>
           <v-alert v-if="notificationsBlocked" type="warning" variant="tonal" density="compact">
             <p>Notifications are off for Gliplog, so reminders won't appear.</p>
             <div class="gl-actions">
-              <v-btn variant="tonal" @click="allowNotifications">Turn on</v-btn>
-            </div>
-          </v-alert>
-          <div
-            v-for="med in journal.activeMedications"
-            :key="med.id"
-            class="gl-stack gl-stack--tight"
-          >
-            <MedicationReminderControls :medication="med" />
-            <div>
-              <v-btn variant="text" :prepend-icon="mdiCalendarPlus" @click="openCalendar(med)">
-                Add to calendar
+              <v-btn variant="tonal" @click="fixNotifications">
+                {{ access === 'denied' ? 'Open settings' : 'Allow notifications' }}
               </v-btn>
             </div>
-          </div>
-          <v-divider />
-          <div class="gl-stack gl-stack--tight">
-            <v-switch
-              :model-value="settings.reminders.showNames"
-              label="Show medication names in reminders"
-              color="primary"
-              hide-details
-              @update:model-value="settings.setReminderNames(!!$event)"
-            />
-            <p class="text-body-small gl-muted">
-              Off, a reminder just says a dose is due, in case your screen is seen by others.
-            </p>
-          </div>
+          </v-alert>
+          <ul class="reminder-rows">
+            <li v-for="med in journal.activeMedications" :key="med.id" class="reminder-row">
+              <div class="reminder-row__text">
+                <span class="reminder-row__name">{{ med.name }}</span>
+                <span class="text-body-small gl-muted">{{ reminderStatus(med) }}</span>
+              </div>
+              <v-btn
+                variant="tonal"
+                :prepend-icon="mdiBellOutline"
+                :aria-label="`Add reminder for ${med.name}`"
+                @click="openReminder(med)"
+              >
+                Add reminder
+              </v-btn>
+            </li>
+          </ul>
+          <template v-if="remindersSupported">
+            <v-divider />
+            <div class="gl-stack gl-stack--tight">
+              <v-switch
+                :model-value="settings.reminders.showNames"
+                label="Show medication names in reminders"
+                color="primary"
+                hide-details
+                @update:model-value="settings.setReminderNames(!!$event)"
+              />
+              <p class="text-body-small gl-muted">
+                Off, a reminder just says a dose is due, in case your screen is seen by others.
+              </p>
+            </div>
+          </template>
         </v-card-text>
       </v-card>
 
-      <AddToCalendarDialog v-model="calendarOpen" :medication="calendarFor" />
+      <AddReminderDialog v-model="reminderOpen" :medication="reminderFor" />
 
       <v-card>
         <v-card-item>
@@ -812,5 +827,31 @@ const formatMb = (bytes: number | null) =>
 
 .about p + p {
   margin-top: 12px;
+}
+.reminder-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reminder-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.reminder-row__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.reminder-row__name {
+  font-weight: 600;
 }
 </style>
