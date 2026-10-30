@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import type { PkProfile } from '@/domain/catalog'
 import { lookbackHoursFor, type DoseEvent, type PkParameters } from '@/domain/pk'
 import { formatHours } from '@/services/time'
 import SourceList from '@/components/common/SourceList.vue'
 import PkChart from './PkChart.vue'
+import ShareLevelsDialog from '@/components/share/ShareLevelsDialog.vue'
+import { mdiShareVariantOutline } from '@/plugins/icons'
 
 const props = defineProps<{
   /** The catalog profile for the doses, or undefined for a medication outside the catalog. */
@@ -22,6 +24,20 @@ const props = defineProps<{
 const params = computed<PkParameters | null>(() => props.profile?.pk ?? props.override ?? null)
 const userSupplied = computed(() => !props.profile && props.override !== null)
 const lookbackHours = computed(() => (params.value ? lookbackHoursFor(params.value) : undefined))
+
+const shareOpen = ref(false)
+const shareInput = computed(() =>
+  params.value
+    ? {
+        params: params.value,
+        doses: props.doses,
+        preview: null,
+        unitLabel: 'mg',
+        now: props.now,
+        lookbackHours: lookbackHours.value,
+      }
+    : null,
+)
 </script>
 
 <template>
@@ -29,6 +45,14 @@ const lookbackHours = computed(() => (params.value ? lookbackHoursFor(params.val
     <v-card-item>
       <p class="tb-eyebrow">Estimated levels</p>
       <v-card-title class="text-wrap">{{ title ?? 'Amount in the body over time' }}</v-card-title>
+      <template v-if="shareInput && doses.length && !preview" #append>
+        <v-btn
+          :icon="mdiShareVariantOutline"
+          variant="text"
+          aria-label="Share estimated levels as an image"
+          @click="shareOpen = true"
+        />
+      </template>
     </v-card-item>
     <v-card-text class="tb-stack">
       <template v-if="params">
@@ -68,5 +92,12 @@ const lookbackHours = computed(() => (params.value ? lookbackHoursFor(params.val
         }}
       </v-alert>
     </v-card-text>
+    <ShareLevelsDialog
+      v-if="shareInput"
+      v-model="shareOpen"
+      :input="shareInput"
+      :name="profile?.name ?? title ?? 'Estimated levels'"
+      :source-text="userSupplied ? 'your own values' : 'the prescribing label'"
+    />
   </v-card>
 </template>

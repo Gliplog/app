@@ -3,26 +3,25 @@ import { computed, ref, useId } from 'vue'
 import {
   SEVERITIES,
   SEVERITY_LABELS,
-  SYMPTOM_LABEL_TERMS,
   SYMPTOM_SOURCES,
   summarizeSymptoms,
   type SymptomSummary,
 } from '@/domain/symptoms'
 import { roundTo } from '@/domain/units'
 import { useJournalStore } from '@/stores/journal'
-import { useNotifyStore } from '@/stores/notify'
 import { formatDate, toEpochMs } from '@/services/time'
 import SourceList from '@/components/common/SourceList.vue'
+import { mdiFilePdfBox } from '@/plugins/icons'
 
 /**
  * Side effects over a chosen period: how often each came, how strong, when last, and how many
- * days after a dose it usually arrived. The text copy is for a prescriber, so it carries the
- * labels' own terms beside the plain ones.
+ * days after a dose it usually arrived. "Export PDF" asks the page for the prescriber report,
+ * which carries the labels' own terms beside the plain ones.
  */
 const props = defineProps<{ now: number }>()
+const emit = defineEmits<{ export: [] }>()
 
 const journal = useJournalStore()
-const notify = useNotifyStore()
 const periodLabelId = useId()
 
 const PERIODS = [
@@ -51,28 +50,6 @@ function timingText(s: SymptomSummary): string {
   if (s.medianDaysAfterDose === null) return 'Before any dose'
   const days = roundTo(s.medianDaysAfterDose, 1)
   return days < 1 ? 'Same day as a dose' : `About ${days} day${days === 1 ? '' : 's'} after a dose`
-}
-
-function termFor(s: SymptomSummary): string {
-  const term = SYMPTOM_LABEL_TERMS[s.symptom]
-  return term && s.symptom !== 'other' ? ` (${term})` : ''
-}
-
-async function copy() {
-  const periodText = PERIODS.find((p) => p.days === period.value)!.label
-  const lines = [
-    `Side effects, ${period.value ? `last ${periodText}` : 'all logged'} (Tidebook)`,
-    ...summary.value.map(
-      (s) =>
-        `- ${s.name}${termFor(s)}: ${s.count} time${s.count === 1 ? '' : 's'} (${severityText(s)}); ${timingText(s).toLowerCase()}; last ${formatDate(s.lastAt)}`,
-    ),
-  ]
-  try {
-    await navigator.clipboard.writeText(lines.join('\n'))
-    notify.show('Summary copied', 'success')
-  } catch {
-    notify.show("Couldn't copy on this device", 'error')
-  }
 }
 </script>
 
@@ -119,12 +96,13 @@ async function copy() {
       </v-table>
       <p v-else class="tb-muted">Nothing logged in this period.</p>
       <p class="text-body-small tb-muted">
-        A record to share with your prescriber; it doesn’t say what caused a symptom. The list
-        follows the side effects reported in the labels’ clinical trials.
+        The list follows the side effects reported in the labels’ clinical trials.
       </p>
       <SourceList :sources="SYMPTOM_SOURCES" />
       <div v-if="summary.length" class="tb-actions">
-        <v-btn variant="tonal" @click="copy">Copy for my prescriber</v-btn>
+        <v-btn variant="tonal" :prepend-icon="mdiFilePdfBox" @click="emit('export')">
+          Export PDF
+        </v-btn>
       </div>
     </v-card-text>
   </v-card>

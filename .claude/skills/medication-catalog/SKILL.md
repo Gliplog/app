@@ -23,7 +23,8 @@ medication is `docs/adding-a-medication.md`.
 1. Figures come from the US prescribing label (DailyMed). Verify each against the label's
    structured text (`/dailymed/services/v2/spls/<setid>.xml`), not a summary of it.
 2. A trial reports one endpoint week; never add intermediate points. `measure` is the label's
-   own unit (`percent` or `kg`).
+   own unit (`percent` or `kg`). The cohort chart merges a medicine's trials over time in
+   `src/domain/cohort.ts`, not in the JSON.
 3. A product lists only trials of its own medicine and route (a comparator arm of its medicine
    counts, as semaglutide 1 mg in SURPASS-2), most relevant population first.
 4. Titration steps use label strengths and are shown as the label's schedule, never as advice.

@@ -1,21 +1,16 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { POPULATION_LABELS } from '@/domain/catalog'
-import type { ProgressPoint, TrialComparison } from '@/domain/progress'
+import type { TrialComparison } from '@/domain/progress'
 import { formatPercentChange, formatWeightChange, roundTo, type WeightUnit } from '@/domain/units'
 import SourceList from '@/components/common/SourceList.vue'
-import CohortChart from './CohortChart.vue'
 
 /**
- * The user's change beside one trial cohort's published endpoint results: a chart of the user's
- * journey with each arm at its endpoint week, then labelled bars at that week. The trial reports
- * one week, so no curve is invented between baseline and endpoint. Rows carry their value as
- * text, so identity never rests on colour or length.
+ * The user's change beside one trial's published results at its final week, as labelled bars.
+ * Rows carry their value as text, so identity never rests on colour or length.
  */
 const props = defineProps<{
   comparison: TrialComparison
-  /** The user's progress from week 0 of this medicine, for the chart. */
-  series: ProgressPoint[]
   weightUnit: WeightUnit
   /** What the user's row says when it has no value yet ("Log a dose to compare"). */
   missingText: string
@@ -77,8 +72,6 @@ const barWidth = (change: number | null) =>
         </span>
       </div>
       <p class="text-body-medium tb-muted">{{ trial.design }}.</p>
-
-      <CohortChart :trial="trial" :series="series" :weight-unit="weightUnit" />
 
       <ul class="bars" :aria-label="`Average weight change at week ${trial.weeks}, and yours`">
         <li

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { baselineFor, cohortOverlay, compareToTrial, progressSeries } from '@/domain/progress'
+import { baselineFor, compareToTrial, progressSeries } from '@/domain/progress'
 import { catalog } from '@/data'
 
 const DAY = 86_400_000
@@ -62,36 +62,5 @@ describe('progressSeries and compareToTrial', () => {
     expect(c.matchingArm!.label).toBe('Semaglutide 1 mg')
     const tirz = compareToTrial(series, surpass2, { molecule: 'tirzepatide', doseMg: 1 })
     expect(tirz.matchingArm).toBeNull()
-  })
-})
-
-describe('cohortOverlay', () => {
-  const step1 = catalog.trials.find((t) => t.id === 'step-1')!
-  const surpass1 = catalog.trials.find((t) => t.id === 'surpass-1')!
-  const series = progressSeries(
-    [
-      { at: 0, kg: 100 },
-      { at: 4 * WEEK, kg: 97 },
-      { at: 12 * WEEK, kg: 92 },
-    ],
-    { at: 0, kg: 100, basis: 'before-first-dose', startAt: 0 },
-  )
-
-  it('starts the user at no change and follows each weigh-in in the trial measure', () => {
-    const overlay = cohortOverlay(series, step1)
-    expect(overlay.user.map((p) => p.weeks)).toEqual([0, 4, 12])
-    expect(overlay.user[2]!.change).toBeCloseTo(-8)
-    expect(cohortOverlay(series, surpass1).user[2]!.change).toBeCloseTo(-8)
-  })
-
-  it('places every arm at the endpoint week only, with the spread between them', () => {
-    const overlay = cohortOverlay(series, step1)
-    expect(overlay.arms.every((a) => a.weeks === step1.weeks)).toBe(true)
-    expect(overlay.arms.find((a) => a.placebo)?.change).toBe(-2.4)
-    expect(overlay.spread).toEqual({ from: -2.4, to: -14.9 })
-  })
-
-  it('draws no user line without weigh-ins', () => {
-    expect(cohortOverlay([], step1).user).toEqual([])
   })
 })

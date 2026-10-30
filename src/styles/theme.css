@@ -316,14 +316,6 @@
     padding-inline: 0;
   }
 
-  .v-field--variant-outlined .v-field__outline__notch .v-field-label {
-    display: none;
-  }
-
-  .v-field--variant-outlined .v-field__outline__notch {
-    max-width: 0;
-  }
-
   /* iOS zooms the page when a focused input's font is under 16px. */
   .v-field input,
   .v-field textarea,

@@ -249,8 +249,7 @@ const announcement = computed(() =>
             {{ formatDateTime(journal.lastDoseOf(med.id)!.takenAt) }}
           </p>
           <p v-if="sharesWith(med).length" class="text-body-small tb-muted">
-            Shares one level estimate with {{ sharesWith(med).join(' and ') }}: the same medicine by
-            the same route.
+            Shares a level estimate with {{ sharesWith(med).join(' and ') }}.
           </p>
           <div class="tb-actions">
             <v-btn

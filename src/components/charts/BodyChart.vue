@@ -1,114 +1,45 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { use, type ComposeOption } from 'echarts/core'
-import { LineChart, type LineSeriesOption } from 'echarts/charts'
+import { use } from 'echarts/core'
+import { LineChart, ScatterChart } from 'echarts/charts'
 import {
   DataZoomComponent,
   GridComponent,
+  LegendComponent,
   MarkLineComponent,
   TooltipComponent,
-  type DataZoomComponentOption,
-  type GridComponentOption,
-  type TooltipComponentOption,
 } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import VChart from 'vue-echarts'
 import { useChartColors } from '@/composables/useChartColors'
 import { formatDate, formatDateRange } from '@/services/time'
 import { roundTo } from '@/domain/units'
+import { bodyChartOption, type BodyChartInput } from './bodyChart'
 
 use([
   LineChart,
+  ScatterChart,
   GridComponent,
+  LegendComponent,
   TooltipComponent,
   MarkLineComponent,
   DataZoomComponent,
   CanvasRenderer,
 ])
 
-/** One measure over time (weight or BMI) with optional labelled reference lines. */
-const props = defineProps<{
-  points: { at: number; value: number }[]
-  unitLabel: string
-  /** "Weight" or "BMI", for the accessible summary and table header. */
-  measure: string
-  decimals: number
-  /** Horizontal guides such as a goal weight or BMI band edges; drawn dashed with a label. */
-  guides: { value: number; label: string }[]
-}>()
+/**
+ * One measure over time (weight, BMI, HbA1c or glucose) with optional labelled reference lines.
+ * A secondary set (glucose at other times of day) is drawn as unjoined hollow points, so
+ * readings taken under different conditions are never joined into one line.
+ */
+const props = defineProps<BodyChartInput>()
 
 const { colors } = useChartColors()
 const showTable = ref(false)
 
 const fmt = (v: number) => `${roundTo(v, props.decimals)} ${props.unitLabel}`.trim()
 
-type Option = ComposeOption<
-  LineSeriesOption | GridComponentOption | TooltipComponentOption | DataZoomComponentOption
->
-
-const option = computed<Option>(() => {
-  const c = colors.value
-  const values = props.points.map((p) => p.value)
-  const all = [...values, ...props.guides.map((g) => g.value)]
-  const min = Math.min(...all)
-  const max = Math.max(...all)
-  const pad = Math.max((max - min) * 0.15, 1)
-  return {
-    animation: false,
-    textStyle: { fontFamily: c.font, color: c.text },
-    grid: { left: 8, right: 16, top: 16, bottom: 8, containLabel: true },
-    tooltip: {
-      trigger: 'axis',
-      backgroundColor: c.surface,
-      borderColor: c.grid,
-      textStyle: { color: c.text, fontFamily: c.font },
-      valueFormatter: (v) => fmt(Number(v)),
-    },
-    xAxis: {
-      type: 'time',
-      axisLine: { lineStyle: { color: c.grid } },
-      axisLabel: {
-        color: c.axis,
-        hideOverlap: true,
-        formatter: { month: '{MMM}', day: '{MMM} {d}', year: '{yyyy}' },
-      },
-      splitLine: { show: false },
-    },
-    yAxis: {
-      type: 'value',
-      min: Math.floor(min - pad),
-      max: Math.ceil(max + pad),
-      axisLabel: { color: c.axis, formatter: (v: number) => `${roundTo(v, 1)}` },
-      splitLine: { lineStyle: { color: c.grid } },
-    },
-    dataZoom: [{ type: 'inside', filterMode: 'none' }],
-    series: [
-      {
-        name: props.measure,
-        type: 'line',
-        showSymbol: props.points.length < 40,
-        symbolSize: 6,
-        lineStyle: { width: 2, color: c.logged, cap: 'round', join: 'round' },
-        itemStyle: { color: c.logged },
-        data: props.points.map((p) => [p.at, p.value]),
-        markLine: props.guides.length
-          ? {
-              silent: true,
-              symbol: 'none',
-              lineStyle: { color: c.now, type: 'dashed', width: 1 },
-              label: {
-                color: c.axis,
-                fontFamily: c.font,
-                formatter: '{b}',
-                position: 'insideEndTop',
-              },
-              data: props.guides.map((g) => ({ yAxis: g.value, name: g.label })),
-            }
-          : undefined,
-      },
-    ],
-  }
-})
+const option = computed(() => bodyChartOption(props, colors.value))
 
 const ariaSummary = computed(() => {
   const pts = props.points
@@ -118,7 +49,10 @@ const ariaSummary = computed(() => {
   return `${props.measure} from ${fmt(first.value)} to ${fmt(last.value)}, ${formatDateRange(first.at, last.at)}, ${pts.length} entries.`
 })
 
-const rows = computed(() => [...props.points].reverse())
+/** Every reading, newest first, with its note when the chart has more than one kind. */
+const rows = computed(() =>
+  [...props.points, ...(props.secondary?.points ?? [])].sort((a, b) => b.at - a.at),
+)
 </script>
 
 <template>
@@ -136,9 +70,12 @@ const rows = computed(() => [...props.points].reverse())
           </tr>
         </thead>
         <tbody>
-          <tr v-for="row in rows" :key="row.at">
+          <tr v-for="(row, i) in rows" :key="`${row.at}-${i}`">
             <td>{{ formatDate(row.at) }}</td>
-            <td class="text-end tb-num">{{ fmt(row.value) }}</td>
+            <td class="text-end tb-num">
+              {{ fmt(row.value) }}
+              <span v-if="row.note" class="d-block text-body-small tb-faint">{{ row.note }}</span>
+            </td>
           </tr>
         </tbody>
       </v-table>

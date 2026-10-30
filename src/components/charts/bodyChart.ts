@@ -1,0 +1,142 @@
+import type { ComposeOption } from 'echarts/core'
+import type { LineSeriesOption, ScatterSeriesOption } from 'echarts/charts'
+import type {
+  DataZoomComponentOption,
+  GridComponentOption,
+  LegendComponentOption,
+  TooltipComponentOption,
+} from 'echarts/components'
+import type { ChartColors } from '@/composables/useChartColors'
+import { niceRange } from '@/domain/report'
+import { roundTo } from '@/domain/units'
+
+interface BodyPoint {
+  at: number
+  value: number
+  /** Shown beside the value in the table, such as when in the day a glucose was taken. */
+  note?: string
+}
+
+export interface BodyChartInput {
+  points: BodyPoint[]
+  /** Readings drawn as unjoined hollow points (glucose at other times of day). */
+  secondary?: { name: string; points: BodyPoint[] }
+  unitLabel: string
+  /** "Weight", "BMI", "HbA1c": names the line and the table column. */
+  measure: string
+  decimals: number
+  /** Horizontal guides such as a goal weight or BMI band edges; drawn dashed with a label. */
+  guides: { value: number; label: string }[]
+}
+
+export type BodyChartOption = ComposeOption<
+  | LineSeriesOption
+  | ScatterSeriesOption
+  | GridComponentOption
+  | LegendComponentOption
+  | TooltipComponentOption
+  | DataZoomComponentOption
+>
+
+/**
+ * The ECharts option for a body measure over time, shared by the in-app chart and the share
+ * image. `hideValues` drops the value axis labels, for an image that shows the shape only.
+ */
+export function bodyChartOption(
+  props: BodyChartInput,
+  c: ChartColors,
+  options: { hideValues?: boolean } = {},
+): BodyChartOption {
+  const fmt = (v: number) => `${roundTo(v, props.decimals)} ${props.unitLabel}`.trim()
+  const extra = props.secondary?.points ?? []
+  const values = [...props.points, ...extra].map((p) => p.value)
+  const all = [...values, ...props.guides.map((g) => g.value)]
+  const min = Math.min(...all)
+  const max = Math.max(...all)
+  // Round ticks with a little room either side, so the first and last labels never collide.
+  const pad = Math.max((max - min) * 0.1, 0.5)
+  const ticks = niceRange(min - pad, max + pad, 5)
+  return {
+    animation: false,
+    textStyle: { fontFamily: c.font, color: c.text },
+    grid: { left: 8, right: 16, top: extra.length ? 36 : 16, bottom: 8, containLabel: true },
+    legend: extra.length
+      ? {
+          top: 0,
+          left: 0,
+          itemWidth: 14,
+          itemHeight: 10,
+          textStyle: { color: c.axis, fontFamily: c.font, fontSize: 11 },
+          data: [props.measure, props.secondary!.name],
+        }
+      : undefined,
+    // Unjoined points have no axis position to snap to, so a chart with them reads per point.
+    tooltip: {
+      trigger: extra.length ? 'item' : 'axis',
+      backgroundColor: c.surface,
+      borderColor: c.grid,
+      textStyle: { color: c.text, fontFamily: c.font },
+      valueFormatter: (v) => fmt(Number(v)),
+    },
+    xAxis: {
+      type: 'time',
+      axisLine: { lineStyle: { color: c.grid } },
+      axisLabel: {
+        color: c.axis,
+        hideOverlap: true,
+        formatter: { month: '{MMM}', day: '{MMM} {d}', year: '{yyyy}' },
+      },
+      splitLine: { show: false },
+    },
+    yAxis: {
+      type: 'value',
+      min: ticks[0],
+      max: ticks[ticks.length - 1],
+      interval: ticks[1]! - ticks[0]!,
+      axisLabel: {
+        show: !options.hideValues,
+        color: c.axis,
+        formatter: (v: number) => `${roundTo(v, 2)}${props.unitLabel === '%' ? '%' : ''}`,
+      },
+      splitLine: { lineStyle: { color: c.grid } },
+    },
+    dataZoom: [{ type: 'inside', filterMode: 'none' }],
+    series: [
+      {
+        name: props.measure,
+        type: 'line',
+        showSymbol: props.points.length < 40,
+        symbolSize: 6,
+        lineStyle: { width: 2, color: c.logged, cap: 'round', join: 'round' },
+        itemStyle: { color: c.logged },
+        data: props.points.map((p) => [p.at, p.value]),
+        markLine: props.guides.length
+          ? {
+              silent: true,
+              symbol: 'none',
+              lineStyle: { color: c.now, type: 'dashed', width: 1 },
+              label: {
+                color: c.axis,
+                fontFamily: c.font,
+                formatter: '{b}',
+                position: 'insideEndTop',
+              },
+              data: props.guides.map((g) => ({ yAxis: g.value, name: g.label })),
+            }
+          : undefined,
+      },
+      ...(extra.length
+        ? [
+            {
+              name: props.secondary!.name,
+              type: 'scatter' as const,
+              symbol: 'emptyCircle',
+              symbolSize: 8,
+              itemStyle: { color: c.preview, borderWidth: 2 },
+              data: extra.map((p) => [p.at, p.value]),
+            },
+          ]
+        : []),
+    ],
+  }
+}

@@ -4,30 +4,36 @@ Part of the `front-end` skill.
 
 ## Shared components
 
-| Component                                  | Use                                                                                     |
-| ------------------------------------------ | --------------------------------------------------------------------------------------- |
-| `common/PresetPicker.vue`                  | Number input as preset chips plus a Custom field; chips are buttons with `aria-pressed` |
-| `common/SourceBadge.vue`                   | Shows where a number came from (label, trial, standard, model)                          |
-| `common/SourceList.vue`                    | A list of sources, each with its badge and a link                                       |
-| `common/ListPager.vue`, `SortToggle.vue`   | Range caption and `v-pagination` (hidden on one page); newest or oldest first toggle    |
-| `common/AppLogo.vue`                       | The brand: mark (`src/assets/brand/tidebook-mark.svg`) plus the two-tone wordmark       |
-| `common/AppSnackbar.vue`, `AppConfirm.vue` | Render the notify and confirm stores; mounted once in `App.vue`                         |
-| `common/UpdatePrompt.vue`                  | Service-worker update and offline-ready notices                                         |
-| `common/DisclaimerDialog.vue`              | First-run acknowledgement: a journal, not medical advice                                |
-| `journal/MedicationDialog.vue`             | Add or edit a medication: product, interval, compounded vial strength, own half-life    |
-| `journal/LogDoseDialog.vue`                | Log or edit a dose: label strengths, syringe units for a vial, site rotation            |
-| `journal/LogWeightDialog.vue`              | Log or edit a weigh-in in kg or lb                                                      |
-| `journal/LogSymptomDialog.vue`             | Log one or more side effects at one strength, or edit one entry                         |
-| `journal/LogGlucoseDialog.vue`             | Log or edit an HbA1c result or a glucose reading (with when in the day)                 |
-| `journal/MedicationStack.vue`              | Today's stacked medication cards: swipe, arrows, dots or arrow keys; back cards inert   |
-| `journal/SymptomSummaryCard.vue`           | Side effects by period, strength and days after a dose; copies a text summary           |
-| `charts/CohortChart.vue`                   | Your change by week with each trial arm at its endpoint week only, and a table          |
-| `charts/GlycemicComparison.vue`            | Your HbA1c or fasting glucose change beside one trial's arms, with starting values      |
-| `charts/BodyChart.vue`                     | Weight or BMI over time with labelled dashed guides (goal, WHO bands) and a table view  |
-| `charts/TrialComparison.vue`               | Your change beside one trial's endpoint arms as labelled bars, with source and caveats  |
-| `charts/PkPanel.vue`                       | Chooses catalog or user-supplied PK, shows sources and caveats, or why no curve exists  |
-| `charts/PkChart.vue`                       | ECharts curve of logged doses, "Now" marker, table view                                 |
-| `charts/levelsChart.ts`                    | The curve's model and ECharts option                                                    |
+| Component                                             | Use                                                                                     |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `common/PresetPicker.vue`                             | Number input as preset chips plus a Custom field; chips are buttons with `aria-pressed` |
+| `common/SourceBadge.vue`                              | Shows where a number came from (label, trial, standard, model)                          |
+| `common/SourceList.vue`                               | A list of sources, each with its badge and a link                                       |
+| `common/ListPager.vue`, `SortToggle.vue`              | Range caption and `v-pagination` (hidden on one page); newest or oldest first toggle    |
+| `common/AppLogo.vue`                                  | The brand: mark (`src/assets/brand/tidebook-mark.svg`) plus the two-tone wordmark       |
+| `common/AppSnackbar.vue`, `AppConfirm.vue`            | Render the notify and confirm stores; mounted once in `App.vue`                         |
+| `common/UpdatePrompt.vue`                             | Service-worker update and offline-ready notices                                         |
+| `common/DisclaimerDialog.vue`                         | First-run acknowledgement: a journal, not medical advice                                |
+| `journal/MedicationDialog.vue`                        | Add or edit a medication: product, interval, compounded vial strength, own half-life    |
+| `journal/LogDoseDialog.vue`                           | Log or edit a dose: label strengths, syringe units for a vial, site rotation            |
+| `journal/LogWeightDialog.vue`                         | Log or edit a weigh-in in kg or lb                                                      |
+| `journal/LogSymptomDialog.vue`                        | Log one or more side effects at one strength, or edit one entry                         |
+| `journal/LogGlucoseDialog.vue`                        | Log or edit an HbA1c result or a glucose reading (with when in the day)                 |
+| `journal/MedicationStack.vue`                         | Today's stacked medication cards: swipe, arrows, dots or arrow keys; back cards inert   |
+| `journal/SymptomSummaryCard.vue`                      | Side effects by period, strength and days after a dose; opens the PDF export            |
+| `charts/CohortChart.vue`                              | One medicine's trial readouts merged over weeks (band and points), your line, a table   |
+| `charts/CohortSection.vue`                            | Progress cohort section: medication, measure and population switches, trial cards       |
+| `charts/TrendCard.vue`                                | Weight, BMI, HbA1c and glucose over time in one card, with a share button               |
+| `charts/bodyChart.ts`                                 | The body-measure chart option, shared by `BodyChart` and share images                   |
+| `share/ShareImageDialog.vue`                          | Preview and share a 4:5 image card; privacy switches go in its slot                     |
+| `share/ShareTrendDialog.vue`, `ShareLevelsDialog.vue` | Image cards for a trend (numbers off by default) and estimated levels                   |
+| `report/ExportReportDialog.vue`                       | Choose a period and export the journal PDF                                              |
+| `charts/GlycemicComparison.vue`                       | Your HbA1c or fasting glucose change beside one trial's arms, with starting values      |
+| `charts/BodyChart.vue`                                | Weight or BMI over time with labelled dashed guides (goal, WHO bands) and a table view  |
+| `charts/TrialComparison.vue`                          | Your change beside one trial's endpoint arms as labelled bars, with source and caveats  |
+| `charts/PkPanel.vue`                                  | Chooses catalog or user-supplied PK, shows sources and caveats, or why no curve exists  |
+| `charts/PkChart.vue`                                  | ECharts curve of logged doses, "Now" marker, table view                                 |
+| `charts/levelsChart.ts`                               | The curve's model and ECharts option                                                    |
 
 ## Patterns
 

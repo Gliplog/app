@@ -82,6 +82,11 @@ test('logs a medication, a dose and a weight, then shows the next dose, BMI and 
   await expect(page.getByText(/32\.7 · Obesity class 1/)).toBeVisible()
 
   await page.getByRole('link', { name: 'Progress', exact: true }).first().click()
+  // One chart merges every semaglutide injection trial; each trial's own card is folded below.
+  await expect(
+    page.getByRole('img', { name: /Trial readouts at week 30, 40, 68, 72/ }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: /Show each trial/ }).click()
   await expect(page.getByText('STEP 1 · 68 weeks')).toBeVisible()
   await expect(page.locator('li', { hasText: 'Semaglutide 2.4 mg' }).first()).toContainText(
     '\u221214.9%',
@@ -111,10 +116,78 @@ test('the medication stack switches medicines and the levels chart follows', asy
   await expect(page.getByText('Tirzepatide injection')).toBeVisible()
 
   await page.getByRole('link', { name: 'Progress', exact: true }).first().click()
-  await expect(page.getByText('SURMOUNT-1 · 72 weeks')).toBeVisible()
+  const cohorts = page.locator('.v-card', { hasText: 'Trial cohorts' })
+  await expect(cohorts).toContainText('Tirzepatide injection')
   await choose(page, 'Medication', 'Wegovy')
-  await expect(page.getByText('STEP 1 · 68 weeks')).toBeVisible()
-  await expect(page.getByText('Log a dose of Wegovy to compare').first()).toBeVisible()
+  await expect(cohorts).toContainText('Semaglutide injection')
+  await expect(page.getByText('Log a dose of Wegovy to add your own line.')).toBeVisible()
+})
+
+test('shares a trend as an image and exports the journal as a PDF', async ({ page }) => {
+  // Take the download path on every browser: a share sheet cannot be driven from a test.
+  await page.addInitScript(() => {
+    delete (navigator as { canShare?: unknown }).canShare
+  })
+  await page.goto('./')
+  await acceptDisclaimer(page)
+  await logWeight(page, '100')
+  await page.getByRole('link', { name: 'Progress', exact: true }).first().click()
+
+  await page.getByRole('button', { name: 'Share weight as an image' }).click()
+  const share = page.getByRole('dialog', { name: 'Share as an image' })
+  const preview = share.getByRole('img', { name: 'Preview of the image to share' })
+  // Decoded, not just present: the production CSP must allow the blob: preview.
+  await expect
+    .poll(() => preview.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth))
+    .toBeGreaterThan(0)
+  await expect(share.getByText('Only the percent change is shown.')).toBeVisible()
+  const image = page.waitForEvent('download')
+  await share.getByRole('button', { name: 'Share' }).click()
+  expect((await image).suggestedFilename()).toMatch(/^tidebook-weight-\d{4}-\d{2}-\d{2}\.png$/)
+
+  await page.getByRole('button', { name: 'Export PDF' }).first().click()
+  const report = page.getByRole('dialog', { name: 'Export PDF' })
+  await choose(report, 'Period', 'All')
+  const pdf = page.waitForEvent('download')
+  await report.getByRole('button', { name: 'Export' }).click()
+  const file = await pdf
+  expect(file.suggestedFilename()).toMatch(/^tidebook-report-\d{4}-\d{2}-\d{2}\.pdf$/)
+  const bytes = await (await import('node:fs/promises')).readFile((await file.path())!)
+  expect(bytes.subarray(0, 8).toString('latin1')).toBe('%PDF-1.4')
+})
+
+test('a field label stays above its field when the field is focused', async ({ page }) => {
+  await page.goto('./')
+  await acceptDisclaimer(page)
+  await page
+    .getByRole('button', { name: /^Log (a )?weight$/ })
+    .first()
+    .click()
+  const dialog = page.getByRole('dialog', { name: 'Weigh-in' })
+  await expect(dialog).toBeVisible()
+  // Focus, then record the label's position every frame for the length of any animation.
+  const positions = await dialog.evaluate(async (root) => {
+    const finite = root
+      .getAnimations({ subtree: true })
+      .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+    await Promise.all(finite.map((a) => a.finished))
+    const label = [...root.querySelectorAll('.v-field-label')].find(
+      (el) => el.textContent?.trim() === 'Notes (optional)',
+    )!
+    const input = root.querySelector<HTMLElement>('textarea')!
+    const read = () => {
+      const r = label.getBoundingClientRect()
+      return `${Math.round(r.x)},${Math.round(r.y)}`
+    }
+    const seen = [read()]
+    input.focus()
+    for (let i = 0; i < 20; i++) {
+      await new Promise(requestAnimationFrame)
+      seen.push(read())
+    }
+    return seen
+  })
+  expect(new Set(positions).size).toBe(1)
 })
 
 test('logs side effects and blood sugar, in the units chosen in Settings', async ({ page }) => {

@@ -40,8 +40,11 @@ F-Droid, iOS later) are in `docs/releasing.md`.
 - Arithmetic lives in `src/domain/` (pure, unit tested). Weight is stored in kg and height in
   cm, unrounded; units convert only for display and entry.
 - Every number shown to users carries a source. Trial figures are copied from the label as
-  printed; no curve is drawn between published points. PK curves only from human data or
-  clearly labelled user-supplied values.
+  printed and never read off a figure. The cohort chart joins one medicine's published
+  readouts from different trials with straight lines, and shows a kilogram readout as percent
+  of the arm's starting weight; both are labelled on the chart and in its sources
+  (`src/domain/cohort.ts`). PK curves only from human data or clearly labelled user-supplied
+  values.
 - Tidebook does arithmetic and shows sourced references; it never recommends a dose.
 - Copy is warm, plain and inclusive: no shame or judgement about weight, every profile field
   optional, gender never used in a calculation.

@@ -8,6 +8,7 @@ import {
   fromA1cPercent,
   fromMgDl,
   glycemicBaseline,
+  glycemicSeries,
   isValidA1c,
   isValidGlucose,
   toA1cPercent,
@@ -73,5 +74,20 @@ describe('glycemic comparison', () => {
   it('is null for a measure the trial does not print, and has no user row without a dose', () => {
     expect(compareGlycemic([], 0, step1, 'fastingGlucose')).toBeNull()
     expect(compareGlycemic([{ at: 0, value: 6 }], null, step1, 'hba1c')!.user).toBeNull()
+  })
+
+  it('follows each reading after the baseline as a change from it', () => {
+    const series = glycemicSeries(
+      [
+        { at: -WEEK, value: 8 },
+        { at: 10 * WEEK, value: 7.2 },
+      ],
+      0,
+    )
+    expect(series).toEqual([
+      { weeks: 0, change: 0 },
+      { weeks: 10, change: expect.closeTo(-0.8, 6) },
+    ])
+    expect(glycemicSeries([], 0)).toEqual([])
   })
 })

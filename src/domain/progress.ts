@@ -100,37 +100,3 @@ export function compareToTrial(
     null
   return { trial, user, userChange, matchingArm }
 }
-
-export interface CohortOverlay {
-  /** The user's journey in the trial's measure, from week 0 (no change) to the latest weigh-in. */
-  user: { weeks: number; change: number }[]
-  /** Each published arm at the trial's endpoint week; nothing is drawn before it. */
-  arms: { label: string; weeks: number; change: number; placebo: boolean }[]
-  /** Lowest to highest mean change across the arms, or null with fewer than two arms. */
-  spread: { from: number; to: number } | null
-}
-
-/**
- * What a cohort chart draws: the user's own change week by week beside each trial arm's mean
- * at the endpoint. The label prints one week, so the arms are points, never a path: Tidebook
- * does not invent the route a cohort took to get there. Values are in the trial's own measure
- * (percent, or kilograms for the caller to show in the user's unit); one is never turned into the
- * other.
- */
-export function cohortOverlay(series: readonly ProgressPoint[], trial: Trial): CohortOverlay {
-  const measure = (p: ProgressPoint) => (trial.measure === 'percent' ? p.changePercent : p.changeKg)
-  const user = series.length
-    ? [{ weeks: 0, change: 0 }, ...series.map((p) => ({ weeks: p.weeks, change: measure(p) }))]
-    : []
-  // A weigh-in at week 0 is the baseline itself; keep one point there.
-  const deduped = user.filter((p, i) => i === 0 || p.weeks > 0)
-  const arms = trial.arms.map((a) => ({
-    label: a.label,
-    weeks: trial.weeks,
-    change: a.change,
-    placebo: a.doseMg === null,
-  }))
-  const changes = arms.map((a) => a.change)
-  const spread = arms.length > 1 ? { from: Math.max(...changes), to: Math.min(...changes) } : null
-  return { user: deduped, arms, spread }
-}

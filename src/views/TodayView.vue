@@ -86,7 +86,7 @@ const groupCaption = computed(() => {
   const g = group.value
   if (!g || g.medicationCount < 2) return undefined
   const names = g.medicationIds.map((id) => journal.medicationById(id)?.name).filter(Boolean)
-  return `Includes doses of ${names.join(' and ')}: the body handles them as one medicine.`
+  return `Includes doses of ${names.join(' and ')}.`
 })
 
 const isEmpty = computed(
@@ -224,9 +224,7 @@ const daysSinceStart = computed(() =>
               {{ s.name }} <span class="tb-num">× {{ s.count }}</span>
             </li>
           </ul>
-          <p v-else class="tb-muted">
-            Nothing logged this week. Noting how you feel helps when you talk with your prescriber.
-          </p>
+          <p v-else class="tb-muted">Nothing logged this week.</p>
           <div class="tb-actions">
             <v-btn variant="text" :to="{ name: 'progress', hash: '#side-effects' }"
               >See summary</v-btn

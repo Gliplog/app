@@ -6,6 +6,14 @@ import { aliases, mdi } from 'vuetify/iconsets/mdi-svg'
  * `system` default follows the device's colour scheme. The user can pin one in Settings.
  * Colours mirror the semantic tokens in styles/tokens.css.
  */
+const FIELD = {
+  variant: 'outlined',
+  density: 'comfortable',
+  color: 'primary',
+  hideDetails: 'auto',
+  singleLine: true,
+} as const
+
 export const vuetify = createVuetify({
   icons: { defaultSet: 'mdi', aliases, sets: { mdi } },
   theme: {
@@ -53,21 +61,14 @@ export const vuetify = createVuetify({
   defaults: {
     // hideDetails 'auto': the message row exists only when there is a hint or error to show,
     // so spacing between fields comes from the container (.tb-stack), never from empty rows.
-    VTextField: {
-      variant: 'outlined',
-      density: 'comfortable',
-      color: 'primary',
-      hideDetails: 'auto',
-    },
-    VSelect: { variant: 'outlined', density: 'comfortable', color: 'primary', hideDetails: 'auto' },
-    VTextarea: {
-      variant: 'outlined',
-      density: 'comfortable',
-      color: 'primary',
-      hideDetails: 'auto',
-      rows: 2,
-      autoGrow: true,
-    },
+    // singleLine: labels sit still above the field (theme.css), so Vuetify must not animate
+    // them into the outline's notch on focus; that notch is hidden, and the animation measured
+    // it as an empty box and flung the label across the screen.
+    VTextField: FIELD,
+    VSelect: FIELD,
+    VAutocomplete: FIELD,
+    VCombobox: FIELD,
+    VTextarea: { ...FIELD, rows: 2, autoGrow: true },
     VSwitch: { color: 'primary', inset: true },
     VCheckbox: { color: 'primary' },
     VRadioGroup: { color: 'primary' },

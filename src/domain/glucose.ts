@@ -84,13 +84,18 @@ export function formatGlucoseChange(deltaMgDl: number, unit: GlucoseUnit): strin
 }
 
 /**
- * A signed change in percentage points shown in `unit`. The master equation is linear, so a
+ * A change in percentage points expressed in `unit`. The master equation is linear, so a
  * change scales by its slope alone: -1.6 points is -17 mmol/mol.
  */
+export function a1cChangeIn(deltaPercent: number, unit: A1cUnit): number {
+  return unit === '%' ? deltaPercent : deltaPercent / NGSP_PER_IFCC
+}
+
+/** A signed HbA1c change shown in `unit`: "-1.6 points" or "-17 mmol/mol". */
 export function formatA1cChange(deltaPercent: number, unit: A1cUnit): string {
   return unit === '%'
     ? signed(deltaPercent, 1, ' points')
-    : signed(deltaPercent / NGSP_PER_IFCC, 0, ' mmol/mol')
+    : signed(a1cChangeIn(deltaPercent, unit), 0, ' mmol/mol')
 }
 
 /** Readings outside these are typos, not results; both cover what a meter or lab reports. */
@@ -188,4 +193,22 @@ export function compareGlycemic(
     if (last) user = { weeks: last.weeks, value: last.value, change: last.value - baseline.value }
   }
   return { trial, measure, baseline, user, arms }
+}
+
+/**
+ * The user's own path for a cohort chart: change from the baseline reading at each later
+ * reading, by weeks since the first dose, starting at no change on week 0. Empty without a
+ * baseline.
+ */
+export function glycemicSeries(
+  readings: readonly Reading[],
+  firstDoseAt: number | null,
+): { weeks: number; change: number }[] {
+  const baseline = glycemicBaseline(readings, firstDoseAt)
+  if (!baseline || firstDoseAt === null) return []
+  const later = readings
+    .filter((r) => r.at > baseline.at && r.at > firstDoseAt)
+    .sort((a, b) => a.at - b.at)
+    .map((r) => ({ weeks: (r.at - firstDoseAt) / WEEK_MS, change: r.value - baseline.value }))
+  return [{ weeks: 0, change: 0 }, ...later]
 }
