@@ -81,3 +81,38 @@ export function photoGap(
     changeKg: first.weight && last.weight ? last.weight.kg - first.weight.kg : null,
   }
 }
+
+/**
+ * The value a line through `points` (oldest first) has at `at`, joining neighbours straight, as
+ * the chart draws it. Within `slackDays` before the first or after the last point the end
+ * value stands; further out there is no measured value, so the answer is null.
+ */
+export function valueAt(
+  points: readonly { at: number; value: number }[],
+  at: number,
+  slackDays = 3,
+): number | null {
+  const first = points[0]
+  const last = points[points.length - 1]
+  if (!first || !last) return null
+  if (at <= first.at) return first.at - at <= slackDays * DAY_MS ? first.value : null
+  if (at >= last.at) return at - last.at <= slackDays * DAY_MS ? last.value : null
+  const i = points.findIndex((p) => p.at >= at)
+  const right = points[i]!
+  const left = points[i - 1]!
+  if (right.at === left.at) return right.value
+  return left.value + ((right.value - left.value) * (at - left.at)) / (right.at - left.at)
+}
+
+/**
+ * At most `max` of `items` (oldest first), spread evenly through the list and always keeping
+ * the first and last, so a chart or a collage shows the whole span without crowding.
+ */
+export function spreadEvenly<T>(items: readonly T[], max: number): T[] {
+  if (max < 1) return []
+  if (items.length <= max) return [...items]
+  if (max === 1) return [items[items.length - 1]!]
+  const picks = new Set<number>()
+  for (let i = 0; i < max; i++) picks.add(Math.round((i * (items.length - 1)) / (max - 1)))
+  return [...picks].sort((a, b) => a - b).map((i) => items[i]!)
+}

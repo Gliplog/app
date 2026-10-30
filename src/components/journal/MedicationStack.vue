@@ -5,7 +5,15 @@ import { dueState } from '@/domain/schedule'
 import { formatDose } from '@/domain/units'
 import { useJournalStore } from '@/stores/journal'
 import { formatDateTime, formatRelativeDays, formatWeekday } from '@/services/time'
-import { mdiChevronLeft, mdiChevronRight, mdiNeedle } from '@/plugins/icons'
+import {
+  mdiBellOutline,
+  mdiBellRingOutline,
+  mdiChevronLeft,
+  mdiChevronRight,
+  mdiNeedle,
+} from '@/plugins/icons'
+import { useSettingsStore } from '@/stores/settings'
+import { remindersSupported } from '@/composables/useReminderSync'
 
 /**
  * The medications in use as a stack of cards: the chosen one in front, the next two peeking
@@ -18,9 +26,19 @@ const props = defineProps<{
   now: number
 }>()
 const selectedId = defineModel<string | undefined>({ required: true })
-const emit = defineEmits<{ 'log-dose': [med: MedicationRow] }>()
+const emit = defineEmits<{ 'log-dose': [med: MedicationRow]; reminder: [med: MedicationRow] }>()
 
 const journal = useJournalStore()
+const settings = useSettingsStore()
+
+/** The app's own reminder is on; the web app reminds through the calendar instead. */
+const reminderOn = (med: MedicationRow) =>
+  remindersSupported && settings.reminderFor(med.id).enabled
+
+function reminderLabel(med: MedicationRow): string {
+  if (!remindersSupported) return `Add a reminder for ${med.name} to your calendar`
+  return reminderOn(med) ? `Reminder for ${med.name}: on` : `Add a reminder for ${med.name}`
+}
 
 /** Cards drawn behind the front one; any further back are hidden until they come forward. */
 const PEEKING = 2
@@ -235,6 +253,15 @@ const announcement = computed(() =>
         <v-card-item>
           <p class="gl-eyebrow">Medication</p>
           <v-card-title class="text-wrap">{{ med.name }}</v-card-title>
+          <template #append>
+            <v-btn
+              :icon="reminderOn(med) ? mdiBellRingOutline : mdiBellOutline"
+              :color="reminderOn(med) ? 'primary' : undefined"
+              variant="text"
+              :aria-label="reminderLabel(med)"
+              @click="emit('reminder', med)"
+            />
+          </template>
           <v-card-subtitle>
             <template v-if="journal.productOf(med)"
               >{{ journal.productOf(med)!.molecule }} · </template

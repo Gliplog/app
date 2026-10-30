@@ -4,6 +4,16 @@ import { GridComponent, LegendComponent, MarkLineComponent } from 'echarts/compo
 import { CanvasRenderer } from 'echarts/renderers'
 import markUrl from '@/assets/brand/gliplog-mark.svg'
 import type { ChartColors } from '@/composables/useChartColors'
+import { drawPin, PIN } from '@/components/charts/photoPins'
+import {
+  drawBrandRow,
+  drawFooter,
+  loadImage,
+  paintBackdrop,
+  readTokens,
+  toPng,
+  wrap,
+} from './cardCanvas'
 
 // An offscreen chart draws only what is registered in the module that creates it.
 use([LineChart, ScatterChart, GridComponent, LegendComponent, MarkLineComponent, CanvasRenderer])
@@ -21,62 +31,14 @@ export interface ShareCardContent {
   caption: string
   /** When the card was made, formatted for the device's locale. */
   madeAt: string
+  /** Progress photos to pin on the chart's first line: `src` is a thumbnail URL. */
+  photos?: { at: number; value: number; src: string }[]
 }
 
 /** Portrait 4:5, the shape messaging apps show without cropping. */
 const WIDTH = 1080
 const HEIGHT = 1350
 const PAD = 72
-
-const TOKENS = [
-  'bg',
-  'text-1',
-  'text-2',
-  'text-3',
-  'brand',
-  'accent',
-  'backdrop-1',
-  'backdrop-2',
-  'glass-card',
-  'glass-edge',
-] as const
-type CardTokens = Record<(typeof TOKENS)[number], string>
-
-function readTokens(): CardTokens {
-  const style = getComputedStyle(document.querySelector('.v-application') ?? document.body)
-  return Object.fromEntries(
-    TOKENS.map((t) => [t, style.getPropertyValue(`--gl-${t}`).trim()]),
-  ) as CardTokens
-}
-
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.onload = () => resolve(img)
-    img.onerror = () => reject(new Error('Could not load the Gliplog mark'))
-    img.src = src
-  })
-}
-
-/** Greedy word wrap to `width`; the last of `maxLines` lines is ellipsised. */
-function wrap(ctx: CanvasRenderingContext2D, text: string, width: number, maxLines: number) {
-  const lines: string[] = []
-  let line = ''
-  for (const word of text.split(/\s+/).filter(Boolean)) {
-    const next = line ? `${line} ${word}` : word
-    if (ctx.measureText(next).width <= width || !line) line = next
-    else {
-      lines.push(line)
-      line = word
-    }
-  }
-  if (line) lines.push(line)
-  if (lines.length > maxLines) {
-    lines.length = maxLines
-    lines[maxLines - 1] = `${lines[maxLines - 1]!.replace(/\s+\S*$/, '')}…`
-  }
-  return lines
-}
 
 /**
  * Draw a share card to a PNG: the Gliplog mark and date, a title, the headline figures, the
@@ -96,6 +58,9 @@ export async function renderShareCard(
     document.fonts.load(`400 28px ${font}`),
   ])
   const mark = await loadImage(markUrl)
+  const photos = await Promise.all(
+    (content.photos ?? []).map(async (p) => ({ ...p, image: await loadImage(p.src) })),
+  )
 
   const canvas = document.createElement('canvas')
   canvas.width = WIDTH
@@ -104,37 +69,8 @@ export async function renderShareCard(
   if (!ctx) throw new Error('Canvas is not available')
   const inner = WIDTH - PAD * 2
 
-  // The app's paper with its two soft pools of colour.
-  ctx.fillStyle = t.bg
-  ctx.fillRect(0, 0, WIDTH, HEIGHT)
-  for (const [x, y, r, colour] of [
-    [0, 0, 900, t['backdrop-1']],
-    [WIDTH, 120, 760, t['backdrop-2']],
-  ] as const) {
-    const g = ctx.createRadialGradient(x, y, 0, x, y, r)
-    g.addColorStop(0, colour)
-    g.addColorStop(1, 'transparent')
-    ctx.fillStyle = g
-    ctx.fillRect(0, 0, WIDTH, HEIGHT)
-  }
-
-  // Brand row: mark, two-tone wordmark, date.
-  ctx.save()
-  ctx.beginPath()
-  ctx.roundRect(PAD, PAD, 64, 64, 14)
-  ctx.clip()
-  ctx.drawImage(mark, PAD, PAD, 64, 64)
-  ctx.restore()
-  ctx.font = `700 40px ${font}`
-  ctx.fillStyle = t['text-1']
-  ctx.fillText('Glip', PAD + 84, PAD + 46)
-  ctx.fillStyle = t.brand
-  ctx.fillText('log', PAD + 84 + ctx.measureText('Glip').width, PAD + 46)
-  ctx.font = `400 26px ${font}`
-  ctx.fillStyle = t['text-3']
-  ctx.textAlign = 'right'
-  ctx.fillText(content.madeAt, WIDTH - PAD, PAD + 44)
-  ctx.textAlign = 'left'
+  paintBackdrop(ctx, t, WIDTH, HEIGHT)
+  drawBrandRow(ctx, t, font, mark, content.madeAt, WIDTH, PAD)
 
   // Title block.
   let y = PAD + 150
@@ -189,6 +125,16 @@ export async function renderShareCard(
         inner,
         panelH - 56,
       )
+      // Pins are drawn here rather than as chart symbols: ECharts loads image symbols after
+      // the first render, which would leave them out of this one-shot image.
+      const scale = 2
+      for (const p of photos) {
+        const at = chart.convertToPixel({ seriesIndex: 0 }, [p.at, p.value]) as number[]
+        const pin = drawPin(p.image, { surface: t.surface, text: t['text-1'] }, 4)
+        const w = PIN.width * scale * 1.2
+        const h = PIN.height * scale * 1.2
+        ctx.drawImage(pin, PAD + at[0]! * scale - w / 2, y + 28 + at[1]! * scale - h, w, h)
+      }
     } finally {
       chart.dispose()
     }
@@ -203,14 +149,6 @@ export async function renderShareCard(
     y += 36
   }
 
-  ctx.font = `600 24px ${font}`
-  ctx.fillStyle = t['text-3']
-  ctx.fillText('Made with Gliplog · Not medical advice', PAD, HEIGHT - PAD + 12)
-
-  return new Promise((resolve, reject) =>
-    canvas.toBlob(
-      (b) => (b ? resolve(b) : reject(new Error('Could not encode the image'))),
-      'image/png',
-    ),
-  )
+  drawFooter(ctx, t, font, HEIGHT, PAD)
+  return toPng(canvas)
 }

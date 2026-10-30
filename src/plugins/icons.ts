@@ -3,6 +3,8 @@
  * and unused icons are tree-shaken out of the bundle.
  */
 export {
+  mdiBellOutline,
+  mdiBellRingOutline,
   mdiCalendarPlus,
   mdiCameraOutline,
   mdiCellphoneArrowDown,
@@ -28,6 +30,7 @@ export {
   mdiCompare,
   mdiStethoscope,
   mdiTrayArrowUp,
+  mdiViewGridOutline,
   mdiWaterOutline,
   mdiWaves,
 } from '@mdi/js'

@@ -25,13 +25,18 @@ Part of the `front-end` skill.
 | `charts/CohortSection.vue`                            | Progress cohort section: medication, measure and population switches, trial cards       |
 | `charts/TrendCard.vue`                                | Weight, BMI, HbA1c and glucose over time in one card, with a share button               |
 | `charts/bodyChart.ts`                                 | The body-measure chart option, shared by `BodyChart` and share images                   |
-| `share/ShareImageDialog.vue`                          | Preview and share a 4:5 image card; privacy switches go in its slot                     |
+| `share/ShareImageDialog.vue`                          | Preview and share an image card (content or a render function); privacy in its slot     |
 | `share/ShareTrendDialog.vue`, `ShareLevelsDialog.vue` | Image cards for a trend (numbers off by default) and estimated levels                   |
 | `report/ExportReportDialog.vue`                       | Choose a period and export the journal PDF                                              |
 | `photos/PhotosCard.vue`                               | Progress photos: take or choose one, a paged grid newest first, Compare                 |
 | `photos/PhotoDialog.vue`                              | Save a new photo (pose, when, notes) or view, edit and delete one                       |
 | `photos/PhotoCompareDialog.vue`                       | Two photos side by side with dates and nearest weigh-ins (within three days)            |
 | `reminders/AddToCalendarDialog.vue`                   | A medication's schedule as a calendar file or a Google, Outlook or Microsoft 365 link   |
+| `reminders/ReminderDialog.vue`                        | Native: one medication's reminder from the bell on its Today card, calendar as fallback |
+| `reminders/MedicationReminderControls.vue`            | Reminder on/off (asks for permission), time, day before, next reminder; Settings shares |
+| `charts/photoPins.ts`                                 | A photo drawn as a map-style pin whose tip marks its date and weight on a line          |
+| `share/ShareCollageDialog.vue`                        | Collage of one pose's photos, picked evenly over a chosen span; post or story shape     |
+| `share/collageCard.ts`, `share/cardCanvas.ts`         | Collage drawing; backdrop, brand row, footer and tokens shared with the trend card      |
 | `charts/GlycemicComparison.vue`                       | Your HbA1c or fasting glucose change beside one trial's arms, with starting values      |
 | `charts/BodyChart.vue`                                | Weight or BMI over time with labelled dashed guides (goal, WHO bands) and a table view  |
 | `charts/TrialComparison.vue`                          | Your change beside one trial's endpoint arms as labelled bars, with source and caveats  |

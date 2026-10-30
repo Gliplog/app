@@ -26,6 +26,9 @@ import LogWeightDialog from '@/components/journal/LogWeightDialog.vue'
 import LogSymptomDialog from '@/components/journal/LogSymptomDialog.vue'
 import LogGlucoseDialog from '@/components/journal/LogGlucoseDialog.vue'
 import PkPanel from '@/components/charts/PkPanel.vue'
+import ReminderDialog from '@/components/reminders/ReminderDialog.vue'
+import AddToCalendarDialog from '@/components/reminders/AddToCalendarDialog.vue'
+import { remindersSupported } from '@/composables/useReminderSync'
 
 const journal = useJournalStore()
 const settings = useSettingsStore()
@@ -53,6 +56,14 @@ function editMedication(med: MedicationRow) {
 function logDose(med?: MedicationRow) {
   doseFor.value = med?.id
   doseDialog.value = true
+}
+
+/** The app's own reminders where it can send them, else the calendar. */
+const reminderDialog = ref(false)
+const reminderMed = ref<MedicationRow | null>(null)
+function openReminder(med: MedicationRow) {
+  reminderMed.value = med
+  reminderDialog.value = true
 }
 
 /*
@@ -162,6 +173,7 @@ const daysSinceStart = computed(() =>
         :medications="journal.activeMedications"
         :now="now"
         @log-dose="logDose"
+        @reminder="openReminder"
       />
 
       <v-fade-transition v-if="current" mode="out-in">
@@ -334,6 +346,8 @@ const daysSinceStart = computed(() =>
 
     <MedicationDialog v-model="medDialog" :medication="editing" />
     <LogDoseDialog v-model="doseDialog" :dose="null" :medication-id="doseFor" />
+    <ReminderDialog v-if="remindersSupported" v-model="reminderDialog" :medication="reminderMed" />
+    <AddToCalendarDialog v-else v-model="reminderDialog" :medication="reminderMed" />
     <LogWeightDialog v-model="weightDialog" :weight="null" />
     <LogSymptomDialog v-model="symptomDialog" :symptom="null" />
     <LogGlucoseDialog v-model="glucoseDialog" :reading="null" />

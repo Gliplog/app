@@ -37,7 +37,7 @@ import { useStoragePersistence } from '@/composables/useStoragePersistence'
 import { useInstallPrompt } from '@/composables/useInstallPrompt'
 import { remindersSupported } from '@/composables/useReminderSync'
 import AddToCalendarDialog from '@/components/reminders/AddToCalendarDialog.vue'
-import { fromTimeValue, planReminders, toTimeValue } from '@/domain/reminders'
+import MedicationReminderControls from '@/components/reminders/MedicationReminderControls.vue'
 import type { MedicationRow } from '@/db/database'
 import { saveFile } from '@/services/fileTransfer'
 import {
@@ -45,7 +45,6 @@ import {
   daysBetween,
   formatBirthMonth,
   formatDateTime,
-  atLocalTime,
   monthNames,
   systemClock,
 } from '@/services/time'
@@ -331,41 +330,6 @@ function openCalendar(med: MedicationRow) {
   calendarOpen.value = true
 }
 
-/** Turning a reminder on asks Android for notification permission first. */
-async function setReminderEnabled(med: MedicationRow, enabled: boolean | null) {
-  if (enabled && __NATIVE__) {
-    const { requestNotificationPermission } = await import('@/services/reminders/nativeReminders')
-    if (!(await requestNotificationPermission())) {
-      notify.show('Notifications are off for Gliplog. Turn them on in Android settings.', 'error')
-      return
-    }
-    notificationsBlocked.value = false
-  }
-  await settings.setReminder(med.id, { enabled: !!enabled })
-}
-
-function setReminderTime(med: MedicationRow, value: string) {
-  const time = fromTimeValue(value)
-  if (time) void settings.setReminder(med.id, time)
-}
-
-/** "Next reminder …", or why there is none yet. */
-function nextReminderText(med: MedicationRow): string {
-  const dueAt = journal.nextDueOf(med)
-  if (dueAt === null) return 'Reminders start after you log a first dose.'
-  const [next] = planReminders({
-    medicationId: med.id,
-    dueAt,
-    intervalDays: med.intervalDays,
-    reminder: settings.reminderFor(med.id),
-    now: systemClock().getTime(),
-    atLocalTime,
-  })
-  return next
-    ? `Next reminder ${formatDateTime(next.at)}`
-    : 'No reminder until your next dose is logged.'
-}
-
 async function promptInstall() {
   if (await install.actions.promptInstall()) notify.show('Gliplog installed', 'success')
 }
@@ -590,30 +554,7 @@ const formatMb = (bytes: number | null) =>
             :key="med.id"
             class="gl-stack gl-stack--tight"
           >
-            <v-switch
-              :model-value="settings.reminderFor(med.id).enabled"
-              :label="`Remind me about ${med.name}`"
-              color="primary"
-              hide-details
-              @update:model-value="setReminderEnabled(med, $event)"
-            />
-            <template v-if="settings.reminderFor(med.id).enabled">
-              <v-text-field
-                :model-value="toTimeValue(settings.reminderFor(med.id))"
-                label="Time of day"
-                type="time"
-                @change="setReminderTime(med, ($event.target as HTMLInputElement).value)"
-              />
-              <v-switch
-                v-if="med.intervalDays > 1"
-                :model-value="settings.reminderFor(med.id).dayBefore"
-                label="Also remind me the day before"
-                color="primary"
-                hide-details
-                @update:model-value="settings.setReminder(med.id, { dayBefore: !!$event })"
-              />
-              <p class="text-body-small gl-muted">{{ nextReminderText(med) }}</p>
-            </template>
+            <MedicationReminderControls :medication="med" />
             <div>
               <v-btn variant="text" :prepend-icon="mdiCalendarPlus" @click="openCalendar(med)">
                 Add to calendar

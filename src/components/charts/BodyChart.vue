@@ -14,7 +14,7 @@ import VChart from 'vue-echarts'
 import { useChartColors } from '@/composables/useChartColors'
 import { formatDate, formatDateRange } from '@/services/time'
 import { roundTo } from '@/domain/units'
-import { bodyChartOption, type BodyChartInput } from './bodyChart'
+import { bodyChartOption, PHOTO_SERIES, type BodyChartInput } from './bodyChart'
 
 use([
   LineChart,
@@ -33,6 +33,12 @@ use([
  * readings taken under different conditions are never joined into one line.
  */
 const props = defineProps<BodyChartInput>()
+const emit = defineEmits<{ photo: [id: string] }>()
+
+function onClick(event: { seriesName?: string; data?: unknown }) {
+  const id = (event.data as { id?: unknown } | undefined)?.id
+  if (event.seriesName === PHOTO_SERIES && typeof id === 'string') emit('photo', id)
+}
 
 const { colors } = useChartColors()
 const showTable = ref(false)
@@ -46,7 +52,10 @@ const ariaSummary = computed(() => {
   if (!pts.length) return `${props.measure}: no entries yet.`
   const first = pts[0]!
   const last = pts[pts.length - 1]!
-  return `${props.measure} from ${fmt(first.value)} to ${fmt(last.value)}, ${formatDateRange(first.at, last.at)}, ${pts.length} entries.`
+  const photos = props.photos?.length
+    ? ` ${props.photos.length} progress photo${props.photos.length === 1 ? '' : 's'} pinned to the line.`
+    : ''
+  return `${props.measure} from ${fmt(first.value)} to ${fmt(last.value)}, ${formatDateRange(first.at, last.at)}, ${pts.length} entries.${photos}`
 })
 
 /** Every reading, newest first, with its note when the chart has more than one kind. */
@@ -57,7 +66,14 @@ const rows = computed(() =>
 
 <template>
   <div>
-    <v-chart class="body-chart" :option="option" autoresize role="img" :aria-label="ariaSummary" />
+    <v-chart
+      class="body-chart"
+      :option="option"
+      autoresize
+      role="img"
+      :aria-label="ariaSummary"
+      @click="onClick"
+    />
     <v-btn variant="text" size="small" class="mt-1" @click="showTable = !showTable">
       {{ showTable ? 'Hide table' : 'Show as table' }}
     </v-btn>

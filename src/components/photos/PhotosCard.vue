@@ -13,10 +13,11 @@ import {
 import { formatDate, nowIso, toIso } from '@/services/time'
 import { usePhotosStore } from '@/stores/photos'
 import { useNotifyStore } from '@/stores/notify'
-import { mdiCameraOutline, mdiCompare, mdiImageOutline } from '@/plugins/icons'
+import { mdiCameraOutline, mdiCompare, mdiImageOutline, mdiViewGridOutline } from '@/plugins/icons'
 import ListPager from '@/components/common/ListPager.vue'
 import PhotoDialog from './PhotoDialog.vue'
 import PhotoCompareDialog from './PhotoCompareDialog.vue'
+import ShareCollageDialog from '@/components/share/ShareCollageDialog.vue'
 
 /**
  * Progress photos on the Progress page: take or choose one, a grid of them newest first, and a
@@ -35,6 +36,7 @@ const viewing = ref<PhotoRow | null>(null)
 const prepared = ref<PreparedPhoto | null>(null)
 const takenAt = ref('')
 const compareOpen = ref(false)
+const collageOpen = ref(false)
 
 const PAGE = 12
 const pages = usePaging(() => photosStore.photos, PAGE)
@@ -124,6 +126,14 @@ function onSaved() {
         >
           Compare
         </v-btn>
+        <v-btn
+          v-if="canCompare"
+          variant="tonal"
+          :prepend-icon="mdiViewGridOutline"
+          @click="collageOpen = true"
+        >
+          Share collage
+        </v-btn>
       </div>
       <input
         ref="cameraInput"
@@ -155,6 +165,7 @@ function onSaved() {
       @saved="onSaved"
     />
     <PhotoCompareDialog v-model="compareOpen" />
+    <ShareCollageDialog v-model="collageOpen" />
   </v-card>
 </template>
 

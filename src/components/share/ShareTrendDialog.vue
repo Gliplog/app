@@ -16,6 +16,8 @@ import {
   roundTo,
 } from '@/domain/units'
 import { useJournalStore } from '@/stores/journal'
+import { usePhotosStore } from '@/stores/photos'
+import { valueAt } from '@/domain/photos'
 import { useSettingsStore } from '@/stores/settings'
 import { useBodyMetrics } from '@/composables/useBodyMetrics'
 import { useChartColors } from '@/composables/useChartColors'
@@ -32,6 +34,8 @@ import type { ShareCardContent } from './shareCard'
 const props = defineProps<{
   measure: 'weight' | 'bmi' | 'a1c' | 'glucose'
   now: number
+  /** Photos that can be pinned to the weight line (see TrendCard). */
+  photos?: { id: string; at: number }[]
 }>()
 const open = defineModel<boolean>({ required: true })
 
@@ -40,6 +44,9 @@ const settings = useSettingsStore()
 const body = useBodyMetrics(() => props.now)
 const { colors } = useChartColors()
 const showNumbers = ref(false)
+// Off by default: whoever receives the image sees the photos.
+const showPhotos = ref(false)
+const photosStore = usePhotosStore()
 
 const byTime = <T extends { at: number }>(list: T[]) => [...list].sort((a, b) => a.at - b.at)
 const madeAt = () => formatDateTime(nowIso())
@@ -84,21 +91,34 @@ function weightCard(): ShareCardContent | null {
   const title = showNumbers.value
     ? `${formatWeightChange(last.changeKg, settings.weightUnit)} (${formatPercentChange(last.changePercent)})`
     : formatPercentChange(last.changePercent)
+  // Pins sit on the line the card draws, whichever measure it is in.
+  const pinned = showPhotos.value
+    ? (props.photos ?? []).flatMap((p) => {
+        const value = valueAt(points, p.at)
+        const src = photosStore.thumbUrls[p.id]
+        return value !== null && src ? [{ at: p.at, value, src }] : []
+      })
+    : []
+  const input: BodyChartInput = {
+    points,
+    unitLabel: showNumbers.value ? settings.weightUnit : '%',
+    measure: 'Weight',
+    decimals: 1,
+    guides: [],
+  }
   // Percent change keeps its axis: it reveals no weight.
-  return card(
-    'Weight',
-    title,
-    stats,
-    {
-      points,
-      unitLabel: showNumbers.value ? settings.weightUnit : '%',
-      measure: 'Weight',
-      decimals: 1,
-      guides: [],
-    },
-    `Weight change since ${sinceText}, from weigh-ins logged in Gliplog.`,
-    false,
-  )
+  return {
+    ...card(
+      'Weight',
+      title,
+      stats,
+      input,
+      `Weight change since ${sinceText}, from weigh-ins logged in Gliplog.`,
+      false,
+    ),
+    chart: bodyChartOption(input, colors.value, { pinRoom: pinned.length > 0 }),
+    photos: pinned,
+  }
 }
 
 function bmiCard(): ShareCardContent | null {
@@ -229,5 +249,12 @@ const NAMES = { weight: 'weight', bmi: 'bmi', a1c: 'hba1c', glucose: 'glucose' }
             : 'Only the change is shown, without values.'
       }}
     </p>
+    <template v-if="measure === 'weight' && photos?.length">
+      <v-switch v-model="showPhotos" label="Include my photos" hide-details />
+      <p v-if="showPhotos" class="text-body-small gl-muted">
+        Small versions of your progress photos are pinned to the line. Anyone you send the image to
+        will see them.
+      </p>
+    </template>
   </ShareImageDialog>
 </template>

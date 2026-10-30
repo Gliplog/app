@@ -107,6 +107,14 @@ Each trial's own card, as printed, is folded below the merged chart.
   mark, headline figures, the same ECharts option as the app, and a caption. Numbers are off
   by default for trends (weight shows as percent change). They leave only through the share
   sheet or a download (`services/fileTransfer.ts`).
+- Progress photos can be pinned to the weight line (`domain/photos.ts` `valueAt` and
+  `spreadEvenly`; at most seven, only within three days of the weigh-ins). In the app they are
+  ECharts image symbols; in a share image they are drawn on the card after `convertToPixel`,
+  because image symbols load after a one-shot render. Including them is off by default.
+- A photo collage (`domain/collage.ts` for the grid, crop and week labels) uses one pose, full
+  images cover-cropped into 3:4 tiles, a ruler of when each was taken, and a post (4:5) or
+  story (9:16) shape. Weight change is off by default and is a percent between the weigh-ins
+  nearest the first and last photo.
 - The PDF report (`services/report/`, writer in `services/pdf/`) is built on the device from
   formatted data: medications, weight, side effects with the labels' terms, HbA1c, glucose
   and the dose log. Standard fonts, no scripts or metadata; text enters only through

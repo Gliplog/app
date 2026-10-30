@@ -7,6 +7,7 @@ import type {
   TooltipComponentOption,
 } from 'echarts/components'
 import type { ChartColors } from '@/composables/useChartColors'
+import { PIN } from './photoPins'
 import { niceRange } from '@/domain/report'
 import { roundTo } from '@/domain/units'
 
@@ -27,7 +28,12 @@ export interface BodyChartInput {
   decimals: number
   /** Horizontal guides such as a goal weight or BMI band edges; drawn dashed with a label. */
   guides: { value: number; label: string }[]
+  /** Progress photos pinned to the line: `symbol` is the pin image, `value` the line's height. */
+  photos?: { id: string; at: number; value: number; symbol: string }[]
 }
+
+/** Names the pinned-photo series, so a click on a pin can be told apart. */
+export const PHOTO_SERIES = 'Photos'
 
 export type BodyChartOption = ComposeOption<
   | LineSeriesOption
@@ -40,12 +46,13 @@ export type BodyChartOption = ComposeOption<
 
 /**
  * The ECharts option for a body measure over time, shared by the in-app chart and the share
- * image. `hideValues` drops the value axis labels, for an image that shows the shape only.
+ * image. `hideValues` drops the value axis labels, for an image that shows the shape only;
+ * `pinRoom` leaves space above the plot for photo pins drawn over it.
  */
 export function bodyChartOption(
   props: BodyChartInput,
   c: ChartColors,
-  options: { hideValues?: boolean } = {},
+  options: { hideValues?: boolean; pinRoom?: boolean } = {},
 ): BodyChartOption {
   const fmt = (v: number) => `${roundTo(v, props.decimals)} ${props.unitLabel}`.trim()
   const extra = props.secondary?.points ?? []
@@ -59,7 +66,14 @@ export function bodyChartOption(
   return {
     animation: false,
     textStyle: { fontFamily: c.font, color: c.text },
-    grid: { left: 8, right: 16, top: extra.length ? 36 : 16, bottom: 8, containLabel: true },
+    // Pins stand above their point, so the plot leaves room for the tallest one.
+    grid: {
+      left: 8,
+      right: 16,
+      top: (extra.length ? 36 : 16) + (props.photos?.length || options.pinRoom ? PIN.height : 0),
+      bottom: 8,
+      containLabel: true,
+    },
     legend: extra.length
       ? {
           top: 0,
@@ -134,6 +148,25 @@ export function bodyChartOption(
               symbolSize: 8,
               itemStyle: { color: c.preview, borderWidth: 2 },
               data: extra.map((p) => [p.at, p.value]),
+            },
+          ]
+        : []),
+      // The pin's tip, at the bottom centre of its image, sits on the line.
+      ...(props.photos?.length
+        ? [
+            {
+              name: PHOTO_SERIES,
+              type: 'scatter' as const,
+              z: 10,
+              cursor: 'pointer',
+              tooltip: { show: false },
+              symbolSize: [PIN.width, PIN.height],
+              symbolOffset: [0, '-50%'],
+              data: props.photos.map((p) => ({
+                value: [p.at, p.value],
+                symbol: `image://${p.symbol}`,
+                id: p.id,
+              })),
             },
           ]
         : []),

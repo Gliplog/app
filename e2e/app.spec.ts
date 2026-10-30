@@ -603,3 +603,87 @@ test('adds the dose schedule to a calendar as a file or a link', async ({ page }
   expect(ics).toMatch(/\r\nDTSTART:\d{8}T083000\r\n/)
   expect(ics).toContain('RRULE:FREQ=WEEKLY;INTERVAL=1')
 })
+
+/** A real PNG drawn in the page, so photo processing runs as it does on a phone. */
+async function makePng(page: Page): Promise<Buffer> {
+  return Buffer.from(
+    await page.evaluate(() => {
+      const canvas = document.createElement('canvas')
+      canvas.width = 300
+      canvas.height = 400
+      const ctx = canvas.getContext('2d')!
+      ctx.fillStyle = '#2d6567'
+      ctx.fillRect(0, 0, 300, 400)
+      return canvas.toDataURL('image/png').split(',')[1]!
+    }),
+    'base64',
+  )
+}
+
+/** Saves a photo from the library on Progress, keeping the time the dialog suggests. */
+async function addPhoto(page: Page, png: Buffer, name: string) {
+  await page
+    .locator('input[type="file"][aria-label="Choose a photo"]')
+    .setInputFiles({ name, mimeType: 'image/png', buffer: png })
+  const dialog = page.getByRole('dialog', { name: 'Progress photo' })
+  await expect(dialog.getByRole('img', { name: 'Your progress photo' })).toBeVisible()
+  await dialog.getByRole('button', { name: 'Save' }).click()
+  await expect(dialog).toBeHidden()
+}
+
+async function expectDecoded(img: Locator) {
+  await expect
+    .poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth))
+    .toBeGreaterThan(0)
+}
+
+test('the bell on a medication card opens its reminder', async ({ page }) => {
+  await page.goto('./')
+  await acceptDisclaimer(page)
+  await addMedication(page, 'Wegovy')
+  await page.getByRole('button', { name: 'Add a reminder for Wegovy to your calendar' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Add to calendar' })
+  await expect(dialog).toBeVisible()
+  await expect(dialog.getByText('Wegovy')).toBeVisible()
+})
+
+test('pins photos to the weight line and shares a collage', async ({ page }) => {
+  await page.addInitScript(() => {
+    delete (navigator as { canShare?: unknown }).canShare
+  })
+  await page.goto('./')
+  await acceptDisclaimer(page)
+  await logWeight(page, '100')
+  await page.getByRole('link', { name: 'Progress', exact: true }).first().click()
+  const png = await makePng(page)
+  for (const name of ['one.png', 'two.png', 'three.png']) await addPhoto(page, png, name)
+
+  await expect(
+    page.getByRole('img', { name: /3 progress photos pinned to the line/ }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Photos', exact: true }).click()
+  await expect(page.getByRole('img', { name: /progress photos? pinned/ })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Photos', exact: true }).click()
+
+  await page.getByRole('button', { name: 'Share weight as an image' }).click()
+  const share = page.getByRole('dialog', { name: 'Share as an image' })
+  await share.getByLabel('Include my photos').check()
+  await expect(share.getByText('Anyone you send the image to will see them.')).toBeVisible()
+  await expectDecoded(share.getByRole('img', { name: 'Preview of the image to share' }))
+  await share.getByRole('button', { name: 'Cancel' }).click()
+
+  await page.getByRole('button', { name: 'Share collage' }).click()
+  const collage = page.getByRole('dialog', { name: 'Share a collage' })
+  const preview = collage.getByRole('img', { name: 'Preview of the image to share' })
+  await expectDecoded(preview)
+  await choose(collage, 'Photos', '3')
+  await choose(collage, 'Shape', 'Story')
+  await expect
+    .poll(() =>
+      preview.evaluate((el: HTMLImageElement) => [el.naturalWidth, el.naturalHeight].join('x')),
+    )
+    .toBe('1080x1920')
+  const download = page.waitForEvent('download')
+  await collage.getByRole('button', { name: 'Share' }).click()
+  expect((await download).suggestedFilename()).toMatch(/^gliplog-photos-\d{4}-\d{2}-\d{2}\.png$/)
+})

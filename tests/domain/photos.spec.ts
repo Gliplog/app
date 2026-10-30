@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { defaultComparison, fitWithin, nearestWeight, photoGap } from '@/domain/photos'
+import {
+  defaultComparison,
+  fitWithin,
+  nearestWeight,
+  photoGap,
+  spreadEvenly,
+  valueAt,
+} from '@/domain/photos'
 
 const DAY = 86_400_000
 
@@ -64,5 +71,32 @@ describe('photoGap', () => {
       weeks: null,
       changeKg: null,
     })
+  })
+})
+
+describe('valueAt', () => {
+  const line = [
+    { at: 0, value: 100 },
+    { at: 10 * DAY, value: 90 },
+  ]
+
+  it('follows the straight line between weigh-ins', () => {
+    expect(valueAt(line, 5 * DAY)).toBe(95)
+    expect(valueAt(line, 10 * DAY)).toBe(90)
+  })
+
+  it('holds the end value just past either end, and nothing further out', () => {
+    expect(valueAt(line, -2 * DAY)).toBe(100)
+    expect(valueAt(line, 12 * DAY)).toBe(90)
+    expect(valueAt(line, 20 * DAY)).toBeNull()
+    expect(valueAt([], 0)).toBeNull()
+  })
+})
+
+describe('spreadEvenly', () => {
+  it('keeps the ends and spaces the rest', () => {
+    expect(spreadEvenly([1, 2, 3, 4, 5, 6, 7, 8, 9], 3)).toEqual([1, 5, 9])
+    expect(spreadEvenly([1, 2, 3], 5)).toEqual([1, 2, 3])
+    expect(spreadEvenly([1, 2, 3], 1)).toEqual([3])
   })
 })

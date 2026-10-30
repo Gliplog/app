@@ -10,14 +10,23 @@ import { renderShareCard, type ShareCardContent } from './shareCard'
 /**
  * Preview an image card and share it: the share sheet on phones (Messages, WhatsApp, Photos),
  * a download elsewhere. The image is drawn on the device and leaves only when the user shares
- * it. Privacy choices go in the default slot; the preview redraws whenever `content` changes.
+ * it. Privacy choices go in the default slot. A chart card passes `content`; any other image
+ * passes `render` with a `renderKey` that changes with its options. The preview redraws
+ * whenever either changes.
  */
-const props = defineProps<{
-  title: string
-  /** File name without the date or extension: "gliplog-weight". */
-  fileStem: string
-  content: ShareCardContent | null
-}>()
+const props = withDefaults(
+  defineProps<{
+    title: string
+    /** File name without the date or extension: "gliplog-weight". */
+    fileStem: string
+    content?: ShareCardContent | null
+    render?: (() => Promise<Blob>) | null
+    renderKey?: string
+    /** The image's shape, as CSS aspect-ratio. */
+    aspect?: string
+  }>(),
+  { content: null, render: null, renderKey: '', aspect: '4 / 5' },
+)
 
 const open = defineModel<boolean>({ required: true })
 const notify = useNotifyStore()
@@ -36,13 +45,14 @@ function setPreview(blob: Blob | null) {
 
 /** Only the latest render wins, so quick toggling never shows a stale preview. */
 let generation = 0
-async function render() {
+async function redraw() {
   const content = props.content
-  if (!content) return
+  const draw = props.render ?? (content ? () => renderShareCard(content, colors.value) : null)
+  if (!draw) return
   const mine = ++generation
   busy.value = true
   try {
-    const blob = await renderShareCard(content, colors.value)
+    const blob = await draw()
     if (mine === generation) setPreview(blob)
   } catch {
     notify.show("Couldn't create the image.", 'error')
@@ -53,9 +63,9 @@ async function render() {
 }
 
 watch(
-  [open, () => props.content],
+  [open, () => props.content, () => props.renderKey],
   () => {
-    if (open.value) void render()
+    if (open.value) void redraw()
     else setPreview(null)
   },
   { deep: true },
@@ -80,7 +90,7 @@ async function share() {
         <v-card-title :id="titleId">{{ title }}</v-card-title>
       </v-card-item>
       <v-card-text class="gl-stack">
-        <div class="share-preview">
+        <div class="share-preview" :style="{ aspectRatio: aspect }">
           <img
             v-if="previewUrl"
             :src="previewUrl"
@@ -115,7 +125,6 @@ async function share() {
 .share-preview {
   display: grid;
   place-items: center;
-  aspect-ratio: 4 / 5;
   max-height: 52vh;
   margin-inline: auto;
 }

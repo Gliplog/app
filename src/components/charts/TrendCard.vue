@@ -9,11 +9,17 @@ import {
   GLUCOSE_UNIT_SOURCES,
 } from '@/domain/glucose'
 import { fromKg } from '@/domain/units'
+import { spreadEvenly, valueAt } from '@/domain/photos'
 import { useJournalStore } from '@/stores/journal'
+import { usePhotosStore } from '@/stores/photos'
+import { useChartColors } from '@/composables/useChartColors'
+import { usePhotoPins } from '@/composables/usePhotoPins'
+import PhotoDialog from '@/components/photos/PhotoDialog.vue'
+import type { PhotoRow } from '@/db/database'
 import { useSettingsStore } from '@/stores/settings'
 import { useBodyMetrics } from '@/composables/useBodyMetrics'
 import { toEpochMs } from '@/services/time'
-import { mdiShareVariantOutline } from '@/plugins/icons'
+import { mdiImageOutline, mdiShareVariantOutline } from '@/plugins/icons'
 import SourceList from '@/components/common/SourceList.vue'
 import BodyChart from './BodyChart.vue'
 import ShareTrendDialog from '@/components/share/ShareTrendDialog.vue'
@@ -22,6 +28,7 @@ import ShareTrendDialog from '@/components/share/ShareTrendDialog.vue'
  * Every body measure over time in one card: weight, BMI, HbA1c and glucose. Glucose draws
  * fasting readings as the line and readings from other times of day as separate points, since
  * they are not comparable with each other. Whatever is shown can be shared as an image.
+ * Progress photos can be pinned to the weight line, at the date each was taken.
  */
 type TrendMeasure = 'weight' | 'bmi' | 'a1c' | 'glucose'
 
@@ -141,6 +148,49 @@ const chart = computed(() => {
   }
 })
 
+const photosStore = usePhotosStore()
+const { colors } = useChartColors()
+const showPhotos = ref(true)
+const viewing = ref<PhotoRow | null>(null)
+const photoOpen = ref(false)
+
+/** A phone-width chart fits about this many pins before they hide each other. */
+const MAX_PINS = 7
+
+/** Photos taken within the weigh-ins' span, thinned evenly, each at the line's height then. */
+const pinned = computed(() => {
+  if (mode.value !== 'weight') return []
+  const line = chart.value.points
+  const onLine = [...photosStore.photos]
+    .reverse()
+    .map((p) => ({
+      id: p.id,
+      at: toEpochMs(p.takenAt),
+      value: valueAt(line, toEpochMs(p.takenAt)),
+    }))
+    .filter((p): p is { id: string; at: number; value: number } => p.value !== null)
+  return spreadEvenly(onLine, MAX_PINS)
+})
+const canPin = computed(() => pinned.value.length > 0)
+
+const { pins } = usePhotoPins(
+  () => pinned.value.map((p) => p.id),
+  () => ({ surface: colors.value.surface, text: colors.value.text }),
+)
+
+const chartPhotos = computed(() =>
+  showPhotos.value
+    ? pinned.value.flatMap((p) => (pins.value[p.id] ? [{ ...p, symbol: pins.value[p.id]! }] : []))
+    : [],
+)
+
+function openPhoto(id: string) {
+  const photo = photosStore.photos.find((p) => p.id === id)
+  if (!photo) return
+  viewing.value = photo
+  photoOpen.value = true
+}
+
 const convertedUnits = computed(
   () =>
     (mode.value === 'a1c' && settings.a1cUnit !== '%') ||
@@ -163,9 +213,10 @@ const convertedUnits = computed(
       </template>
     </v-card-item>
     <v-card-text class="gl-stack">
-      <div v-if="MEASURES.length > 1">
+      <div v-if="MEASURES.length > 1 || canPin" class="trend-controls">
         <p :id="labelId" class="d-sr-only">Measure</p>
         <v-btn-toggle
+          v-if="MEASURES.length > 1"
           v-model="mode"
           role="group"
           mandatory
@@ -175,6 +226,15 @@ const convertedUnits = computed(
         >
           <v-btn v-for="m in MEASURES" :key="m.value" :value="m.value">{{ m.label }}</v-btn>
         </v-btn-toggle>
+        <v-btn
+          v-if="canPin"
+          :prepend-icon="mdiImageOutline"
+          :variant="showPhotos ? 'tonal' : 'outlined'"
+          :aria-pressed="showPhotos"
+          @click="showPhotos = !showPhotos"
+        >
+          Photos
+        </v-btn>
       </div>
       <BodyChart
         :points="chart.points"
@@ -183,7 +243,12 @@ const convertedUnits = computed(
         :measure="chart.measure"
         :decimals="chart.decimals"
         :guides="chart.guides"
+        :photos="chartPhotos"
+        @photo="openPhoto"
       />
+      <p v-if="chartPhotos.length" class="text-body-small gl-muted">
+        Tap a photo to open it. Each sits on the line at the date it was taken.
+      </p>
       <p v-if="mode === 'glucose' && !chart.points.length" class="text-body-small gl-muted">
         No fasting readings yet; readings from other times of day show as points.
       </p>
@@ -202,6 +267,16 @@ const convertedUnits = computed(
         Add your height in Settings to track BMI.
       </p>
     </v-card-text>
-    <ShareTrendDialog v-model="shareOpen" :measure="mode" :now="now" />
+    <ShareTrendDialog v-model="shareOpen" :measure="mode" :now="now" :photos="pinned" />
+    <PhotoDialog v-model="photoOpen" :photo="viewing" :prepared="null" taken-at="" />
   </v-card>
 </template>
+
+<style scoped>
+.trend-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+</style>
