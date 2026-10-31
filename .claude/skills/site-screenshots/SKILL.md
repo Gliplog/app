@@ -23,9 +23,12 @@ build with sample data, never real records.
 
 ## How the script works
 
-`scripts/site-screenshots.mjs` holds everything:
+`scripts/site-screenshots.mjs` holds the steps:
 
 - **Sample data:** a 20-week Wegovy course dated relative to now, so "next dose" text stays true.
+  It lives in `scripts/sample-backup.mjs`, shared with `scripts/store-screenshots.mjs`, which
+  takes the F-Droid and Play listing screenshots (`make store-screenshots`; see
+  `docs/releasing.md`).
 - **Loading:** a backup file restored through Settings, the way a user moves data. Restore
   replaces settings, so the backup also accepts the first-run notice and dismisses the install
   hint.

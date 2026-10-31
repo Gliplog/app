@@ -1,11 +1,10 @@
-# Template for the F-Droid metadata merge request (fdroiddata: metadata/io.github.gliplog.yml).
-# Fill in the commit for the first release tag before submitting.
 Categories:
-  - Health & Fitness
+  - Health Manager
+  - Medication
 License: AGPL-3.0-only
+WebSite: https://gliplog.com/
 SourceCode: https://github.com/Gliplog/app
 IssueTracker: https://github.com/Gliplog/app/issues
-WebSite: https://gliplog.com/
 
 AutoName: Gliplog
 
@@ -18,14 +17,21 @@ Builds:
     commit: v0.1.0
     subdir: android/app
     sudo:
-      - curl -Lo node.tar.xz https://nodejs.org/dist/v24.16.0/node-v24.16.0-linux-x64.tar.xz
-      - tar xJf node.tar.xz --strip-components=1 -C /usr/local/
+      - apt-get update
+      - apt-get install -y curl xz-utils
+      - curl -Lo /tmp/node.tar.xz https://nodejs.org/dist/v24.16.0/node-v24.16.0-linux-x64.tar.xz
+      - echo "d804845d34eddc21dc1092b519d643ef40b1f58ec5dec5c22b1f4bd8fabde6c9  /tmp/node.tar.xz"
+        | sha256sum -c
+      - tar xJf /tmp/node.tar.xz --strip-components=1 -C /usr/local/
     init: cd ../.. && npm ci
     gradle:
       - yes
     prebuild: cd ../.. && npm run build:android
+    scandelete:
+      - node_modules
 
 AutoUpdateMode: Version
-UpdateCheckMode: Tags ^v[0-9.]+$
+UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
+UpdateCheckData: package.json|"versionCode":\s*(\d+)|.|"version":\s*"([\d.]+)"
 CurrentVersion: 0.1.0
 CurrentVersionCode: 100

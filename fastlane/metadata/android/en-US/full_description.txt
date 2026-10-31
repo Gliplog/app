@@ -8,6 +8,8 @@ Gliplog is a calm, private journal for people taking a GLP-1 medicine, whether a
 <li>See how your change so far sits beside the published average from the clinical trials of your medicine, each figure linked to its US prescribing label.</li>
 <li>See an estimate of how much medicine is still in your body, drawn from the published half-life and peak time.</li>
 <li>For compounded vials, enter the strength once and every dose also shows the units to draw on a U-100 syringe.</li>
+<li>Note side effects, HbA1c and blood glucose, and keep progress photos that only you can see.</li>
+<li>Set dose reminders, and export a PDF report to take to an appointment.</li>
 </ul>
 
 <b>Private by design</b>

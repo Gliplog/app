@@ -11,16 +11,17 @@ shares this origin.
 
 All commands run on the Node version in `.nvmrc` (`nvm use`); never system Node.
 
-| Command            | Purpose                                                                                          |
-| ------------------ | ------------------------------------------------------------------------------------------------ |
-| `make install`     | `npm ci`                                                                                         |
-| `make dev`         | Vite dev server (no service worker in dev)                                                       |
-| `make check`       | Fast gate: lint, format, typecheck, token and contrast checks, markdown, knip, unit tests, build |
-| `make check-all`   | Full gate before declaring done: adds Playwright e2e (offline, PWA) and `npm audit`              |
-| `make preview`     | Serve the production build at `http://localhost:4173/app/`                                       |
-| `make android`     | Build the Capacitor bundle (`dist-android/`) and sync it into `android/`                         |
-| `make ios`         | Build the iOS bundle (`dist-ios/`) and sync it into `ios/`; the app builds in CI, not locally    |
-| `make screenshots` | Retake the Today and Progress screenshots in `../gliplog.github.io` with sample data             |
+| Command                  | Purpose                                                                                          |
+| ------------------------ | ------------------------------------------------------------------------------------------------ |
+| `make install`           | `npm ci`                                                                                         |
+| `make dev`               | Vite dev server (no service worker in dev)                                                       |
+| `make check`             | Fast gate: lint, format, typecheck, token and contrast checks, markdown, knip, unit tests, build |
+| `make check-all`         | Full gate before declaring done: adds Playwright e2e (offline, PWA) and `npm audit`              |
+| `make preview`           | Serve the production build at `http://localhost:4173/app/`                                       |
+| `make android`           | Build the Capacitor bundle (`dist-android/`) and sync it into `android/`                         |
+| `make ios`               | Build the iOS bundle (`dist-ios/`) and sync it into `ios/`; the app builds in CI, not locally    |
+| `make screenshots`       | Retake the Today and Progress screenshots in `../gliplog.github.io` with sample data             |
+| `make store-screenshots` | Retake the F-Droid and Play phone screenshots in `fastlane/metadata` with sample data            |
 
 ## Skills and rules
 
