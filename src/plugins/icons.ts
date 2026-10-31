@@ -32,6 +32,7 @@ export {
   mdiSortCalendarAscending,
   mdiSortCalendarDescending,
   mdiCompare,
+  mdiCrop,
   mdiStethoscope,
   mdiTrayArrowUp,
   mdiViewGridOutline,

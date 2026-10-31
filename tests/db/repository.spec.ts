@@ -166,8 +166,6 @@ describe('backup', () => {
     })
     await repo.setSetting('profile', {
       heightCm: 170,
-      gender: 'unspecified',
-      genderText: '',
       goalKg: null,
     })
     return repo

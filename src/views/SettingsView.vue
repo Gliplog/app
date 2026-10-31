@@ -22,13 +22,7 @@ import {
   type WeightUnit,
 } from '@/domain/units'
 import type { A1cUnit, GlucoseUnit } from '@/domain/glucose'
-import {
-  GENDER_LABELS,
-  GENDERS,
-  useSettingsStore,
-  type Gender,
-  type ThemePreference,
-} from '@/stores/settings'
+import { useSettingsStore, type ThemePreference } from '@/stores/settings'
 import { useJournalStore } from '@/stores/journal'
 import { usePhotosStore } from '@/stores/photos'
 import { useNotifyStore } from '@/stores/notify'
@@ -107,8 +101,6 @@ const a1cUnitModel = computed({
   set: (value: A1cUnit) => void settings.setA1cUnit(value),
 })
 
-const genderItems = GENDERS.map((g) => ({ title: GENDER_LABELS[g], value: g }))
-
 /*
  * The profile form holds what the user is typing; Save writes only valid values. It is filled
  * from the store whenever the store or the display units change.
@@ -117,8 +109,6 @@ const form = reactive({
   cm: '',
   feet: '',
   inches: '',
-  gender: 'unspecified' as Gender,
-  genderText: '',
   goal: '',
 })
 
@@ -128,8 +118,6 @@ function fillForm() {
   const fi = p.heightCm ? cmToFeetInches(p.heightCm) : null
   form.feet = fi ? String(fi.feet) : ''
   form.inches = fi ? String(fi.inches) : ''
-  form.gender = p.gender
-  form.genderText = p.genderText
   form.goal = p.goalKg ? String(roundTo(fromKg(p.goalKg, settings.weightUnit), 1)) : ''
 }
 watch(() => [settings.profile, settings.weightUnit, settings.loaded], fillForm, {
@@ -173,8 +161,6 @@ async function saveProfile() {
   const p = parsed.value
   await settings.updateProfile({
     heightCm: p.heightCm,
-    gender: form.gender,
-    genderText: form.gender === 'self' ? form.genderText.trim() : '',
     goalKg: p.goalKg,
   })
   notify.show('Profile saved', 'success')
@@ -363,17 +349,6 @@ const formatMb = (bytes: number | null) =>
               :error="!!parsed.heightError"
             />
           </div>
-          <v-select v-model="form.gender" :items="genderItems" label="Gender" />
-          <v-text-field
-            v-if="form.gender === 'self'"
-            v-model="form.genderText"
-            label="In your words"
-            maxlength="60"
-            autocomplete="off"
-          />
-          <p class="text-body-small gl-muted">
-            Not used in any calculation. It's here so your record describes you.
-          </p>
           <v-text-field
             v-model="form.goal"
             label="Goal weight (optional)"

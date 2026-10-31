@@ -46,8 +46,11 @@ const PEEK_OFFSET = 12
 /** A drag past this share of the card's width, or a quick flick, changes the card. */
 const SWIPE_FRACTION = 0.22
 const FLICK_PX_PER_MS = 0.45
-/** Matches the longest keyframe below, so the leaving card's class is removed after it ends. */
-const SWITCH_MS = 460
+/**
+ * Clears the switch animation if `animationend` never arrives (the card was hidden or removed
+ * mid-swing). Longer than the 420 ms keyframes below so it never cuts one short.
+ */
+const SWITCH_FALLBACK_MS = 600
 
 const count = computed(() => props.medications.length)
 const index = computed(() => {
@@ -58,22 +61,49 @@ const index = computed(() => {
 /** 0 for the front card, 1 for the one just behind it, and so on, wrapping around. */
 const depthOf = (i: number) => (i - index.value + count.value) % count.value
 
-/** The card swinging out; `fromX` is where a swipe let go, so the swing starts under the finger. */
-const leaving = ref<{ id: string; direction: 'next' | 'prev'; fromX: number } | null>(null)
-let leavingTimer: ReturnType<typeof setTimeout> | undefined
+/**
+ * The cards a switch animates. `leaveId` is the old front card, which carries on in the swipe's
+ * direction (`away`: -1 left, 1 right) from `fromX`, where the finger let go, so it never jumps
+ * back to the centre first. `enterId`, going back only, is the card brought forward from the
+ * rear, which fades in at the front.
+ */
+const switching = ref<{
+  leaveId: string
+  enterId: string | null
+  away: -1 | 1
+  fromX: number
+} | null>(null)
+let switchTimer: ReturnType<typeof setTimeout> | undefined
 
 /**
- * Bring card `target` to the front. Going forward, the front card swings out and tucks in at
- * the back; going back, the incoming card swings out from behind and comes over the top.
+ * Bring card `target` to the front. The front card flies off the way the finger went and fades,
+ * then fades back in at its new place in the stack: forward (a swipe left) it goes to the rear
+ * and the card behind slides up; back (a swipe right) it settles just behind the card brought
+ * from the rear. A card changes layer only while it is invisible, so nothing pops through.
  */
 function switchTo(target: number, direction: 'next' | 'prev', fromX = 0) {
   const from = props.medications[index.value]!
   const to = props.medications[target]!
   if (from.id === to.id) return
-  leaving.value = { id: direction === 'next' ? from.id : to.id, direction, fromX }
-  clearTimeout(leavingTimer)
-  leavingTimer = setTimeout(() => (leaving.value = null), SWITCH_MS)
+  switching.value = {
+    leaveId: from.id,
+    enterId: direction === 'prev' ? to.id : null,
+    away: direction === 'next' ? -1 : 1,
+    fromX,
+  }
+  clearTimeout(switchTimer)
+  switchTimer = setTimeout(() => (switching.value = null), SWITCH_FALLBACK_MS)
   selectedId.value = to.id
+}
+
+function onAnimationEnd(event: AnimationEvent) {
+  // Only the leaving card's own swing ends a switch: the entering card's fade ends with it, and
+  // animations inside a card (progress bars) bubble up here too.
+  if (event.target !== event.currentTarget || !event.animationName.startsWith('stack-leave')) {
+    return
+  }
+  clearTimeout(switchTimer)
+  switching.value = null
 }
 
 function go(step: 1 | -1, fromX = 0) {
@@ -87,7 +117,7 @@ function show(id: string) {
   if (target >= 0) switchTo(target, target > index.value ? 'next' : 'prev')
 }
 
-onBeforeUnmount(() => clearTimeout(leavingTimer))
+onBeforeUnmount(() => clearTimeout(switchTimer))
 
 function onKeydown(event: KeyboardEvent) {
   if (event.key === 'ArrowRight') go(1)
@@ -100,55 +130,81 @@ function onKeydown(event: KeyboardEvent) {
  * Swipe: a horizontal drag moves the front card with the finger; a vertical one is left to the
  * page so scrolling still works (touch-action: pan-y). A drag that moved the card cancels the
  * click it would otherwise end in, so a swipe that starts on a button never presses it.
+ *
+ * The finger's offset is written straight to the card as `--pull` rather than through reactive
+ * state: a reactive write would re-render every card on every pointer move, which stutters on
+ * phones. Only the start and end of a drag touch Vue state.
  */
-const drag = ref({ active: false, dx: 0 })
-let start: { x: number; y: number; t: number; id: number; width: number } | null = null
+const dragging = ref(false)
+let start: {
+  x: number
+  y: number
+  t: number
+  id: number
+  card: HTMLElement
+} | null = null
+let dx = 0
 let horizontal = false
 let suppressClick = false
 
+function setPull(card: HTMLElement, px: number | null) {
+  if (px === null) card.style.removeProperty('--pull')
+  else card.style.setProperty('--pull', String(px))
+}
+
 function onPointerDown(event: PointerEvent) {
   if (count.value < 2 || (event.pointerType === 'mouse' && event.button !== 0)) return
-  const card = event.currentTarget as HTMLElement
   start = {
     x: event.clientX,
     y: event.clientY,
     t: event.timeStamp,
     id: event.pointerId,
-    width: card.offsetWidth,
+    card: event.currentTarget as HTMLElement,
   }
+  dx = 0
   horizontal = false
   suppressClick = false
 }
 
 function onPointerMove(event: PointerEvent) {
   if (!start || event.pointerId !== start.id) return
-  const dx = event.clientX - start.x
-  const dy = event.clientY - start.y
+  const moveX = event.clientX - start.x
+  const moveY = event.clientY - start.y
   if (!horizontal) {
-    if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) {
+    if (Math.abs(moveY) > 10 && Math.abs(moveY) > Math.abs(moveX)) {
       start = null
       return
     }
-    if (Math.abs(dx) < 10) return
+    if (Math.abs(moveX) < 10) return
     horizontal = true
     suppressClick = true
-    ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
+    dragging.value = true
+    start.card.setPointerCapture(event.pointerId)
   }
-  drag.value = { active: true, dx }
+  dx = moveX
+  setPull(start.card, dx)
+}
+
+/** Dropping `--pull` re-enables the transition, so a short drag springs back from where it was. */
+function endDrag() {
+  if (start) setPull(start.card, null)
+  start = null
+  dragging.value = false
 }
 
 function onPointerUp(event: PointerEvent) {
   if (!start || event.pointerId !== start.id) return
-  const { dx } = drag.value
   const speed = Math.abs(dx) / Math.max(1, event.timeStamp - start.t)
-  const far = Math.abs(dx) > start.width * SWIPE_FRACTION
-  start = null
-  // Dropping the drag re-enables the transition, so a short drag springs back from where it
-  // was; a switch hands the release point to the leaving card's keyframes instead.
-  drag.value = { active: false, dx: 0 }
-  if (horizontal && (far || speed > FLICK_PX_PER_MS) && Math.abs(dx) > 24) {
-    go(dx < 0 ? 1 : -1, dx)
-  }
+  const far = Math.abs(dx) > start.card.offsetWidth * SWIPE_FRACTION
+  const switching = horizontal && (far || speed > FLICK_PX_PER_MS) && Math.abs(dx) > 24
+  endDrag()
+  // A switch hands the release point to the keyframes, so the card carries on from there.
+  if (switching) go(dx < 0 ? 1 : -1, dx)
+}
+
+/** The browser took the gesture (a scroll, a system swipe): spring back, never switch. */
+function onPointerCancel(event: PointerEvent) {
+  if (start && event.pointerId === start.id) endDrag()
 }
 
 function onClickCapture(event: MouseEvent) {
@@ -161,17 +217,17 @@ function onClickCapture(event: MouseEvent) {
 function cardStyle(i: number) {
   const depth = depthOf(i)
   const id = props.medications[i]!.id
-  const swingFrom = leaving.value?.id === id ? leaving.value.fromX : 0
+  const leaves = switching.value?.leaveId === id
   const hidden = depth > PEEKING
-  const style: Record<string, string> = {
+  return {
     '--depth': String(Math.min(depth, PEEKING + 1)),
     '--peek': `${PEEK_OFFSET}px`,
     // Unitless, so it can scale both the offset (px) and the tilt (deg).
-    '--drag': String(depth === 0 && drag.value.active ? drag.value.dx : swingFrom),
+    '--swing-from': String(leaves ? switching.value!.fromX : 0),
+    '--away': String(leaves ? switching.value!.away : -1),
+    '--shown': hidden ? '0' : '1',
     zIndex: String(count.value - depth),
   }
-  if (hidden) style.opacity = '0'
-  return style
 }
 
 function intervalText(days: number): string {
@@ -232,12 +288,13 @@ const announcement = computed(() =>
           'gl-card-stacked',
           {
             'med-stack__card--front': depthOf(i) === 0,
-            'med-stack__card--dragging': depthOf(i) === 0 && drag.active,
-            'med-stack__card--leave-next': leaving?.id === med.id && leaving.direction === 'next',
-            'med-stack__card--enter-prev': leaving?.id === med.id && leaving.direction === 'prev',
+            'med-stack__card--dragging': depthOf(i) === 0 && dragging,
+            'med-stack__card--leave': switching?.leaveId === med.id,
+            'med-stack__card--enter': switching?.enterId === med.id,
           },
         ]"
         :style="cardStyle(i)"
+        :link="false"
         role="group"
         aria-roledescription="slide"
         :aria-label="count > 1 ? `${med.name}, ${i + 1} of ${count}` : med.name"
@@ -246,7 +303,8 @@ const announcement = computed(() =>
         @pointerdown="onPointerDown"
         @pointermove="onPointerMove"
         @pointerup="onPointerUp"
-        @pointercancel="onPointerUp"
+        @pointercancel="onPointerCancel"
+        @animationend="onAnimationEnd"
         @click.capture="onClickCapture"
       >
         <v-card-item>
@@ -331,16 +389,18 @@ const announcement = computed(() =>
 
 .med-stack__card {
   --stack-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --pull: 0;
   grid-area: 1 / 1;
   transform-origin: 50% 100%;
-  transform: translate3d(calc(var(--drag) * 1px), calc(var(--depth) * var(--peek)), 0)
-    scale(calc(1 - var(--depth) * 0.045)) rotate(calc(var(--drag) * 0.012deg));
+  transform: translate3d(calc(var(--pull) * 1px), calc(var(--depth) * var(--peek)), 0)
+    scale(calc(1 - var(--depth) * 0.045)) rotate(calc(var(--pull) * 0.012deg));
+  opacity: var(--shown);
   transition:
-    transform 460ms var(--stack-ease),
+    transform 420ms var(--stack-ease),
     opacity var(--gl-dur-base) var(--gl-ease-standard),
     filter var(--gl-dur-base) var(--gl-ease-standard);
   user-select: none;
-  will-change: transform;
+  will-change: transform, opacity;
 }
 
 .med-stack__card:not(.med-stack__card--front) {
@@ -351,50 +411,62 @@ const announcement = computed(() =>
   transition: none;
 }
 
-/* The front card swings away from the finger, then slides in behind the others. */
-.med-stack__card--leave-next {
-  animation: stack-leave 460ms var(--stack-ease);
+/*
+ * The old front card carries on the way the finger went (`--away`) and fades out, drops behind
+ * the others while it is invisible, then fades in at its new depth. The layer change at 45 %
+ * is hidden by the opacity, so it never shows through the cards in front.
+ */
+.med-stack__card--leave {
+  animation: stack-leave 420ms var(--stack-ease);
 }
 
-/* The rearmost card swings out to the side, then comes over the top to the front. */
-.med-stack__card--enter-prev {
-  animation: stack-enter 460ms var(--stack-ease);
+/* Going back, the card brought from the rear grows into the front as the old one flies off. */
+.med-stack__card--enter {
+  animation: stack-enter 420ms var(--stack-ease);
 }
 
 @keyframes stack-leave {
   0% {
-    transform: translate3d(calc(var(--drag) * 1px), 0, 0) scale(1);
+    transform: translate3d(calc(var(--swing-from) * 1px), 0, 0) scale(1)
+      rotate(calc(var(--swing-from) * 0.012deg));
+    opacity: 1;
+    z-index: 50;
+  }
+  44% {
+    transform: translate3d(calc(var(--away) * 70%), 0, 0) scale(0.96)
+      rotate(calc(var(--away) * 7deg));
+    opacity: 0;
     z-index: 50;
   }
   45% {
-    transform: translate3d(-62%, -4px, 0) scale(0.97) rotate(-5deg);
-    z-index: 50;
-  }
-  55% {
+    transform: translate3d(0, calc(var(--depth) * var(--peek)), 0)
+      scale(calc(1 - var(--depth) * 0.045));
+    opacity: 0;
     z-index: 0;
   }
   100% {
     transform: translate3d(0, calc(var(--depth) * var(--peek)), 0)
       scale(calc(1 - var(--depth) * 0.045));
+    opacity: var(--shown);
     z-index: 0;
   }
 }
 
 @keyframes stack-enter {
   0% {
-    transform: translate3d(0, calc(2 * var(--peek)), 0) scale(0.91);
-    z-index: 0;
+    transform: translate3d(0, var(--peek), 0) scale(0.94);
+    opacity: 0;
   }
-  45% {
-    transform: translate3d(62%, -4px, 0) scale(0.97) rotate(5deg);
-    z-index: 0;
-  }
-  55% {
-    z-index: 50;
+  /*
+   * A quick fade: solid within the first quarter, so the cards behind barely show through it
+   * and the old front card never does when it settles in behind.
+   */
+  25% {
+    opacity: 1;
   }
   100% {
     transform: translate3d(0, 0, 0) scale(1);
-    z-index: 50;
+    opacity: 1;
   }
 }
 

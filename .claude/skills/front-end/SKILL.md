@@ -49,5 +49,5 @@ One-line rules; detail lives in `reference/`. Read a reference when its trigger 
     colours. Trials are a reference, never a target.
 13. Never tell the user what dose to take. Strengths and titration are "from the label"; the
     user's own prescriber decides.
-14. Inclusive by default: every profile field optional, "Prefer not to say" and a free-text
-    gender, no gendered imagery or pink and blue coding.
+14. Inclusive by default: every profile field optional, no gender field (nothing uses it), no
+    gendered imagery or pink and blue coding.

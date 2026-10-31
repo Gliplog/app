@@ -50,6 +50,6 @@ F-Droid, App Store) are in `docs/releasing.md`.
   values.
 - Gliplog does arithmetic and shows sourced references; it never recommends a dose.
 - Copy is warm, plain and inclusive: no shame or judgement about weight, every profile field
-  optional, gender never used in a calculation.
+  optional, and no field the app does not use (so no gender).
 - Brand names are trademarks of their owners; Gliplog is not affiliated with any maker, and
   says so in Settings.

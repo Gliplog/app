@@ -18,8 +18,8 @@ Live at [gliplog.com/app](https://gliplog.com/app/). The project site is
   hint). Today shows when the next dose falls from your own interval.
 - **Weight and BMI.** Log weigh-ins in kilograms or pounds; add your height (cm or ft and in)
   to see BMI over time with the WHO adult bands. Gliplog is for adults 18 and over.
-- **Profile.** Height, gender and a goal weight. Every field is
-  optional, and gender is never used in a calculation.
+- **Profile.** Height and a goal weight, both optional. Gliplog asks for nothing it does not
+  use.
 - **Trial comparison.** Your change since your first dose beside the endpoint averages from the
   trials in each medicine's US prescribing information (STEP, SURMOUNT, SURPASS, SUSTAIN, OASIS,
   ATTAIN). Only published endpoints are shown; no curve is invented between them.

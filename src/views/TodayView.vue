@@ -352,6 +352,16 @@ const daysSinceStart = computed(() =>
 </template>
 
 <style scoped>
+/*
+ * A swiped medication card travels past the column's edge; clipping here (not on the stack)
+ * keeps it visible up to the screen edge without widening the page into a horizontal scroll.
+ */
+.today {
+  /* Older WebViews without `clip` fall back to `hidden`, which clips the same way here. */
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
 .today-grid {
   display: grid;
   gap: 16px;

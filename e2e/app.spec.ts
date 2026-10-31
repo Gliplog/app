@@ -115,6 +115,26 @@ test('the medication stack switches medicines and the levels chart follows', asy
     .click()
   await expect(page.getByText('Tirzepatide injection')).toBeVisible()
 
+  // A swipe moves the card past the column's edge, but never widens the page into a scroll.
+  const widerThanScreen = () =>
+    page.evaluate(() => {
+      const root = document.documentElement
+      return root.scrollWidth > root.clientWidth
+    })
+  const card = page.getByRole('group', { name: 'Zepbound, 1 of 2' })
+  await expect(page.locator('.v-overlay__scrim')).toHaveCount(0)
+  await card.scrollIntoViewIfNeeded()
+  const box = (await card.boundingBox())!
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(box.x + box.width * 1.2, box.y + box.height / 2, { steps: 8 })
+  expect(await widerThanScreen()).toBe(false)
+  await page.mouse.up()
+  await expect(page.getByText('Showing Wegovy, 2 of 2')).toBeAttached()
+  expect(await widerThanScreen()).toBe(false)
+  await page.getByRole('button', { name: 'Next medication' }).click()
+  await expect(page.getByText('Tirzepatide injection')).toBeVisible()
+
   await page.getByRole('link', { name: 'Progress', exact: true }).first().click()
   const cohorts = page.locator('.v-card', { hasText: 'Trial cohorts' })
   await expect(cohorts).toContainText('Tirzepatide injection')
@@ -702,4 +722,106 @@ test('pins photos to the weight line and shares a collage', async ({ page }) => 
   const download = page.waitForEvent('download')
   await collage.getByRole('button', { name: 'Share' }).click()
   expect((await download).suggestedFilename()).toMatch(/^gliplog-photos-\d{4}-\d{2}-\d{2}\.png$/)
+})
+
+test('two photos in different poses still make a collage', async ({ page }) => {
+  await page.goto('./')
+  await acceptDisclaimer(page)
+  await page.getByRole('link', { name: 'Progress', exact: true }).first().click()
+  const png = await makePng(page)
+  await addPhoto(page, png, 'front.png')
+  await page
+    .locator('input[type="file"][aria-label="Choose a photo"]')
+    .setInputFiles({ name: 'side.png', mimeType: 'image/png', buffer: png })
+  const dialog = page.getByRole('dialog', { name: 'Progress photo' })
+  await choose(dialog, 'Pose', 'Side')
+  await dialog.getByRole('button', { name: 'Save' }).click()
+  await expect(dialog).toBeHidden()
+
+  await page.getByRole('button', { name: 'Share collage' }).click()
+  const collage = page.getByRole('dialog', { name: 'Share a collage' })
+  await expectDecoded(collage.getByRole('img', { name: 'Preview of the image to share' }))
+  await expect(collage.getByRole('button', { name: 'Share' })).toBeEnabled()
+  // With only two photos there is no span to choose.
+  await expect(collage.getByRole('combobox', { name: 'From' })).toHaveCount(0)
+  await collage.getByRole('button', { name: 'Cancel' }).click()
+
+  // Choosing the right-hand photo on the left swaps the two, so one photo never shows twice.
+  await page.getByRole('button', { name: 'Compare' }).click()
+  const compare = page.getByRole('dialog', { name: 'Compare' })
+  // The field, not its input, shows the chosen photo.
+  const left = compare.locator('.v-select', { hasText: 'Photo on the left' })
+  const right = compare.locator('.v-select', { hasText: 'Photo on the right' })
+  // Both photos were taken this minute, so either may open on the left.
+  await expect(left).toContainText(/Front|Side/)
+  const [was, other] = (await left.textContent())!.includes('Front')
+    ? ['Front', 'Side']
+    : ['Side', 'Front']
+  await expect(right).toContainText(other)
+  await left.click()
+  await page.getByRole('option', { name: new RegExp(`· ${other}$`) }).click()
+  await expect(left).toContainText(other)
+  await expect(right).toContainText(was)
+})
+
+test('crops a new photo before saving it', async ({ page }) => {
+  await page.goto('./')
+  await acceptDisclaimer(page)
+  await page.getByRole('link', { name: 'Progress', exact: true }).first().click()
+  const png = await makePng(page)
+  await page
+    .locator('input[type="file"][aria-label="Choose a photo"]')
+    .setInputFiles({ name: 'one.png', mimeType: 'image/png', buffer: png })
+  const dialog = page.getByRole('dialog', { name: 'Progress photo' })
+  const image = dialog.getByRole('img', { name: 'Your progress photo' })
+  const size = () =>
+    image.evaluate(
+      (el: HTMLImageElement) => el.complete && `${el.naturalWidth}x${el.naturalHeight}`,
+    )
+  await expect.poll(size).toBe('300x400')
+
+  await dialog.getByRole('button', { name: 'Crop' }).click()
+  await expect(dialog.getByRole('button', { name: 'Save' })).toBeDisabled()
+  await choose(dialog, 'Shape', 'Square')
+  await dialog.getByRole('button', { name: 'Apply crop' }).click()
+  await expect.poll(size).toBe('300x300')
+
+  await dialog.getByRole('button', { name: 'Undo crop' }).click()
+  await expect.poll(size).toBe('300x400')
+
+  // Dragging a corner resizes the frame; dragging inside a full frame has nowhere to go.
+  const drag = async (target: Locator, dx: number, dy: number) => {
+    const box = (await target.boundingBox())!
+    const x = box.x + box.width / 2
+    const y = box.y + box.height / 2
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    await page.mouse.move(x + dx, y + dy, { steps: 6 })
+    await page.mouse.up()
+  }
+  await dialog.getByRole('button', { name: 'Crop' }).click()
+  await drag(dialog.getByRole('group', { name: /^Crop frame/ }), 40, 40)
+  await dialog.getByRole('button', { name: 'Apply crop' }).click()
+  await expect.poll(size).toBe('300x400')
+  await dialog.getByRole('button', { name: 'Crop' }).click()
+  await drag(dialog.locator('.cropper__handle--se'), -60, -60)
+  await dialog.getByRole('button', { name: 'Apply crop' }).click()
+  await expect
+    .poll(() =>
+      image.evaluate(
+        (el: HTMLImageElement) => el.complete && el.naturalWidth < 300 && el.naturalHeight < 400,
+      ),
+    )
+    .toBe(true)
+  await dialog.getByRole('button', { name: 'Undo crop' }).click()
+  await expect.poll(size).toBe('300x400')
+
+  await dialog.getByRole('button', { name: 'Crop' }).click()
+  const frame = dialog.getByRole('group', { name: /^Crop frame/ })
+  await frame.focus()
+  for (let i = 0; i < 10; i++) await page.keyboard.press('Shift+ArrowLeft')
+  await dialog.getByRole('button', { name: 'Apply crop' }).click()
+  await expect.poll(size).toBe('240x400')
+  await dialog.getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByText('Photo saved')).toBeVisible()
 })

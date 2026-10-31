@@ -117,8 +117,6 @@ function sampleBackup() {
         key: 'profile',
         value: {
           heightCm: 172,
-          gender: 'unspecified',
-          genderText: '',
           goalKg: 85,
         },
       },

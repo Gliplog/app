@@ -12,30 +12,14 @@ import {
 
 export type ThemePreference = 'system' | 'light' | 'dark'
 
-export const GENDERS = ['woman', 'man', 'nonbinary', 'self', 'unspecified'] as const
-export type Gender = (typeof GENDERS)[number]
-
-export const GENDER_LABELS: Record<Gender, string> = {
-  woman: 'Woman',
-  man: 'Man',
-  nonbinary: 'Non-binary',
-  self: 'I’ll describe it',
-  unspecified: 'Prefer not to say',
-}
-
 /** Everything about the person. Every field is optional; nothing here is required to use the app. */
 export interface Profile {
   heightCm: number | null
-  gender: Gender
-  /** The user's own words when `gender` is `self`. */
-  genderText: string
   goalKg: number | null
 }
 
 const EMPTY_PROFILE: Profile = {
   heightCm: null,
-  gender: 'unspecified',
-  genderText: '',
   goalKg: null,
 }
 
@@ -62,11 +46,12 @@ export function sanitizeProfile(value: unknown): Profile {
   const v = value as Record<string, unknown>
   return {
     heightCm: positiveOrNull(v.heightCm),
-    gender: GENDERS.includes(v.gender as Gender) ? (v.gender as Gender) : 'unspecified',
-    genderText: typeof v.genderText === 'string' ? v.genderText.slice(0, 60) : '',
     goalKg: positiveOrNull(v.goalKg),
   }
 }
+
+const hasUnkeptFields = (stored: unknown, clean: Profile) =>
+  typeof stored === 'object' && stored !== null && Object.keys(stored).some((k) => !(k in clean))
 
 /** Display preferences and the user's profile, loaded once and written through on change. */
 export const useSettingsStore = defineStore('settings', () => {
@@ -107,6 +92,13 @@ export const useSettingsStore = defineStore('settings', () => {
     installHintDismissed.value = hint ?? false
     reminders.value = sanitizeReminderSettings(remind)
     loaded.value = true
+    // A stored profile can hold fields the app no longer collects (such as gender). Writing the
+    // clean copy back removes them from the database, and so from every later backup. It runs
+    // after loading so a failed write (storage full) never holds up the app; the next load
+    // tries again.
+    if (hasUnkeptFields(stored, profile.value)) {
+      repository.setSetting(SETTING_KEYS.profile, { ...profile.value }).catch(() => {})
+    }
   }
 
   async function setTheme(value: ThemePreference) {
