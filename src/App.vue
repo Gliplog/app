@@ -190,6 +190,17 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+/*
+ * The title's text line box (1.75rem line-height plus descender space below the baseline) is
+ * taller than the logo, which then sits at its top, above the bar's center. Lay it out as flex
+ * so the box is exactly the logo's height; visible overflow keeps the mark's shadow unclipped.
+ */
+.app-bar :deep(.v-toolbar-title__placeholder) {
+  display: flex;
+  align-items: center;
+  overflow: visible;
+}
+
 .brand {
   display: inline-flex;
   text-decoration: none;
