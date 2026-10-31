@@ -1,3 +1,5 @@
+import { glycemicSeries, type Reading } from './glucose'
+import { baselineFor, progressSeries, type WeightPoint } from './progress'
 import type { Population, SourceRef, Trial } from './catalog'
 
 /**
@@ -137,4 +139,85 @@ export function cohortMeasures(
   return (['weight', 'hba1c', 'fastingGlucose'] as const).filter(
     (m) => cohortReadouts(trials, molecule, route, m).readouts.length > 0,
   )
+}
+
+/** Whether both kinds of trial (with and without diabetes) report this measure. */
+export function hasMixedPopulations(
+  trials: readonly Trial[],
+  molecule: string,
+  route: Trial['route'],
+  measure: CohortMeasure,
+): boolean {
+  const { readouts } = cohortReadouts(trials, molecule, route, measure)
+  return new Set(readouts.map((r) => r.population)).size > 1
+}
+
+/**
+ * The trials a cohort chart opens on. People without diabetes start near a normal HbA1c and
+ * glucose and barely change, so merging them with diabetes trials draws a misleading path:
+ * blood sugar opens on the diabetes trials when there are any. Weight opens on every trial, as
+ * one medicine's path over time.
+ */
+export function defaultPopulation(
+  trials: readonly Trial[],
+  molecule: string,
+  route: Trial['route'],
+  measure: CohortMeasure,
+): CohortPopulation {
+  if (measure === 'weight') return 'all'
+  return cohortReadouts(trials, molecule, route, measure, 't2d').readouts.length ? 't2d' : 'all'
+}
+
+/** What the user has logged that a cohort chart compares, with the first dose as week 0. */
+export interface CohortUserInput {
+  weights: readonly WeightPoint[]
+  /** HbA1c in percent. */
+  a1c: readonly Reading[]
+  /** Fasting glucose in mg/dL. */
+  fasting: readonly Reading[]
+  firstDoseAt: number | null
+}
+
+/**
+ * The user's own path in the measure's stored unit (percent of starting weight, HbA1c points,
+ * mg/dL), by weeks since the first dose. Empty until there is a dose and a starting value.
+ */
+export function cohortUserSeries(
+  measure: CohortMeasure,
+  input: CohortUserInput,
+): { weeks: number; change: number }[] {
+  if (measure !== 'weight') {
+    return glycemicSeries(measure === 'hba1c' ? input.a1c : input.fasting, input.firstDoseAt)
+  }
+  const baseline = baselineFor(input.weights, input.firstDoseAt)
+  if (!baseline || baseline.basis === 'no-doses') return []
+  return progressSeries(input.weights, baseline).map((p) => ({
+    weeks: p.weeks,
+    change: p.changePercent,
+  }))
+}
+
+/**
+ * How to read a cohort chart, after the sentence naming week 0 (which the caller dates): what a
+ * point is, whether a path is drawn, what a hollow point means, and how the populations differ.
+ */
+export function cohortNotes(
+  summary: CohortSummary,
+  measure: CohortMeasure,
+  population: CohortPopulation,
+  mixed: boolean,
+): string[] {
+  return [
+    summary.band.length
+      ? "Each point is one group's average at the final week of its trial; the shaded range joins those weeks."
+      : "Each point is one group's average at the final week of its trial. These trials reported a single week, so no path is drawn.",
+    summary.readouts.some((r) => r.printedKg !== null)
+      ? 'Hollow points are worked out from kilograms.'
+      : '',
+    population === 'all' && mixed
+      ? measure === 'weight'
+        ? 'Trials in people with type 2 diabetes usually show less weight change.'
+        : 'People without diabetes start near a normal level, so their change is small.'
+      : '',
+  ].filter(Boolean)
 }

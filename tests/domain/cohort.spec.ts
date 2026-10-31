@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { catalog } from '@/data'
-import { cohortMeasures, cohortReadouts, DERIVED_PERCENT_SOURCE } from '@/domain/cohort'
+import {
+  cohortMeasures,
+  cohortNotes,
+  cohortReadouts,
+  cohortUserSeries,
+  defaultPopulation,
+  DERIVED_PERCENT_SOURCE,
+  hasMixedPopulations,
+} from '@/domain/cohort'
 
 const trials = catalog.trials
 
@@ -59,5 +67,59 @@ describe('cohortReadouts', () => {
       'fastingGlucose',
     ])
     expect(cohortMeasures(trials, 'orforglipron', 'tablet')).toEqual(['weight', 'hba1c'])
+  })
+})
+
+describe('cohort chart choices', () => {
+  const WEEK = 7 * 86_400_000
+
+  it('opens weight on every trial and blood sugar on the diabetes trials', () => {
+    expect(defaultPopulation(trials, 'semaglutide', 'injection', 'weight')).toBe('all')
+    expect(defaultPopulation(trials, 'semaglutide', 'injection', 'hba1c')).toBe('t2d')
+    expect(hasMixedPopulations(trials, 'semaglutide', 'injection', 'weight')).toBe(true)
+  })
+
+  it('measures the user from the weigh-in at their first dose, in percent', () => {
+    const series = cohortUserSeries('weight', {
+      weights: [
+        { at: 0, kg: 100 },
+        { at: 4 * WEEK, kg: 95 },
+      ],
+      a1c: [],
+      fasting: [],
+      firstDoseAt: 0,
+    })
+    expect(series).toEqual([
+      { weeks: 0, change: 0 },
+      { weeks: 4, change: -5 },
+    ])
+    const undosed = { weights: [{ at: 0, kg: 100 }], a1c: [], fasting: [], firstDoseAt: null }
+    expect(cohortUserSeries('weight', undosed)).toEqual([])
+  })
+
+  it('takes HbA1c and fasting glucose from their own readings', () => {
+    const input = {
+      weights: [],
+      a1c: [
+        { at: 0, value: 8 },
+        { at: 12 * WEEK, value: 7 },
+      ],
+      fasting: [
+        { at: 0, value: 150 },
+        { at: 6 * WEEK, value: 120 },
+      ],
+      firstDoseAt: 0,
+    }
+    expect(cohortUserSeries('hba1c', input).at(-1)).toEqual({ weeks: 12, change: -1 })
+    expect(cohortUserSeries('fastingGlucose', input).at(-1)).toEqual({ weeks: 6, change: -30 })
+  })
+
+  it('explains the band, derived points and mixed populations', () => {
+    const summary = cohortReadouts(trials, 'semaglutide', 'injection', 'weight')
+    const notes = cohortNotes(summary, 'weight', 'all', true).join(' ')
+    expect(notes).toMatch(/shaded range/)
+    expect(notes).toMatch(/Hollow points/)
+    expect(notes).toMatch(/type 2 diabetes usually show less/)
+    expect(cohortNotes(summary, 'weight', 'obesity', true).join(' ')).not.toMatch(/diabetes/)
   })
 })

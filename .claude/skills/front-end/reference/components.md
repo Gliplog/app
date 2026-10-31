@@ -27,7 +27,7 @@ Part of the `front-end` skill.
 | `charts/bodyChart.ts`                                 | The body-measure chart option, shared by `BodyChart` and share images                   |
 | `share/ShareImageDialog.vue`                          | Preview and share an image card (content or a render function); privacy in its slot     |
 | `share/ShareTrendDialog.vue`, `ShareLevelsDialog.vue` | Image cards for a trend (numbers off by default) and estimated levels                   |
-| `report/ExportReportDialog.vue`                       | Choose a period and export the journal PDF                                              |
+| `report/ExportReportDialog.vue`                       | Choose a period and the parts to include, and export the journal PDF                    |
 | `photos/PhotosCard.vue`                               | Progress photos: take or choose one, a paged grid newest first, Compare                 |
 | `photos/PhotoDialog.vue`                              | Save a new photo (pose, when, notes) or view, edit and delete one                       |
 | `photos/PhotoCompareDialog.vue`                       | Two photos side by side with dates and nearest weigh-ins (within three days)            |

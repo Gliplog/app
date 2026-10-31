@@ -148,12 +148,19 @@ test('shares a trend as an image and exports the journal as a PDF', async ({ pag
   await page.getByRole('button', { name: 'Export PDF' }).first().click()
   const report = page.getByRole('dialog', { name: 'Export PDF' })
   await choose(report, 'Period', 'All')
+  // Nothing was dosed, so the dose log cannot be chosen; the combined chart is left out.
+  await expect(report.getByRole('checkbox', { name: /^Medications and doses/ })).toBeDisabled()
+  await report.getByRole('checkbox', { name: /^Combined chart/ }).uncheck()
   const pdf = page.waitForEvent('download')
-  await report.getByRole('button', { name: 'Export' }).click()
+  await report.getByRole('button', { name: 'Export', exact: true }).click()
   const file = await pdf
   expect(file.suggestedFilename()).toMatch(/^gliplog-report-\d{4}-\d{2}-\d{2}\.pdf$/)
   const bytes = await (await import('node:fs/promises')).readFile((await file.path())!)
-  expect(bytes.subarray(0, 8).toString('latin1')).toBe('%PDF-1.4')
+  const text = bytes.toString('latin1')
+  expect(text.startsWith('%PDF-1.4')).toBe(true)
+  expect(text).toContain('(Weight)')
+  expect(text).not.toContain('(Combined chart)')
+  expect(text).not.toContain('(Dose log)')
 })
 
 test('a field label stays above its field when the field is focused', async ({ page }) => {

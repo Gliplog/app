@@ -184,13 +184,9 @@
           {
             "from": 1,
             "doseMg": 2.5
-          },
-          {
-            "from": 5,
-            "doseMg": 5
           }
         ],
-        "maintenance": "Increases of 2.5 mg after at least 4 weeks on the current dose, up to 15 mg once weekly.",
+        "maintenance": "If more glucose control is needed, increases of 2.5 mg after at least 4 weeks on the current dose, up to 15 mg once weekly.",
         "source": {
           "kind": "label",
           "citation": "MOUNJARO (tirzepatide) US prescribing information, section 2",

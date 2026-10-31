@@ -4,11 +4,15 @@ import { catalog, findPkProfile, trialsFor } from '@/data'
 import type { CatalogProduct } from '@/domain/catalog'
 import {
   cohortMeasures,
+  cohortNotes,
   cohortReadouts,
+  cohortUserSeries,
+  defaultPopulation,
+  hasMixedPopulations,
   type CohortMeasure,
   type CohortPopulation,
 } from '@/domain/cohort'
-import { compareGlycemic, glycemicSeries } from '@/domain/glucose'
+import { compareGlycemic } from '@/domain/glucose'
 import { baselineFor, compareToTrial, progressSeries } from '@/domain/progress'
 import { formatWeight } from '@/domain/units'
 import { useJournalStore } from '@/stores/journal'
@@ -85,39 +89,24 @@ const summary = computed(() =>
       )
     : { readouts: [], band: [], sources: [] },
 )
-const hasT2dReadouts = computed(
+/** Offer the population filter only when both kinds of trial are present. */
+const mixedPopulations = computed(
   () =>
     !!product.value &&
-    cohortReadouts(
-      catalog.trials,
-      product.value.molecule,
-      product.value.route,
-      measure.value,
-      't2d',
-    ).readouts.length > 0,
+    hasMixedPopulations(catalog.trials, product.value.molecule, product.value.route, measure.value),
 )
 
-/** Offer the population filter only when both kinds of trial are present. */
-const mixedPopulations = computed(() => {
-  if (!product.value) return false
-  const all = cohortReadouts(
-    catalog.trials,
-    product.value.molecule,
-    product.value.route,
-    measure.value,
-  )
-  return new Set(all.readouts.map((r) => r.population)).size > 1
-})
-
-/*
- * People without diabetes start near a normal HbA1c and glucose and barely change, so merging
- * them with diabetes trials draws a misleading path: blood sugar opens on the diabetes trials.
- * Weight opens on every trial, as one medicine's path over time.
- */
 watch(
   [measure, product],
   () => {
-    population.value = measure.value === 'weight' || !hasT2dReadouts.value ? 'all' : 't2d'
+    population.value = product.value
+      ? defaultPopulation(
+          catalog.trials,
+          product.value.molecule,
+          product.value.route,
+          measure.value,
+        )
+      : 'all'
   },
   { immediate: true, flush: 'sync' },
 )
@@ -141,12 +130,14 @@ const readingsOf = (fasting: boolean) =>
     .filter((g) => (fasting ? g.kind === 'glucose' && g.context === 'fasting' : g.kind === 'a1c'))
     .map((g) => ({ at: toEpochMs(g.measuredAt), value: g.value }))
 
-const userSeries = computed(() => {
-  if (measure.value === 'weight') {
-    return weightSeries.value.map((p) => ({ weeks: p.weeks, change: p.changePercent }))
-  }
-  return glycemicSeries(readingsOf(measure.value === 'fastingGlucose'), firstDoseAt.value)
-})
+const userSeries = computed(() =>
+  cohortUserSeries(measure.value, {
+    weights: kgPoints.value,
+    a1c: readingsOf(false),
+    fasting: readingsOf(true),
+    firstDoseAt: firstDoseAt.value,
+  }),
+)
 
 const startText = computed(() => {
   const b = baseline.value
@@ -160,23 +151,11 @@ const startText = computed(() => {
   return `Week 0 is your first ${product.value?.molecule} dose on ${when}.`
 })
 
-const hasDerived = computed(() => summary.value.readouts.some((r) => r.printedKg !== null))
-
 const captionText = computed(() =>
   [
     startText.value,
-    summary.value.band.length
-      ? "Each point is one group's average at the final week of its trial; the shaded range joins those weeks."
-      : "Each point is one group's average at the final week of its trial. These trials reported a single week, so no path is drawn.",
-    hasDerived.value ? 'Hollow points are worked out from kilograms.' : '',
-    population.value === 'all' && mixedPopulations.value
-      ? measure.value === 'weight'
-        ? 'Trials in people with type 2 diabetes usually show less weight change.'
-        : 'People without diabetes start near a normal level, so their change is small.'
-      : '',
-  ]
-    .filter(Boolean)
-    .join(' '),
+    ...cohortNotes(summary.value, measure.value, population.value, mixedPopulations.value),
+  ].join(' '),
 )
 
 /* Trial by trial: each trial's own card, as printed, folded below the merged chart. */

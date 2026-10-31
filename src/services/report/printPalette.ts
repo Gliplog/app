@@ -15,12 +15,17 @@ export const PRINT_TOKENS = {
   'surface-2': '#f4ede2',
   divider: '#e8ddcc',
   'divider-strong': '#d6c7af',
+  'good-fg': '#1f6b41',
+  'good-bg': '#e2f0e7',
   'notice-fg': '#8a5c12',
   'notice-bg': '#fbefd7',
   'chart-logged': '#1c6468',
   'chart-preview': '#c0643f',
+  'chart-trial': '#c0643f',
+  'chart-placebo': '#877960',
   'chart-grid': '#e8ddcc',
   'chart-axis': '#7a6c54',
+  'chart-now': '#877960',
 } as const
 
 export const MARK_COLOURS = {

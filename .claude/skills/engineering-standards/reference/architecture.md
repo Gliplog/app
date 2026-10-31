@@ -125,9 +125,14 @@ Each trial's own card, as printed, is folded below the merged chart.
   story (9:16) shape. Weight change is off by default and is a percent between the weigh-ins
   nearest the first and last photo.
 - The PDF report (`services/report/`, writer in `services/pdf/`) is built on the device from
-  formatted data: medications, weight, side effects with the labels' terms, HbA1c, glucose
-  and the dose log. Standard fonts, no scripts or metadata; text enters only through
-  `pdfString`. The print palette mirrors the light tokens and is tested against them.
+  formatted data (`collectReport` to `ReportData`, then the pure `renderReport`). The user
+  picks the period and the parts (`REPORT_SECTIONS`): a combined chart, weight and BMI, blood
+  sugar, trial comparison, estimated levels, side effects with the labels' terms, and
+  medications with the dose log. Charts are vector drawings (`pdfChart.ts`); the combined
+  chart stacks the other chosen parts on one time axis, and the trial comparison reuses
+  `domain/cohort.ts` (population, user series, notes) so it matches the app's card. Standard
+  fonts, no scripts or metadata; text enters only through `pdfString`. The print palette
+  mirrors the light tokens and is tested against them.
 
 ## PK model
 

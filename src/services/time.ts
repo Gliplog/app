@@ -72,6 +72,19 @@ export function formatHours(hours: number): string {
   return `${Number((hours / 24).toFixed(1))} days`
 }
 
+const axisDayFormat = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' })
+const axisHourFormat = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' })
+
+/**
+ * Label for a chart axis tick: the date for spans over three days ("Oct 29"), otherwise the
+ * date and time, so ticks on short charts stay unambiguous.
+ */
+export function formatAxisTick(epochMs: number, spanMs: number): string {
+  return spanMs > 3 * 86_400_000
+    ? axisDayFormat.format(new Date(epochMs))
+    : `${axisDayFormat.format(new Date(epochMs))}, ${axisHourFormat.format(new Date(epochMs))}`
+}
+
 /** "Sep 29 – Oct 29, 2026" in the device's locale. */
 export function formatDateRange(startMs: number, endMs: number): string {
   return dateFormat.formatRange(new Date(startMs), new Date(endMs))
