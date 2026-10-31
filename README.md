@@ -17,8 +17,8 @@ Live at [gliplog.com/app](https://gliplog.com/app/). The project site is
 - **Doses.** Log each dose with its date, time and, for injections, the site (with a rotation
   hint). Today shows when the next dose falls from your own interval.
 - **Weight and BMI.** Log weigh-ins in kilograms or pounds; add your height (cm or ft and in)
-  to see BMI over time with the WHO adult bands. Adult bands are not shown under 18.
-- **Profile.** Height, birth month and year (for age), gender and a goal weight. Every field is
+  to see BMI over time with the WHO adult bands. Gliplog is for adults 18 and over.
+- **Profile.** Height, gender and a goal weight. Every field is
   optional, and gender is never used in a calculation.
 - **Trial comparison.** Your change since your first dose beside the endpoint averages from the
   trials in each medicine's US prescribing information (STEP, SURMOUNT, SURPASS, SUSTAIN, OASIS,

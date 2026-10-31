@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { repository } from '@/db'
-import { isBirthMonth, type BirthMonth } from '@/domain/body'
 import { A1C_UNITS, GLUCOSE_UNITS, type A1cUnit, type GlucoseUnit } from '@/domain/glucose'
 import { HEIGHT_UNITS, WEIGHT_UNITS, type HeightUnit, type WeightUnit } from '@/domain/units'
 import {
@@ -27,7 +26,6 @@ export const GENDER_LABELS: Record<Gender, string> = {
 /** Everything about the person. Every field is optional; nothing here is required to use the app. */
 export interface Profile {
   heightCm: number | null
-  birthMonth: BirthMonth | null
   gender: Gender
   /** The user's own words when `gender` is `self`. */
   genderText: string
@@ -36,7 +34,6 @@ export interface Profile {
 
 const EMPTY_PROFILE: Profile = {
   heightCm: null,
-  birthMonth: null,
   gender: 'unspecified',
   genderText: '',
   goalKg: null,
@@ -65,7 +62,6 @@ export function sanitizeProfile(value: unknown): Profile {
   const v = value as Record<string, unknown>
   return {
     heightCm: positiveOrNull(v.heightCm),
-    birthMonth: isBirthMonth(v.birthMonth) ? v.birthMonth : null,
     gender: GENDERS.includes(v.gender as Gender) ? (v.gender as Gender) : 'unspecified',
     genderText: typeof v.genderText === 'string' ? v.genderText.slice(0, 60) : '',
     goalKg: positiveOrNull(v.goalKg),

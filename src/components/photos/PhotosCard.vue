@@ -78,13 +78,12 @@ function onSaved() {
 <template>
   <v-card>
     <v-card-item>
-      <p class="gl-eyebrow">Only on this device</p>
+      <p class="gl-eyebrow">For your eyes only</p>
       <v-card-title>Progress photos</v-card-title>
     </v-card-item>
     <v-card-text class="gl-stack">
       <p v-if="!photosStore.photos.length">
-        Take a photo now and then, in the same spot and pose, to see changes the scale doesn't show.
-        Photos stay on this device and are never shared unless you choose to.
+        Same spot, same pose, every few weeks. Photos show what the scale can't.
       </p>
       <ul v-else class="grid" aria-label="Your progress photos, newest first">
         <li v-for="photo in pages.current.value.items" :key="photo.id">

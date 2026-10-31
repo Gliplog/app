@@ -242,9 +242,7 @@ async function render(): Promise<Blob> {
         }}
       </p>
     </template>
-    <p class="text-body-small gl-muted">
-      The collage is made on this device. Anyone you send it to will see these photos.
-    </p>
+    <p class="text-body-small gl-muted">Anyone you send this to will see these photos.</p>
   </ShareImageDialog>
 </template>
 

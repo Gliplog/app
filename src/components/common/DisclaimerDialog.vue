@@ -3,6 +3,7 @@ import { computed, ref, useId } from 'vue'
 import { useSettingsStore } from '@/stores/settings'
 import { useNotifyStore } from '@/stores/notify'
 import { nowIso } from '@/services/time'
+import { ADULT_AGE } from '@/domain/body'
 
 const settings = useSettingsStore()
 const notify = useNotifyStore()
@@ -38,11 +39,15 @@ async function accept() {
         </p>
         <p>Level charts are estimates and trial results are averages. Yours will differ.</p>
         <p>Everything you enter stays on this device. No account, nothing uploaded.</p>
+        <p>
+          You must be {{ ADULT_AGE }} or older to use Gliplog, or the age of majority where you live
+          if that is higher.
+        </p>
       </v-card-text>
       <v-card-actions>
         <v-spacer />
         <v-btn color="primary" variant="flat" :loading="saving" @click="accept">
-          I understand
+          I'm {{ ADULT_AGE }} or older and understand
         </v-btn>
       </v-card-actions>
     </v-card>

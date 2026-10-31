@@ -35,14 +35,13 @@ describe('sanitizeProfile', () => {
     expect(
       sanitizeProfile({
         heightCm: -5,
-        birthMonth: '1980-13',
+        birthMonth: '1980-04',
         gender: 'robot',
         genderText: 42,
         goalKg: 70,
       }),
     ).toEqual({
       heightCm: null,
-      birthMonth: null,
       gender: 'unspecified',
       genderText: '',
       goalKg: 70,
@@ -53,7 +52,6 @@ describe('sanitizeProfile', () => {
   it('accepts every field filled in', () => {
     const p = {
       heightCm: 168,
-      birthMonth: '1979-02',
       gender: 'self',
       genderText: 'Agender',
       goalKg: 65,

@@ -77,8 +77,7 @@ const shareInput = computed(() =>
           :lookback-hours="lookbackHours"
         />
         <p class="text-body-small gl-muted">
-          An estimate of medicine remaining in the body, based on a simple model from published
-          data.
+          Estimated amount in your body, from a simple model of published data.
         </p>
         <SourceList v-if="profile?.pk" :sources="profile.pk.sources" :note="profile.pk.notes" />
       </template>

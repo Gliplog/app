@@ -31,7 +31,7 @@ import AddReminderDialog from '@/components/reminders/AddReminderDialog.vue'
 const journal = useJournalStore()
 const settings = useSettingsStore()
 const now = useNow()
-const body = useBodyMetrics(() => now.value)
+const body = useBodyMetrics()
 
 const medDialog = ref(false)
 const editing = ref<MedicationRow | null>(null)
@@ -233,7 +233,7 @@ const daysSinceStart = computed(() =>
               <dd class="gl-num">{{ daysSinceStart + 1 }}</dd>
             </div>
           </dl>
-          <p v-if="latest && body.currentBmi.value === null" class="text-body-small gl-muted">
+          <p v-if="latest && !body.heightCm.value" class="text-body-small gl-muted">
             Add your height in Settings to see your BMI.
           </p>
           <div class="gl-actions">

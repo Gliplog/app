@@ -131,8 +131,8 @@ async function download() {
         Download calendar invite
       </v-btn>
       <p class="text-body-small gl-muted">
-        For Apple Calendar, Samsung Calendar, Outlook and most calendar apps. It's made on this
-        device; open it to add the repeating event with an alert.
+        Works with Apple, Samsung, Outlook and most calendar apps. Open it to add a repeating event
+        with an alert.
       </p>
     </div>
 
@@ -150,10 +150,10 @@ async function download() {
         </v-btn>
       </div>
       <p class="text-body-small gl-muted">
-        These open the calendar's website with the event filled in, so its title and times go to
-        Google or Microsoft. Google adds it repeating. Outlook adds one event: set Repeat to
-        {{ describeInterval(medication.intervalDays) }} before you save. Microsoft 365 is for a work
-        or school account.
+        These send the event's title and times to Google or Microsoft. Google adds it as repeating;
+        in Outlook, set Repeat to
+        {{ describeInterval(medication.intervalDays) }} before saving. Microsoft 365 is for work or
+        school accounts.
       </p>
     </div>
   </div>

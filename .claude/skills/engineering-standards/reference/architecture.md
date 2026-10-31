@@ -54,8 +54,7 @@ that must survive a reload goes into the database.
   WebView's camera capture file is deleted once stored. Photos never go to the gallery.
 - HbA1c is stored in NGSP percent and glucose in mg/dL, unrounded, with the unit typed;
   Settings chooses the display units, as for weight.
-- Ids are `crypto.randomUUID()`; timestamps are UTC ISO strings. A birth month is a `YYYY-MM`
-  calendar string, never an instant.
+- Ids are `crypto.randomUUID()`; timestamps are UTC ISO strings.
 - Deleting a medication deletes its doses in the same transaction. Stopping one keeps both.
 - `navigator.storage.persist()` is requested on launch (Settings shows the result). Safari may
   still evict data; a backup file (Settings, Save a backup) is the only guarantee. The app

@@ -7,8 +7,8 @@ import { expect, test, type Locator, type Page } from '@playwright/test'
 async function acceptDisclaimer(page: Page) {
   const dialog = page.getByRole('dialog', { name: 'A private journal, not medical advice' })
   await expect(dialog).toBeVisible()
-  await dialog.getByRole('button', { name: 'I understand' }).click()
-  await expect(page.getByRole('button', { name: 'I understand' })).toBeHidden()
+  await dialog.getByRole('button', { name: "I'm 18 or older and understand" }).click()
+  await expect(page.getByRole('button', { name: "I'm 18 or older and understand" })).toBeHidden()
 }
 
 /**
@@ -367,7 +367,7 @@ test('the disclaimer blocks scrolling the page behind it until accepted', async 
   isMobile,
 }) => {
   await page.goto('./#/settings')
-  await expect(page.getByRole('button', { name: 'I understand' })).toBeVisible()
+  await expect(page.getByRole('button', { name: "I'm 18 or older and understand" })).toBeVisible()
   await expect(page.locator('html')).toHaveCSS('overflow-y', 'hidden')
   // Playwright cannot wheel or swipe in mobile WebKit; there the root lock above is the check.
   if (!(browserName === 'webkit' && isMobile)) {
@@ -684,7 +684,7 @@ test('pins photos to the weight line and shares a collage', async ({ page }) => 
   await page.getByRole('button', { name: 'Share weight as an image' }).click()
   const share = page.getByRole('dialog', { name: 'Share as an image' })
   await share.getByLabel('Include my photos').check()
-  await expect(share.getByText('Anyone you send the image to will see them.')).toBeVisible()
+  await expect(share.getByText('Anyone you send this to will see them.')).toBeVisible()
   await expectDecoded(share.getByRole('img', { name: 'Preview of the image to share' }))
   await share.getByRole('button', { name: 'Cancel' }).click()
 

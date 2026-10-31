@@ -1,14 +1,6 @@
 import { catalog, findPkProfile, findProduct } from '@/data'
 import type { DoseRow, GlucoseRow, MedicationRow, SymptomRow, WeightRow } from '@/db/database'
-import {
-  ADULT_AGE,
-  ageOn,
-  bmi,
-  bmiBand,
-  BMI_BANDS,
-  BMI_SOURCE,
-  type BirthMonth,
-} from '@/domain/body'
+import { bmi, bmiBand, BMI_BANDS, BMI_SOURCE } from '@/domain/body'
 import { SOURCE_KIND_LABELS, type CatalogProduct } from '@/domain/catalog'
 import {
   cohortMeasures,
@@ -53,7 +45,6 @@ import {
 } from '@/domain/units'
 import { A4, LETTER, type PageSize } from '@/services/pdf/pageSize'
 import {
-  calendarMonth,
   formatAxisTick,
   formatDate,
   formatDateRange,
@@ -84,7 +75,7 @@ export interface ReportSource {
   /** Every dose pooled per medicine (the journal store's `levelGroups`). */
   levelGroups: readonly MedicationLevels[]
   units: { weight: WeightUnit; a1c: A1cUnit; glucose: GlucoseUnit }
-  profile: { heightCm: number | null; birthMonth: BirthMonth | null; goalKg: number | null }
+  profile: { heightCm: number | null; goalKg: number | null }
   /** The sections the reader chose; those with nothing to print are left out. */
   sections: readonly ReportSection[]
   period: ReportPeriod
@@ -356,7 +347,7 @@ function spanOf(times: readonly number[]): ReportChart['window'] | null {
 }
 
 function collectWeight(source: Source, rows: Rows): ReportWeight {
-  const { units, profile, now } = source
+  const { units, profile } = source
   const series = chronological(rows.weights)
   const first = series[0]!
   const last = series[series.length - 1]!
@@ -377,23 +368,20 @@ function collectWeight(source: Source, rows: Rows): ReportWeight {
   let bmiChart: ReportChart | null = null
   const height = profile.heightCm
   if (height) {
-    const age = profile.birthMonth ? ageOn(profile.birthMonth, calendarMonth(now)) : null
     const latest = bmi(last.kg, height)
-    const band = bmiBand(latest, age)
     stats.push(['BMI', String(roundTo(latest, 1))])
-    if (band) stats.push(['BMI band', band.label])
+    stats.push(['BMI band', bmiBand(latest).label])
     const values = series.map((w) => ({ at: toEpochMs(w.measuredAt), value: bmi(w.kg, height) }))
-    const adult = age === null || age >= ADULT_AGE
     if (window) {
       const lo = Math.min(...values.map((v) => v.value)) - 4
       const hi = Math.max(...values.map((v) => v.value)) + 4
       // Only band edges near the reader's own values, so the axis is not stretched.
-      const guides = adult
-        ? BMI_BANDS.filter((b) => b.from > 0 && b.from >= lo && b.from <= hi).map((b) => ({
-            value: b.from,
-            label: b.label,
-          }))
-        : []
+      const guides = BMI_BANDS.filter((b) => b.from > 0 && b.from >= lo && b.from <= hi).map(
+        (b) => ({
+          value: b.from,
+          label: b.label,
+        }),
+      )
       bmiChart = timeChart(
         'Body mass index',
         window,
@@ -404,11 +392,9 @@ function collectWeight(source: Source, rows: Rows): ReportWeight {
       )
     }
     notes.push(
-      adult
-        ? `BMI is weight over height squared, from the height in your profile (${roundTo(height, 1)} cm). ` +
-            'It is a population screening measure, not a diagnosis. ' +
-            `Bands: ${BMI_SOURCE.citation} (${BMI_SOURCE.url}).`
-        : 'BMI is shown without the adult bands, which do not apply under 18.',
+      `BMI is weight over height squared, from the height in your profile (${roundTo(height, 1)} cm). ` +
+        'It is a population screening measure, not a diagnosis. ' +
+        `Bands: ${BMI_SOURCE.citation} (${BMI_SOURCE.url}).`,
     )
   }
   return {

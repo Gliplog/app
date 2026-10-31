@@ -10,7 +10,7 @@ import {
   readBackupFile,
   restoreBackup,
 } from '@/db/backup'
-import { ADULT_AGE, ageOn } from '@/domain/body'
+import { ADULT_AGE } from '@/domain/body'
 import {
   cmToFeetInches,
   feetInchesToCm,
@@ -48,14 +48,7 @@ import {
 import { nativeApps, notificationSettingsSteps } from '@/services/platform'
 import type { MedicationRow } from '@/db/database'
 import { saveFile } from '@/services/fileTransfer'
-import {
-  calendarMonth,
-  daysBetween,
-  formatBirthMonth,
-  formatDateTime,
-  monthNames,
-  systemClock,
-} from '@/services/time'
+import { daysBetween, formatDateTime, systemClock } from '@/services/time'
 import {
   mdiBellOutline,
   mdiCellphoneArrowDown,
@@ -114,7 +107,6 @@ const a1cUnitModel = computed({
   set: (value: A1cUnit) => void settings.setA1cUnit(value),
 })
 
-const months = monthNames().map((title, i) => ({ title, value: i + 1 }))
 const genderItems = GENDERS.map((g) => ({ title: GENDER_LABELS[g], value: g }))
 
 /*
@@ -125,8 +117,6 @@ const form = reactive({
   cm: '',
   feet: '',
   inches: '',
-  birthMonth: null as number | null,
-  birthYear: '',
   gender: 'unspecified' as Gender,
   genderText: '',
   goal: '',
@@ -138,9 +128,6 @@ function fillForm() {
   const fi = p.heightCm ? cmToFeetInches(p.heightCm) : null
   form.feet = fi ? String(fi.feet) : ''
   form.inches = fi ? String(fi.inches) : ''
-  const [y, m] = p.birthMonth ? p.birthMonth.split('-') : []
-  form.birthYear = y ?? ''
-  form.birthMonth = m ? Number(m) : null
   form.gender = p.gender
   form.genderText = p.genderText
   form.goal = p.goalKg ? String(roundTo(fromKg(p.goalKg, settings.weightUnit), 1)) : ''
@@ -148,8 +135,6 @@ function fillForm() {
 watch(() => [settings.profile, settings.weightUnit, settings.loaded], fillForm, {
   immediate: true,
 })
-
-const thisYear = calendarMonth(systemClock().getTime()).year
 
 const parsed = computed(() => {
   const num = (t: string) => (t.trim() === '' ? null : Number(t))
@@ -170,20 +155,6 @@ const parsed = computed(() => {
       else heightError = 'Feet as a whole number, inches 0 to 11.9'
     }
   }
-  const year = num(form.birthYear)
-  let birthMonth: string | null = null
-  let birthError: string | undefined
-  if (year !== null || form.birthMonth !== null) {
-    if (
-      year !== null &&
-      Number.isInteger(year) &&
-      year >= 1900 &&
-      year <= thisYear &&
-      form.birthMonth
-    )
-      birthMonth = `${year}-${String(form.birthMonth).padStart(2, '0')}`
-    else birthError = 'Choose a month and a year'
-  }
   const goalValue = num(form.goal)
   let goalKg: number | null = null
   let goalError: string | undefined
@@ -192,25 +163,16 @@ const parsed = computed(() => {
     if (kg >= 20 && kg <= 400) goalKg = kg
     else goalError = 'Enter a weight you can reach on a scale'
   }
-  return { heightCm, heightError, birthMonth, birthError, goalKg, goalError }
+  return { heightCm, heightError, goalKg, goalError }
 })
 
-const age = computed(() =>
-  parsed.value.birthMonth
-    ? ageOn(parsed.value.birthMonth, calendarMonth(systemClock().getTime()))
-    : null,
-)
-
-const profileValid = computed(
-  () => !parsed.value.heightError && !parsed.value.birthError && !parsed.value.goalError,
-)
+const profileValid = computed(() => !parsed.value.heightError && !parsed.value.goalError)
 
 async function saveProfile() {
   if (!profileValid.value) return
   const p = parsed.value
   await settings.updateProfile({
     heightCm: p.heightCm,
-    birthMonth: p.birthMonth,
     gender: form.gender,
     genderText: form.gender === 'self' ? form.genderText.trim() : '',
     goalKg: p.goalKg,
@@ -401,31 +363,6 @@ const formatMb = (bytes: number | null) =>
               :error="!!parsed.heightError"
             />
           </div>
-          <div class="birth-row">
-            <v-select
-              v-model="form.birthMonth"
-              :items="months"
-              label="Birth month"
-              clearable
-              :error-messages="parsed.birthError"
-            />
-            <v-text-field
-              v-model="form.birthYear"
-              label="Year"
-              type="number"
-              inputmode="numeric"
-              :error="!!parsed.birthError"
-            />
-          </div>
-          <p v-if="age !== null" class="text-body-small gl-muted">
-            Age {{ age
-            }}<template v-if="parsed.birthMonth">
-              (born {{ formatBirthMonth(parsed.birthMonth) }})</template
-            >.
-            <template v-if="age < ADULT_AGE">
-              Adult BMI bands don't apply under {{ ADULT_AGE }}, so Gliplog won't show one.
-            </template>
-          </p>
           <v-select v-model="form.gender" :items="genderItems" label="Gender" />
           <v-text-field
             v-if="form.gender === 'self'"
@@ -584,9 +521,7 @@ const formatMb = (bytes: number | null) =>
                 hide-details
                 @update:model-value="settings.setReminderNames(!!$event)"
               />
-              <p class="text-body-small gl-muted">
-                Off, a reminder just says a dose is due, in case your screen is seen by others.
-              </p>
+              <p class="text-body-small gl-muted">When off, reminders just say a dose is due.</p>
             </div>
           </template>
         </v-card-text>
@@ -769,6 +704,10 @@ const formatMb = (bytes: number | null) =>
             medical device. Ask your prescriber or pharmacist about your treatment.
           </p>
           <p>
+            You must be {{ ADULT_AGE }} or older to use Gliplog, or the age of majority where you
+            live if that is higher.
+          </p>
+          <p>
             Trial figures are group averages from US prescribing information. Level charts are
             estimates, not blood levels. Compounded medicines are not FDA-approved.
           </p>
@@ -797,14 +736,6 @@ const formatMb = (bytes: number | null) =>
   display: grid;
   gap: 16px;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
-  align-items: start;
-}
-
-/* The month gets the wider share so its label and the longest month name fit beside the year. */
-.birth-row {
-  display: grid;
-  grid-template-columns: 3fr 2fr;
-  gap: 12px;
   align-items: start;
 }
 

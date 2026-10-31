@@ -1,36 +1,8 @@
 /**
- * Body measures derived from the profile: age from a birth month, and body mass index from
- * height and weight. BMI is a population screening measure; the categories are the WHO adult
- * cut-offs and do not apply under 18.
+ * Body measures derived from the profile: body mass index from height and weight. BMI is a
+ * population screening measure; the categories are the WHO adult cut-offs, which fit because
+ * Gliplog is for adults only.
  */
-
-/** A birth month as "YYYY-MM". Kept as a calendar string, never an instant, so no time zone shifts it. */
-export type BirthMonth = string
-
-const BIRTH_MONTH = /^(\d{4})-(0[1-9]|1[0-2])$/
-
-export function isBirthMonth(value: unknown): value is BirthMonth {
-  return typeof value === 'string' && BIRTH_MONTH.test(value)
-}
-
-export interface CalendarDate {
-  year: number
-  /** 1 to 12. */
-  month: number
-}
-
-/**
- * Completed years on `on`. Only the birth month is known, so a birthday month counts as
- * already reached: the age is never overstated by more than the days left in that month.
- */
-export function ageOn(birth: BirthMonth, on: CalendarDate): number | null {
-  const match = BIRTH_MONTH.exec(birth)
-  if (!match) return null
-  const year = Number(match[1])
-  const month = Number(match[2])
-  const age = on.year - year - (on.month < month ? 1 : 0)
-  return age >= 0 ? age : null
-}
 
 /** Weight over height squared (kg/m²). */
 export function bmi(weightKg: number, heightCm: number): number {
@@ -67,11 +39,11 @@ export const BMI_SOURCE = {
   url: 'https://iris.who.int/handle/10665/42330',
 } as const
 
+/** Gliplog is for adults only, which is what lets it use the WHO adult BMI bands for everyone. */
 export const ADULT_AGE = 18
 
-/** The WHO band for an adult's BMI, or null under 18. An unknown age is treated as adult. */
-export function bmiBand(value: number, age: number | null): BmiBand | null {
-  if (age !== null && age < ADULT_AGE) return null
+/** The WHO adult band for a BMI. */
+export function bmiBand(value: number): BmiBand {
   let band = BMI_BANDS[0]!
   for (const b of BMI_BANDS) if (value >= b.from) band = b
   return band

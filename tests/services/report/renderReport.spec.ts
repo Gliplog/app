@@ -113,7 +113,7 @@ function source(period: ReportPeriod = '90d'): ReportSource {
     glucose,
     levelGroups,
     units: { weight: 'kg', a1c: '%', glucose: 'mg/dL' },
-    profile: { heightCm: 170, birthMonth: null, goalKg: 85 },
+    profile: { heightCm: 170, goalKg: 85 },
     sections: REPORT_SECTIONS,
     period,
     now: NOW,

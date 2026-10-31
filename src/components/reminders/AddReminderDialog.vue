@@ -132,8 +132,7 @@ const notifySubtitle = computed(() => {
                 </li>
               </ul>
               <p v-if="!remindersSupported" class="text-body-small gl-muted">
-                A web app can't wake itself to notify you without a server, and Gliplog doesn't have
-                one. Your calendar can remind you instead.
+                Without a server, a web app can't send reminders. Your calendar can.
               </p>
             </div>
           </v-window-item>

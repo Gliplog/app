@@ -90,26 +90,6 @@ export function formatDateRange(startMs: number, endMs: number): string {
   return dateFormat.formatRange(new Date(startMs), new Date(endMs))
 }
 
-/** The local calendar year and month (1 to 12) of an instant, for ages from a birth month. */
-export function calendarMonth(epochMs: number): { year: number; month: number } {
-  const d = new Date(epochMs)
-  return { year: d.getFullYear(), month: d.getMonth() + 1 }
-}
-
-const monthYearFormat = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' })
-
-/** "March 1984" for a stored "1984-03"; the day is fixed mid-month so no time zone moves it. */
-export function formatBirthMonth(birthMonth: string): string {
-  const [y, m] = birthMonth.split('-').map(Number)
-  return monthYearFormat.format(new Date(y!, m! - 1, 15))
-}
-
-/** Month names in the device's language, January first, for a month picker. */
-export function monthNames(): string[] {
-  const f = new Intl.DateTimeFormat(undefined, { month: 'long' })
-  return Array.from({ length: 12 }, (_, i) => f.format(new Date(2000, i, 15)))
-}
-
 /** "Thursday" for a due date, in the device's language. */
 export function formatWeekday(epochMs: number): string {
   return weekdayFormat.format(new Date(epochMs))

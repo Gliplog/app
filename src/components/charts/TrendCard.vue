@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, useId, watch } from 'vue'
-import { ADULT_AGE, BMI_BANDS, BMI_SOURCE } from '@/domain/body'
+import { BMI_BANDS, BMI_SOURCE } from '@/domain/body'
 import {
   decimalsFor,
   fromA1cPercent,
@@ -32,11 +32,11 @@ import ShareTrendDialog from '@/components/share/ShareTrendDialog.vue'
  */
 type TrendMeasure = 'weight' | 'bmi' | 'a1c' | 'glucose'
 
-const props = defineProps<{ now: number }>()
+defineProps<{ now: number }>()
 
 const journal = useJournalStore()
 const settings = useSettingsStore()
-const body = useBodyMetrics(() => props.now)
+const body = useBodyMetrics()
 const labelId = useId()
 const shareOpen = ref(false)
 
@@ -47,7 +47,7 @@ const MEASURES = computed(() =>
   (
     [
       { value: 'weight', label: 'Weight', on: journal.weights.length > 0 },
-      { value: 'bmi', label: 'BMI', on: journal.weights.length > 0 && !!body.heightCm.value },
+      { value: 'bmi', label: 'BMI', on: body.bmiSeries.value.length > 0 },
       { value: 'a1c', label: 'HbA1c', on: a1c.value.length > 0 },
       { value: 'glucose', label: 'Glucose', on: glucose.value.length > 0 },
     ] as const
@@ -71,11 +71,9 @@ const TITLES: Record<TrendMeasure, string> = {
   glucose: 'Glucose',
 }
 
-const adult = computed(() => body.age.value === null || body.age.value >= ADULT_AGE)
-
 /** Band edges near the user's own values, so the axis is not stretched to far-off lines. */
 const bmiGuides = computed(() => {
-  if (!adult.value || !body.bmiSeries.value.length) return []
+  if (!body.bmiSeries.value.length) return []
   const values = body.bmiSeries.value.map((p) => p.value)
   const lo = Math.min(...values) - 4
   const hi = Math.max(...values) + 4
@@ -246,19 +244,14 @@ const convertedUnits = computed(
         :photos="chartPhotos"
         @photo="openPhoto"
       />
-      <p v-if="chartPhotos.length" class="text-body-small gl-muted">
-        Tap a photo to open it. Each sits on the line at the date it was taken.
-      </p>
+      <p v-if="chartPhotos.length" class="text-body-small gl-muted">Tap a photo to open it.</p>
       <p v-if="mode === 'glucose' && !chart.points.length" class="text-body-small gl-muted">
         No fasting readings yet; readings from other times of day show as points.
       </p>
       <template v-if="mode === 'bmi'">
-        <p v-if="adult" class="text-body-small gl-muted">
+        <p class="text-body-small gl-muted">
           Dashed lines are the WHO adult bands. BMI is a screening measure and doesn't tell muscle
           from fat.
-        </p>
-        <p v-else class="text-body-small gl-muted">
-          Adult BMI bands don't apply under {{ ADULT_AGE }}.
         </p>
         <SourceList :sources="[BMI_SOURCE]" />
       </template>

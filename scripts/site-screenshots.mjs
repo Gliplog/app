@@ -117,7 +117,6 @@ function sampleBackup() {
         key: 'profile',
         value: {
           heightCm: 172,
-          birthMonth: null,
           gender: 'unspecified',
           genderText: '',
           goalKg: 85,
@@ -162,7 +161,7 @@ try {
     })
     const page = await context.newPage()
     await page.goto(`http://localhost:${PORT}/app/`)
-    await page.getByRole('button', { name: 'I understand' }).click()
+    await page.getByRole('button', { name: "I'm 18 or older and understand" }).click()
     await page.getByRole('link', { name: 'Settings', exact: true }).first().click()
     await page.getByLabel('Backup file').setInputFiles(backupPath)
     await page.getByRole('button', { name: 'Restore backup' }).click()
