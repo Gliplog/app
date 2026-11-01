@@ -28,7 +28,11 @@ import { usePhotosStore } from '@/stores/photos'
 import { useNotifyStore } from '@/stores/notify'
 import { useConfirmStore } from '@/stores/confirm'
 import { useStoragePersistence } from '@/composables/useStoragePersistence'
-import { useInstallPrompt } from '@/composables/useInstallPrompt'
+import { useInstallPrompt, type InstallPlatform } from '@/composables/useInstallPrompt'
+import androidChromeShot from '@/assets/install/android-chrome.webp'
+import androidFirefoxShot from '@/assets/install/android-firefox.webp'
+import iosChromeShot from '@/assets/install/ios-chrome.webp'
+import iosSafariShot from '@/assets/install/ios-safari.webp'
 import { remindersSupported } from '@/composables/useReminderSync'
 import AddReminderDialog from '@/components/reminders/AddReminderDialog.vue'
 import { toTimeValue } from '@/domain/reminders'
@@ -298,6 +302,42 @@ function reminderStatus(med: MedicationRow): string {
   if (remindersSupported && r.enabled) return `Notify me at ${toTimeValue(r)}`
   return remindersSupported ? 'No reminder' : `Dose ${describeInterval(med.intervalDays)}`
 }
+
+interface InstallScreenshot {
+  src: string
+  width: number
+  height: number
+  alt: string
+}
+
+const INSTALL_SCREENSHOTS: Partial<Record<InstallPlatform, InstallScreenshot>> = {
+  'ios-safari': {
+    src: iosSafariShot,
+    width: 480,
+    height: 666,
+    alt: "Safari's Share menu with Add to Home Screen highlighted",
+  },
+  'ios-chrome': {
+    src: iosChromeShot,
+    width: 480,
+    height: 842,
+    alt: "Chrome's Share menu on iPhone with Add to Home Screen highlighted",
+  },
+  'android-chrome': {
+    src: androidChromeShot,
+    width: 480,
+    height: 996,
+    alt: "Chrome's menu on Android with Install and create shortcut highlighted",
+  },
+  'android-firefox': {
+    src: androidFirefoxShot,
+    width: 480,
+    height: 999,
+    alt: "Firefox's menu on Android with Add app to Home screen highlighted",
+  },
+}
+
+const installShot = computed(() => INSTALL_SCREENSHOTS[install.state.platform])
 
 async function promptInstall() {
   if (await install.actions.promptInstall()) notify.show('Gliplog installed', 'success')
@@ -632,6 +672,15 @@ const formatMb = (bytes: number | null) =>
                   </li>
                 </template>
               </ol>
+              <img
+                v-if="installShot"
+                class="install-shot"
+                :src="installShot.src"
+                :width="installShot.width"
+                :height="installShot.height"
+                :alt="installShot.alt"
+                loading="lazy"
+              />
             </template>
           </template>
         </v-card-text>
@@ -721,6 +770,16 @@ const formatMb = (bytes: number | null) =>
 
 .install-steps li + li {
   margin-top: 4px;
+}
+
+.install-shot {
+  display: block;
+  width: 100%;
+  max-width: 240px;
+  height: auto;
+  margin: 0 auto;
+  border: 1px solid var(--gl-divider-strong);
+  border-radius: var(--gl-radius-lg);
 }
 
 .privacy-list {
