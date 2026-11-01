@@ -127,8 +127,7 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', onVisible
           Allow notifications
         </v-btn>
         <p class="text-body-small gl-muted text-center">
-          {{ systemName }} will ask you to confirm. Nothing is sent anywhere; reminders are set on
-          this phone.
+          Reminders are set on this phone. Nothing is sent anywhere.
         </p>
       </div>
     </div>
@@ -140,8 +139,7 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', onVisible
         </span>
         <h3 class="text-title-large gl-display">Notifications are off for Gliplog</h3>
         <p class="gl-muted">
-          Turn on notifications for Gliplog in {{ systemName }} settings, then come back here. Your
-          reminder will be ready.
+          Turn on notifications for Gliplog in {{ systemName }} settings, then come back here.
         </p>
       </div>
       <div class="gl-stack gl-stack--tight">

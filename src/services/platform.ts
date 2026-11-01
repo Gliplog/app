@@ -3,7 +3,7 @@
  * screen. Fixed at build time (`__PLATFORM__`), so each bundle carries only its own.
  */
 
-/** The phone's system, as copy names it: "Android will ask you to confirm". */
+/** The phone's system, as copy names it: "in Android settings". */
 export const systemName = __PLATFORM__ === 'ios' ? 'iOS' : 'Android'
 
 /** Where to turn Gliplog's notifications back on when the app cannot open the screen itself. */

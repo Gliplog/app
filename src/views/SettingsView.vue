@@ -480,9 +480,7 @@ const formatMb = (bytes: number | null) =>
               <v-btn value="dark">Dark</v-btn>
             </v-btn-toggle>
           </div>
-          <p class="text-body-small gl-muted">
-            Switch units any time. Your entries convert automatically.
-          </p>
+          <p class="text-body-small gl-muted">Entries convert when you switch.</p>
         </v-card-text>
       </v-card>
 
