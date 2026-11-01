@@ -1,0 +1,1 @@
+Settings now shows how to install Gliplog on your phone, with screenshots for Chrome, Firefox and Safari.
