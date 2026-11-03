@@ -1,4 +1,4 @@
-package io.github.gliplog;
+package io.github.gliplog.app;
 
 import android.content.Intent;
 import android.net.Uri;

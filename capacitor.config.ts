@@ -8,7 +8,7 @@ import type { CapacitorConfig } from '@capacitor/cli'
  * published on Google Play and the App Store.
  */
 const config: CapacitorConfig = {
-  appId: 'io.github.gliplog',
+  appId: 'io.github.gliplog.app',
   appName: 'Gliplog',
   webDir: process.env.GLIPLOG_PLATFORM === 'ios' ? 'dist-ios' : 'dist-android',
   server: {

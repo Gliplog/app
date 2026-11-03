@@ -19,10 +19,10 @@ if (pkg.versionCode != appVersionCode) {
 def releaseKeystore = System.getenv('GLIPLOG_KEYSTORE')
 
 android {
-    namespace = "io.github.gliplog"
+    namespace = "io.github.gliplog.app"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "io.github.gliplog"
+        applicationId "io.github.gliplog.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode appVersionCode

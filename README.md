@@ -110,7 +110,7 @@ cd android && ./gradlew assembleDebug    # needs JDK 21 and the Android SDK
   attaches both to a GitHub release.
 - `fastlane/metadata/android/` holds the store listing that F-Droid reads.
 
-The app id `io.github.gliplog` and the WebView origin `https://localhost` must never change
+The app id `io.github.gliplog.app` and the WebView origin `https://localhost` must never change
 after release. The release checklist, Play's health-app and Data safety answers, the F-Droid
 submission and the path to iOS are in [docs/releasing.md](docs/releasing.md).
 
