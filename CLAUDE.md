@@ -21,7 +21,7 @@ All commands run on the Node version in `.nvmrc` (`nvm use`); never system Node.
 | `make android`           | Build the Capacitor bundle (`dist-android/`) and sync it into `android/`                         |
 | `make ios`               | Build the iOS bundle (`dist-ios/`) and sync it into `ios/`; the app builds in CI, not locally    |
 | `make screenshots`       | Retake the Today and Progress screenshots in `../gliplog.github.io` with sample data             |
-| `make store-screenshots` | Retake the F-Droid and Play phone screenshots in `fastlane/metadata` with sample data            |
+| `make store-screenshots` | Retake the F-Droid and Play phone, tablet and Chromebook screenshots in `fastlane/metadata`      |
 
 ## Skills and rules
 
