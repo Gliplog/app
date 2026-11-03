@@ -1,0 +1,1 @@
+See your estimated medication level over time, with doses marked on the weight chart. A countdown shows when your next dose is due, and Gliplog warns you when two medications overlap.
