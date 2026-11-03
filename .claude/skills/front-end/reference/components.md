@@ -23,10 +23,10 @@ Part of the `front-end` skill.
 | `journal/SymptomSummaryCard.vue`                      | Side effects by period, strength and days after a dose; opens the PDF export            |
 | `charts/CohortChart.vue`                              | One medicine's trial readouts merged over weeks (band and points), your line, a table   |
 | `charts/CohortSection.vue`                            | Progress cohort section: medication, measure and population switches, trial cards       |
-| `charts/TrendCard.vue`                                | Weight, BMI, HbA1c and glucose over time in one card, with a share button               |
+| `charts/TrendCard.vue`                                | Weight, BMI, HbA1c and glucose in one card; photos, doses, levels strip; share button   |
 | `charts/bodyChart.ts`                                 | The body-measure chart option, shared by `BodyChart` and share images                   |
 | `share/ShareImageDialog.vue`                          | Preview and share an image card (content or a render function); privacy in its slot     |
-| `share/ShareTrendDialog.vue`, `ShareLevelsDialog.vue` | Image cards for a trend (numbers off by default) and estimated levels                   |
+| `share/ShareTrendDialog.vue`, `ShareLevelsDialog.vue` | Image cards for a trend (numbers, doses, levels opt-in) and estimated levels            |
 | `report/ExportReportDialog.vue`                       | Choose a period and the parts to include, and export the journal PDF                    |
 | `photos/PhotosCard.vue`                               | Progress photos: take or choose one, a paged grid newest first, Compare                 |
 | `photos/PhotoDialog.vue`                              | Save a new photo (pose, when, notes) or view, edit and delete one                       |
@@ -54,6 +54,12 @@ Part of the `front-end` skill.
   (`journal.levelGroups`), so Today and Progress agree. Progress shows one `PkPanel` per group,
   never several medicines on one axis. Today's levels panel follows the front card of the
   medication stack (`journal.focusedMedication`), and Progress starts its cohort switcher there.
+- The level strip under a trend follows the measure: mg beside real units, percent of each
+  line's peak beside a percent change, and always percent of peak for two or more medicines
+  (`domain/levelStrip.ts`). `useLevelStrip` gives the app chart and its share image the same
+  lines and colours. Dose marks label only a change of strength (`domain/doseMarks.ts`).
+- Share dialogs put their privacy switches in `ShareImageDialog`'s slot, which renders them
+  at 48px rows with a plain track and a 14px label so they sit at the buttons' size.
 - Trial cards show the two most relevant trials and fold the rest behind a button.
 - Lists page in memory, ten to a page (`usePaging`, `domain/listing.ts`), newest first with a
   sort toggle. Charts and totals always use every row, not the page.

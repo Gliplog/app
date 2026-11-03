@@ -9,6 +9,7 @@ export {
   mdiCalendarPlus,
   mdiCameraOutline,
   mdiCellphoneArrowDown,
+  mdiChartBellCurve,
   mdiChartLine,
   mdiCheckCircle,
   mdiCheckCircleOutline,

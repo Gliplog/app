@@ -13,7 +13,7 @@ import { CanvasRenderer } from 'echarts/renderers'
 import VChart from 'vue-echarts'
 import { useChartColors } from '@/composables/useChartColors'
 import { formatDate, formatDateRange } from '@/services/time'
-import { roundTo } from '@/domain/units'
+import { formatDose, roundTo } from '@/domain/units'
 import { bodyChartOption, PHOTO_SERIES, type BodyChartInput } from './bodyChart'
 
 use([
@@ -30,7 +30,8 @@ use([
 /**
  * One measure over time (weight, BMI, HbA1c or glucose) with optional labelled reference lines.
  * A secondary set (glucose at other times of day) is drawn as unjoined hollow points, so
- * readings taken under different conditions are never joined into one line.
+ * readings taken under different conditions are never joined into one line. Doses can be
+ * marked on the line, and estimated levels drawn in a strip below on the same dates.
  */
 const props = defineProps<BodyChartInput>()
 const emit = defineEmits<{ photo: [id: string] }>()
@@ -55,21 +56,46 @@ const ariaSummary = computed(() => {
   const photos = props.photos?.length
     ? ` ${props.photos.length} progress photo${props.photos.length === 1 ? '' : 's'} pinned to the line.`
     : ''
-  const levels = props.levels
-    ? ` Estimated levels below, each scaled to its own peak, at the latest entry: ${props.levels
-        .readAt(last.at)
-        .map((r) => `${r.label} ${roundTo(r.percent, 0)}%`)
+  const doses = props.doses?.length
+    ? ` ${props.doses.length} dose${props.doses.length === 1 ? '' : 's'} marked on the line; strength by date: ${props.doses
+        .filter((d) => d.changed)
+        .map((d) => `${formatDate(d.at)} ${d.label} ${formatDose(d.mg)}`)
         .join(', ')}.`
     : ''
-  return `${props.measure} from ${fmt(first.value)} to ${fmt(last.value)}, ${formatDateRange(first.at, last.at)}, ${pts.length} entries.${photos}${levels}`
+  const levels = props.levels
+    ? props.levels.scale === 'amount'
+      ? ` Estimated amount in the body below, at the latest entry: ${props.levels
+          .readAt(last.at)
+          .map((r) => `${r.label} ${formatDose(r.mg)}`)
+          .join(', ')}.`
+      : ` Estimated levels below, each scaled to its own peak, at the latest entry: ${props.levels
+          .readAt(last.at)
+          .map((r) => `${r.label} ${roundTo(r.percent, 0)}%`)
+          .join(', ')}.`
+    : ''
+  return `${props.measure} from ${fmt(first.value)} to ${fmt(last.value)}, ${formatDateRange(first.at, last.at)}, ${pts.length} entries.${photos}${doses}${levels}`
 })
 
+interface TableRow {
+  at: number
+  value?: number
+  note?: string
+  dose?: string
+}
+
 /**
- * Every reading, newest first, with its note when the chart has more than one kind, and each
- * medicine's estimated level at that moment when the level strip is shown.
+ * Every reading and marked dose, newest first: a reading with its note when the chart has more
+ * than one kind, a dose with its medicine and strength, and each medicine's estimated level at
+ * that moment when the level strip is shown.
  */
 const rows = computed(() =>
-  [...props.points, ...(props.secondary?.points ?? [])]
+  [
+    ...[...props.points, ...(props.secondary?.points ?? [])].map<TableRow>((p) => p),
+    ...(props.doses ?? []).map<TableRow>((d) => ({
+      at: d.at,
+      dose: `${d.label} ${formatDose(d.mg)}`,
+    })),
+  ]
     .sort((a, b) => b.at - a.at)
     .map((row) => ({ ...row, levels: props.levels?.readAt(row.at) ?? [] })),
 )
@@ -94,6 +120,7 @@ const rows = computed(() =>
           <tr>
             <th scope="col">Date</th>
             <th scope="col" class="text-end">{{ measure }}</th>
+            <th v-if="doses?.length" scope="col">Dose</th>
             <th v-for="s in levels?.series ?? []" :key="s.key" scope="col" class="text-end">
               {{ s.label }} level
             </th>
@@ -103,12 +130,21 @@ const rows = computed(() =>
           <tr v-for="(row, i) in rows" :key="`${row.at}-${i}`">
             <td>{{ formatDate(row.at) }}</td>
             <td class="text-end gl-num">
-              {{ fmt(row.value) }}
+              <template v-if="row.value !== undefined">{{ fmt(row.value) }}</template>
               <span v-if="row.note" class="d-block text-body-small gl-faint">{{ row.note }}</span>
             </td>
+            <td v-if="doses?.length">{{ row.dose }}</td>
             <td v-for="r in row.levels" :key="r.key" class="text-end gl-num">
-              {{ roundTo(r.percent, 0) }}%
-              <span class="d-block text-body-small gl-faint">{{ roundTo(r.mg, 2) }} mg</span>
+              <template v-if="levels?.scale === 'amount'">
+                {{ formatDose(r.mg) }}
+                <span class="d-block text-body-small gl-faint"
+                  >{{ roundTo(r.percent, 0) }}% of peak</span
+                >
+              </template>
+              <template v-else>
+                {{ roundTo(r.percent, 0) }}%
+                <span class="d-block text-body-small gl-faint">{{ formatDose(r.mg) }}</span>
+              </template>
             </td>
           </tr>
         </tbody>

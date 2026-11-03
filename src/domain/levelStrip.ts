@@ -3,10 +3,13 @@
  * glucose), on the same time axis. They sit in their own panel rather than on a second axis of
  * the same plot, so neither scale can be lined up against the other to suggest a cause.
  *
- * Each medication is scaled to its own peak in the window: semaglutide and tirzepatide doses
- * differ several-fold in mg for a similar effect, so a shared mg axis would make a switch look
- * like "more drug". The amount in mg stays available beside every percentage.
+ * The strip follows the measure above it. Beside a measure in real units (kg, BMI, mmol/L) it
+ * shows the estimated amount in mg; beside a measure shown as percent change it shows each line
+ * as percent of its own peak in the window. With two or more medicines it always uses percent of
+ * peak: semaglutide and tirzepatide doses differ several-fold in mg for a similar effect, so a
+ * shared mg axis would make a switch look like "more drug". Both figures stay in every readout.
  */
+import { niceRange } from './report'
 import { amountAt, rateConstants, simulate, type DoseEvent, type PkParameters } from './pk'
 
 /**
@@ -35,6 +38,26 @@ export interface StripSeries {
   points: [number, number, number][]
   /** The highest estimated amount in the window, in mg; 0 when every dose has cleared. */
   peakMg: number
+}
+
+/** How the strip's axis reads: estimated mg, or percent of each line's own peak. */
+export type StripScale = 'amount' | 'percent'
+
+/**
+ * The strip's scale for a measure shown in real units or as percent change. More than one
+ * line always reads as percent of peak (see the module comment).
+ */
+export function stripScale(measureInPercent: boolean, lineCount: number): StripScale {
+  return measureInPercent || lineCount > 1 ? 'percent' : 'amount'
+}
+
+/**
+ * Round mg ticks from zero up past the highest peak, about three steps, so the strip keeps the
+ * same few gridlines as the percent axis (0, 50, 100).
+ */
+export function amountTicks(series: readonly StripSeries[]): number[] {
+  const peak = series.reduce((max, s) => Math.max(max, s.peakMg), 0)
+  return peak > 0 ? niceRange(0, peak, 3) : [0, 1]
 }
 
 export interface StripReading {

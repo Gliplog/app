@@ -136,14 +136,40 @@ test('shows estimated levels under the weight chart on the same dates', async ({
   await expect(levels).toHaveAttribute('aria-pressed', 'false')
   await levels.click()
   await expect(levels).toHaveAttribute('aria-pressed', 'true')
+  // One medicine beside a weight in real units reads in mg.
   await expect(
-    page.getByRole('img', { name: /^Weight .+Estimated levels below.+Semaglutide injection/ }),
+    page.getByRole('img', {
+      name: /^Weight .+Estimated amount in the body below.+Semaglutide injection [\d.]+ mg/,
+    }),
   ).toBeVisible()
-  await expect(page.getByText(/not as its cause/)).toBeVisible()
+  await expect(
+    page.getByText('Estimated amount in your body, based on your doses.', { exact: false }),
+  ).toBeVisible()
+
+  const doses = page.getByRole('button', { name: 'Doses', exact: true })
+  await expect(doses).toHaveAttribute('aria-pressed', 'false')
+  await doses.click()
+  await expect(
+    page.getByRole('img', { name: /1 dose marked on the line; strength by date: .+0\.25 mg/ }),
+  ).toBeVisible()
   await page.getByRole('button', { name: 'Show as table' }).first().click()
   await expect(
     page.getByRole('columnheader', { name: 'Semaglutide injection level' }),
   ).toBeVisible()
+  await expect(page.getByRole('columnheader', { name: 'Dose' })).toBeVisible()
+  await expect(page.getByRole('cell', { name: 'Semaglutide injection 0.25 mg' })).toBeVisible()
+
+  // The share image can carry the levels too, off until asked for.
+  await page.getByRole('button', { name: 'Share weight as an image' }).click()
+  const share = page.getByRole('dialog', { name: 'Share as an image' })
+  const include = share.getByLabel('Include estimated levels')
+  await expect(include).not.toBeChecked()
+  await include.check()
+  await expect(share.getByText(/Shown as a percent of peak/)).toBeVisible()
+  await share.getByLabel('Show my weight').check()
+  await expect(share.getByText(/Shown in mg/)).toBeVisible()
+  await expect(share.getByLabel('Include my doses')).toBeVisible()
+  await expect(share.getByAltText('Preview of the image to share')).toBeVisible()
 })
 
 test('the medication stack switches medicines and the levels chart follows', async ({ page }) => {
@@ -757,7 +783,7 @@ test('pins photos to the weight line and shares a collage', async ({ page }) => 
   await page.getByRole('button', { name: 'Share weight as an image' }).click()
   const share = page.getByRole('dialog', { name: 'Share as an image' })
   await share.getByLabel('Include my photos').check()
-  await expect(share.getByText('Anyone you send this to will see them.')).toBeVisible()
+  await expect(share.getByText('Anyone you share with can see your photos.')).toBeVisible()
   await expectDecoded(share.getByRole('img', { name: 'Preview of the image to share' }))
   await share.getByRole('button', { name: 'Cancel' }).click()
 

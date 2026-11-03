@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
   LEVEL_STRIP_MAX,
+  amountTicks,
   assignSlots,
   levelStrip,
   stripReadings,
+  stripScale,
   stripWindow,
   type StripInput,
 } from '@/domain/levelStrip'
@@ -82,5 +84,34 @@ describe('assignSlots', () => {
     const next = assignSlots(['c', 'e'], first)
     expect(next.get('c')).toBe(2)
     expect(next.get('e')).toBe(0)
+  })
+})
+
+describe('stripScale', () => {
+  it('reads in mg beside a measure in real units', () => {
+    expect(stripScale(false, 1)).toBe('amount')
+  })
+
+  it('reads as percent of peak beside a percent change', () => {
+    expect(stripScale(true, 1)).toBe('percent')
+  })
+
+  it('keeps percent of peak for two medicines, whose mg are not comparable', () => {
+    expect(stripScale(false, 2)).toBe('percent')
+  })
+})
+
+describe('amountTicks', () => {
+  it('runs from zero to a round mg past the highest peak', () => {
+    const series = levelStrip([sema, tirz], { start: now - 60 * DAY, end: now })
+    const ticks = amountTicks(series)
+    const peak = Math.max(...series.map((s) => s.peakMg))
+    expect(ticks[0]).toBe(0)
+    expect(ticks[ticks.length - 1]).toBeGreaterThanOrEqual(peak)
+    expect(ticks.length).toBeLessThanOrEqual(5)
+  })
+
+  it('gives a unit band when every dose has cleared', () => {
+    expect(amountTicks([{ key: 'a', label: 'A', points: [], peakMg: 0 }])).toEqual([0, 1])
   })
 })

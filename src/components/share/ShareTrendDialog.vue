@@ -22,7 +22,13 @@ import { useSettingsStore } from '@/stores/settings'
 import { useBodyMetrics } from '@/composables/useBodyMetrics'
 import { useChartColors } from '@/composables/useChartColors'
 import { formatDate, formatDateTime, nowIso, toEpochMs } from '@/services/time'
-import { bodyChartOption, type BodyChartInput } from '@/components/charts/bodyChart'
+import {
+  bodyChartOption,
+  levelStripInput,
+  type BodyChartInput,
+} from '@/components/charts/bodyChart'
+import { stripScale, type StripInput } from '@/domain/levelStrip'
+import { doseMarks, type DoseMarkInput } from '@/domain/doseMarks'
 import ShareImageDialog from './ShareImageDialog.vue'
 import type { ShareCardContent } from './shareCard'
 
@@ -30,12 +36,23 @@ import type { ShareCardContent } from './shareCard'
  * Share a trend (weight, BMI, HbA1c or glucose) as an image for friends. Numbers are off by
  * default: weight then shows as percent change and the other measures as change only, with no
  * axis values, so a card can be shared without revealing a weight or a lab result.
+ *
+ * Estimated levels can go in a strip under the line, and doses can be marked on the weight
+ * line; both are off by default, since they name the medicine. The strip follows the numbers
+ * choice: in mg beside a measure with its values, as percent of peak beside a change only.
  */
 const props = defineProps<{
   measure: 'weight' | 'bmi' | 'a1c' | 'glucose'
   now: number
   /** Photos that can be pinned to the weight line (see TrendCard). */
   photos?: { id: string; at: number }[]
+  /** The level strip's medicines and colour slots, as the app's chart has them. */
+  levelInputs?: StripInput[]
+  levelSlots?: ReadonlyMap<string, number>
+  /** Whether each strip line's half-life is the user's own; named in the caption. */
+  levelSources?: { key: string; userSupplied: boolean }[]
+  /** Every logged dose, for marks on the weight line. */
+  doses?: DoseMarkInput[]
 }>()
 const open = defineModel<boolean>({ required: true })
 
@@ -47,25 +64,60 @@ const showNumbers = ref(false)
 // Off by default: whoever receives the image sees the photos.
 const showPhotos = ref(false)
 const photosStore = usePhotosStore()
+const showLevels = ref(false)
+const showDoses = ref(false)
+const canLevels = computed(() => (props.levelInputs?.length ?? 0) > 0)
+const canDoses = computed(() => props.measure === 'weight' && (props.doses?.length ?? 0) > 0)
 
 const byTime = <T extends { at: number }>(list: T[]) => [...list].sort((a, b) => a.at - b.at)
 const madeAt = () => formatDateTime(nowIso())
+
+/**
+ * The chosen extras on a card's chart: the level strip over the same dates as its entries, in
+ * mg only while the card shows values, and dose marks on the weight line.
+ */
+function withExtras(input: BodyChartInput, inPercent: boolean): BodyChartInput {
+  const inputs = props.levelInputs ?? []
+  const times = [...input.points, ...(input.secondary?.points ?? [])].map((p) => p.at)
+  const levels =
+    showLevels.value && inputs.length && times.length
+      ? levelStripInput(
+          inputs,
+          props.levelSlots ?? new Map(),
+          times,
+          props.now,
+          stripScale(inPercent, inputs.length),
+        )
+      : undefined
+  const doses =
+    showDoses.value && canDoses.value ? doseMarks(props.doses ?? [], input.points) : undefined
+  return { ...input, levels, doses }
+}
+
+/** The caption's sentence on estimated levels, which carries where their half-lives came from. */
+function levelsCaption(input: BodyChartInput): string {
+  if (!input.levels) return ''
+  const own = props.levelSources?.some((s) => s.userSupplied)
+  const from = own ? 'label and your own half-lives' : 'label half-lives'
+  return ` Levels estimated from ${from}.`
+}
 
 /** `hideValues` defaults to hiding the axis while numbers are off. */
 function card(
   eyebrow: string,
   title: string,
   stats: [string, string][],
-  input: BodyChartInput,
+  base: BodyChartInput,
   caption: string,
   hideValues = !showNumbers.value,
 ): ShareCardContent {
+  const input = withExtras(base, !showNumbers.value)
   return {
     eyebrow,
     title,
     stats,
     chart: bodyChartOption(input, colors.value, { hideValues }),
-    caption,
+    caption: caption + levelsCaption(input),
     madeAt: madeAt(),
   }
 }
@@ -99,24 +151,28 @@ function weightCard(): ShareCardContent | null {
         return value !== null && src ? [{ at: p.at, value, src }] : []
       })
     : []
-  const input: BodyChartInput = {
-    points,
-    unitLabel: showNumbers.value ? settings.weightUnit : '%',
-    measure: 'Weight',
-    decimals: 1,
-    guides: [],
-  }
+  const input = withExtras(
+    {
+      points,
+      unitLabel: showNumbers.value ? settings.weightUnit : '%',
+      measure: 'Weight',
+      decimals: 1,
+      guides: [],
+    },
+    !showNumbers.value,
+  )
   // Percent change keeps its axis: it reveals no weight.
   return {
-    ...card(
-      'Weight',
-      title,
-      stats,
-      input,
-      `Weight change since ${sinceText}, from weigh-ins logged in Gliplog.`,
-      false,
-    ),
+    eyebrow: 'Weight',
+    title,
+    stats,
     chart: bodyChartOption(input, colors.value, { pinRoom: pinned.length > 0 }),
+    caption:
+      `Weight change since ${sinceText}, from weigh-ins` +
+      (input.doses?.length ? ' and doses' : '') +
+      ` logged in Gliplog.` +
+      levelsCaption(input),
+    madeAt: madeAt(),
     photos: pinned,
   }
 }
@@ -252,7 +308,21 @@ const NAMES = { weight: 'weight', bmi: 'bmi', a1c: 'hba1c', glucose: 'glucose' }
     <template v-if="measure === 'weight' && photos?.length">
       <v-switch v-model="showPhotos" label="Include my photos" hide-details />
       <p v-if="showPhotos" class="text-body-small gl-muted">
-        Your photos appear on the line. Anyone you send this to will see them.
+        Anyone you share with can see your photos.
+      </p>
+    </template>
+    <template v-if="canDoses">
+      <v-switch v-model="showDoses" label="Include my doses" hide-details />
+    </template>
+    <template v-if="canLevels">
+      <v-switch v-model="showLevels" label="Include estimated levels" hide-details />
+      <p v-if="showLevels" class="text-body-small gl-muted">
+        {{
+          showNumbers && (levelInputs?.length ?? 0) === 1
+            ? 'Shown in mg.'
+            : 'Shown as a percent of peak.'
+        }}
+        Includes the medicine name.
       </p>
     </template>
   </ShareImageDialog>

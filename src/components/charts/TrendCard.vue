@@ -19,17 +19,16 @@ import type { PhotoRow } from '@/db/database'
 import { useSettingsStore } from '@/stores/settings'
 import { useBodyMetrics } from '@/composables/useBodyMetrics'
 import { toEpochMs } from '@/services/time'
-import { mdiImageOutline, mdiNeedle, mdiShareVariantOutline } from '@/plugins/icons'
-import { findPkProfile } from '@/data'
 import {
-  LEVEL_STRIP_MAX,
-  assignSlots,
-  levelStrip,
-  stripReadings,
-  stripWindow,
-  type StripInput,
-} from '@/domain/levelStrip'
-import type { LevelStripInput } from './bodyChart'
+  mdiChartBellCurve,
+  mdiImageOutline,
+  mdiNeedle,
+  mdiShareVariantOutline,
+} from '@/plugins/icons'
+import { LEVEL_STRIP_MAX, stripScale } from '@/domain/levelStrip'
+import { doseMarks } from '@/domain/doseMarks'
+import { useLevelStrip } from '@/composables/useLevelStrip'
+import { levelStripInput, type LevelStripInput } from './bodyChart'
 import SourceList from '@/components/common/SourceList.vue'
 import BodyChart from './BodyChart.vue'
 import ShareTrendDialog from '@/components/share/ShareTrendDialog.vue'
@@ -38,7 +37,7 @@ import ShareTrendDialog from '@/components/share/ShareTrendDialog.vue'
  * Every body measure over time in one card: weight, BMI, HbA1c and glucose. Glucose draws
  * fasting readings as the line and readings from other times of day as separate points, since
  * they are not comparable with each other. Whatever is shown can be shared as an image.
- * Progress photos can be pinned to the weight line, at the date each was taken.
+ * Progress photos and doses can be marked on the weight line, at the date of each.
  */
 type TrendMeasure = 'weight' | 'bmi' | 'a1c' | 'glucose'
 
@@ -200,56 +199,38 @@ function openPhoto(id: string) {
 }
 
 /*
- * Estimated levels in a strip under the measure, on the same time axis. Off until asked for,
- * and never in the shared image. Only medicines with a curve take part, the most recently dosed
- * first, up to LEVEL_STRIP_MAX.
+ * Estimated levels in a strip under the measure, on the same time axis; off until asked for.
+ * Every measure here is in real units, so one medicine reads in mg; several read as percent of
+ * each one's own peak (see `domain/levelStrip.ts`).
  */
+const {
+  levelGroups,
+  inputs: stripInputs,
+  slots: stripSlots,
+  sources: levelSources,
+  doses: doseInputs,
+  truncated,
+} = useLevelStrip()
 const showLevels = ref(false)
-const levelGroups = computed(() => journal.levelGroups.filter((g) => g.pk !== null))
-const stripGroups = computed(() => levelGroups.value.slice(0, LEVEL_STRIP_MAX))
-const slots = ref(new Map<string, number>())
-watch(
-  stripGroups,
-  (groups) =>
-    (slots.value = assignSlots(
-      groups.map((g) => g.key),
-      slots.value,
-    )),
-  { immediate: true },
-)
-
-const stripInputs = computed<StripInput[]>(() =>
-  stripGroups.value.map((g) => ({
-    key: g.key,
-    // A curve from the user's own half-life says so wherever its name appears.
-    label: g.pk!.userSupplied ? `${g.label} (your values)` : g.label,
-    params: g.pk!.params,
-    doses: g.doses,
-  })),
-)
 
 const levels = computed<LevelStripInput | undefined>(() => {
   if (!showLevels.value || !stripInputs.value.length) return undefined
   const times = [...chart.value.points, ...(chart.value.secondary?.points ?? [])].map((p) => p.at)
-  const window = stripWindow(times, props.now)
-  const inputs = stripInputs.value
-  const series = levelStrip(inputs, window)
-  return {
-    window,
-    series: series.map((s) => ({ ...s, slot: slots.value.get(s.key) ?? 0 })),
-    readAt: (at: number) => stripReadings(inputs, series, at),
-  }
+  return levelStripInput(
+    stripInputs.value,
+    stripSlots.value,
+    times,
+    props.now,
+    stripScale(false, stripInputs.value.length),
+  )
 })
 
-/** Where each line's half-life and peak come from, shown under the chart. */
-const levelSources = computed(() =>
-  stripGroups.value.map((g) => ({
-    key: g.key,
-    label: g.label,
-    userSupplied: g.pk!.userSupplied,
-    pk: g.pk!.userSupplied ? null : (findPkProfile(g.pkProfile)?.pk ?? null),
-  })),
+/** Doses on the weight line: off until asked for, like the level strip. */
+const showDoses = ref(false)
+const marks = computed(() =>
+  mode.value === 'weight' ? doseMarks(doseInputs.value, chart.value.points) : [],
 )
+const chartDoses = computed(() => (showDoses.value ? marks.value : []))
 
 const convertedUnits = computed(
   () =>
@@ -273,7 +254,10 @@ const convertedUnits = computed(
       </template>
     </v-card-item>
     <v-card-text class="gl-stack">
-      <div v-if="MEASURES.length > 1 || canPin || levelGroups.length" class="trend-controls">
+      <div
+        v-if="MEASURES.length > 1 || canPin || marks.length || levelGroups.length"
+        class="trend-controls"
+      >
         <p :id="labelId" class="d-sr-only">Measure</p>
         <v-btn-toggle
           v-if="MEASURES.length > 1"
@@ -296,8 +280,17 @@ const convertedUnits = computed(
           Photos
         </v-btn>
         <v-btn
-          v-if="levelGroups.length"
+          v-if="marks.length"
           :prepend-icon="mdiNeedle"
+          :variant="showDoses ? 'tonal' : 'outlined'"
+          :aria-pressed="showDoses"
+          @click="showDoses = !showDoses"
+        >
+          Doses
+        </v-btn>
+        <v-btn
+          v-if="levelGroups.length"
+          :prepend-icon="mdiChartBellCurve"
           :variant="showLevels ? 'tonal' : 'outlined'"
           :aria-pressed="showLevels"
           @click="showLevels = !showLevels"
@@ -313,18 +306,18 @@ const convertedUnits = computed(
         :decimals="chart.decimals"
         :guides="chart.guides"
         :photos="chartPhotos"
+        :doses="chartDoses"
         :levels="levels"
         @photo="openPhoto"
       />
       <template v-if="levels">
         <p class="text-body-small gl-muted">
-          The lower panel shows estimated medication levels, from each medicine's half-life and time
-          to peak, each scaled to its own peak in this period, so early lower doses read low.
-          They're shown alongside your {{ chart.measure.toLowerCase() }} on the same dates, not as
-          its cause.
-          <template v-if="levelGroups.length > LEVEL_STRIP_MAX">
-            Showing the {{ LEVEL_STRIP_MAX }} most recently taken.
-          </template>
+          {{
+            levels.scale === 'amount'
+              ? 'Estimated amount in your body, based on your doses.'
+              : "Estimated levels as a percent of each medicine's peak."
+          }}
+          <template v-if="truncated">Showing the {{ LEVEL_STRIP_MAX }} most recent.</template>
         </p>
         <div v-for="src in levelSources" :key="src.key" class="gl-stack gl-stack--tight">
           <p class="text-body-small">
@@ -336,6 +329,9 @@ const convertedUnits = computed(
           <SourceList v-if="src.pk" :sources="src.pk.sources" :note="src.pk.notes" />
         </div>
       </template>
+      <p v-if="chartDoses.length" class="text-body-small gl-muted">
+        Diamonds mark doses. Labels show new strengths.
+      </p>
       <p v-if="chartPhotos.length" class="text-body-small gl-muted">Tap a photo to open it.</p>
       <p v-if="mode === 'glucose' && !chart.points.length" class="text-body-small gl-muted">
         No fasting readings yet; readings from other times of day show as points.
@@ -352,7 +348,16 @@ const convertedUnits = computed(
         Add your height in Settings to track BMI.
       </p>
     </v-card-text>
-    <ShareTrendDialog v-model="shareOpen" :measure="mode" :now="now" :photos="pinned" />
+    <ShareTrendDialog
+      v-model="shareOpen"
+      :measure="mode"
+      :now="now"
+      :photos="pinned"
+      :level-inputs="stripInputs"
+      :level-slots="stripSlots"
+      :level-sources="levelSources"
+      :doses="doseInputs"
+    />
     <PhotoDialog v-model="photoOpen" :photo="viewing" :prepared="null" taken-at="" />
   </v-card>
 </template>

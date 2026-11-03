@@ -9,8 +9,18 @@ import type {
 import type { ChartColors } from '@/composables/useChartColors'
 import { PIN } from './photoPins'
 import { niceRange } from '@/domain/report'
-import type { StripReading, StripSeries } from '@/domain/levelStrip'
-import { roundTo } from '@/domain/units'
+import {
+  amountTicks,
+  levelStrip,
+  stripReadings,
+  stripWindow,
+  type StripInput,
+  type StripReading,
+  type StripScale,
+  type StripSeries,
+} from '@/domain/levelStrip'
+import type { DoseMark } from '@/domain/doseMarks'
+import { formatDose, roundTo } from '@/domain/units'
 
 interface BodyPoint {
   at: number
@@ -31,6 +41,8 @@ export interface BodyChartInput {
   guides: { value: number; label: string }[]
   /** Progress photos pinned to the line: `symbol` is the pin image, `value` the line's height. */
   photos?: { id: string; at: number; value: number; symbol: string }[]
+  /** Doses marked on the line; a change of strength carries a label (see `domain/doseMarks.ts`). */
+  doses?: DoseMark[]
   /** Medication levels in a strip below, on the same time axis (see `domain/levelStrip.ts`). */
   levels?: LevelStripInput
 }
@@ -41,6 +53,29 @@ export interface LevelStripInput {
   series: (StripSeries & { slot: number })[]
   /** Every line's exact level at a moment, for the readout above the strip. */
   readAt: (at: number) => StripReading[]
+  /** Whether the strip's axis is in mg or percent of each line's own peak. */
+  scale: StripScale
+}
+
+/**
+ * The level strip for a chart whose entries fall at `times`: one window for every line, from
+ * the first entry to now, so the strip and the measure share their dates.
+ */
+export function levelStripInput(
+  inputs: readonly StripInput[],
+  slots: ReadonlyMap<string, number>,
+  times: readonly number[],
+  now: number,
+  scale: StripScale,
+): LevelStripInput {
+  const window = stripWindow(times, now)
+  const series = levelStrip(inputs, window)
+  return {
+    window,
+    series: series.map((s) => ({ ...s, slot: slots.get(s.key) ?? 0 })),
+    readAt: (at: number) => stripReadings(inputs, series, at),
+    scale,
+  }
 }
 
 /** A dash per slot, so a level line is told apart by pattern as well as colour. */
@@ -48,6 +83,12 @@ const LEVEL_DASHES: ('solid' | number[])[] = ['solid', [10, 5], [2, 4]]
 
 /** Names the pinned-photo series, so a click on a pin can be told apart. */
 export const PHOTO_SERIES = 'Photos'
+
+/** Names the dose-mark series, which the readout describes on its own line. */
+const DOSE_SERIES = 'Doses'
+
+/** A small upright needle-like diamond, told apart from the line's round points by shape. */
+const DOSE_SYMBOL = 'path://M5 0 L10 7 L5 14 L0 7 Z'
 
 export type BodyChartOption = ComposeOption<
   | LineSeriesOption
@@ -93,7 +134,9 @@ function measureOption(
     grid: {
       left: 8,
       right: 16,
-      top: (extra.length ? 36 : 16) + (props.photos?.length || options.pinRoom ? PIN.height : 0),
+      top:
+        (extra.length ? 36 : 16) +
+        (props.photos?.length || options.pinRoom ? PIN.height : props.doses?.length ? 16 : 0),
       bottom: 8,
       containLabel: true,
     },
@@ -113,7 +156,17 @@ function measureOption(
       backgroundColor: c.surface,
       borderColor: c.grid,
       textStyle: { color: c.text, fontFamily: c.font },
-      valueFormatter: (v) => fmt(Number(v)),
+      formatter: (params) => {
+        const list = Array.isArray(params) ? params : [params]
+        return list
+          .filter((p) => p.seriesName !== PHOTO_SERIES)
+          .map((p) =>
+            p.seriesName === DOSE_SERIES
+              ? doseText(p.data as DoseDatum)
+              : `${p.marker}${p.seriesName}: ${fmt((p.value as [number, number])[1])}`,
+          )
+          .join('<br>')
+      },
     },
     xAxis: {
       type: 'time',
@@ -142,7 +195,8 @@ function measureOption(
       {
         name: props.measure,
         type: 'line',
-        showSymbol: props.points.length < 40,
+        // With doses marked, the diamonds carry the line; round points as well would crowd it.
+        showSymbol: props.points.length < 40 && !props.doses?.length,
         symbolSize: 6,
         lineStyle: { width: 2, color: c.logged, cap: 'round', join: 'round' },
         itemStyle: { color: c.logged },
@@ -174,6 +228,7 @@ function measureOption(
             },
           ]
         : []),
+      ...(props.doses?.length ? [doseSeries(props.doses, c)] : []),
       // The pin's tip, at the bottom centre of its image, sits on the line.
       ...(props.photos?.length
         ? [
@@ -197,11 +252,61 @@ function measureOption(
   }
 }
 
-const levelText = (r: StripReading) =>
-  `${r.label}: ${roundTo(r.percent, 0)}% of peak · ${roundTo(r.mg, 2)} mg`
+interface DoseDatum {
+  value: [number, number]
+  name: string
+  mg: number
+  /** What is written above the mark, when anything is. */
+  text: string
+}
+
+const doseText = (d: DoseDatum) => `${d.name}: ${formatDose(d.mg)} dose`
 
 /**
- * Adds the level strip as a second panel under the measure: its own grid and 0 to 100% axis,
+ * Every dose as a small mark on the line, above the line's own points but below photo pins.
+ * The strength is written above a mark only where it changes, so the labels stay legible. With
+ * more than one medicine, each one's first mark also names it, so a switch between medicines
+ * never reads as a change of strength (their mg are not comparable).
+ */
+function doseSeries(doses: DoseMark[], c: ChartColors): ScatterSeriesOption {
+  const named = new Set(doses.map((d) => d.key)).size > 1
+  return {
+    name: DOSE_SERIES,
+    type: 'scatter',
+    z: 5,
+    symbol: DOSE_SYMBOL,
+    symbolSize: [7, 10],
+    itemStyle: { color: c.now, borderColor: c.surface, borderWidth: 1 },
+    // Labels start at their mark and read rightward, clear of the value axis on the left.
+    label: {
+      position: 'top',
+      align: 'left',
+      offset: [-4, 0],
+      distance: 4,
+      color: c.axis,
+      fontFamily: c.font,
+      fontSize: 10,
+      formatter: (p) => (p.data as DoseDatum).text,
+    },
+    labelLayout: { hideOverlap: true },
+    data: doses.map((d) => ({
+      value: [d.at, d.value] as [number, number],
+      name: d.label,
+      mg: d.mg,
+      text: named && d.first ? `${d.label} ${formatDose(d.mg)}` : formatDose(d.mg),
+      label: { show: d.changed },
+    })),
+  }
+}
+
+const levelText = (r: StripReading, scale: StripScale) =>
+  scale === 'amount'
+    ? `${r.label}: ${formatDose(r.mg)} · ${roundTo(r.percent, 0)}% of peak`
+    : `${r.label}: ${roundTo(r.percent, 0)}% of peak · ${formatDose(r.mg)}`
+
+/**
+ * Adds the level strip as a second panel under the measure: its own grid and axis (mg from
+ * zero, or 0 to 100% of each line's peak),
  * an x-axis locked to the measure's, one zoom for both and a crosshair across both. The readout
  * gives the measure and every level at the same moment.
  */
@@ -227,7 +332,7 @@ function withLevelStrip(
       symbol: 'none',
       lineStyle: { width: 2, color, type: LEVEL_DASHES[s.slot], cap: 'round', join: 'round' },
       itemStyle: { color },
-      data: s.points.map(([at, percent]) => [at, percent]),
+      data: s.points.map(([at, percent, mg]) => [at, levels.scale === 'amount' ? mg : percent]),
     }
   })
   const baseLegend = base.legend as LegendComponentOption | undefined
@@ -261,8 +366,14 @@ function withLevelStrip(
         const at = Number((list[0]?.value as [number, number] | undefined)?.[0])
         const measure = list
           .filter((p) => !levelNames.has(p.seriesName ?? '') && p.seriesName !== PHOTO_SERIES)
-          .map((p) => `${p.marker}${p.seriesName}: ${fmt((p.value as [number, number])[1])}`)
-        const readings = Number.isFinite(at) ? levels.readAt(at).map(levelText) : []
+          .map((p) =>
+            p.seriesName === DOSE_SERIES
+              ? doseText(p.data as DoseDatum)
+              : `${p.marker}${p.seriesName}: ${fmt((p.value as [number, number])[1])}`,
+          )
+        const readings = Number.isFinite(at)
+          ? levels.readAt(at).map((r) => levelText(r, levels.scale))
+          : []
         return [...measure, ...readings].join('<br>')
       },
     },
@@ -275,14 +386,25 @@ function withLevelStrip(
       {
         type: 'value',
         gridIndex: 1,
-        min: 0,
-        max: 100,
-        interval: 50,
-        axisLabel: { color: c.axis, formatter: '{value}%' },
+        ...levelAxis(levels, c),
         splitLine: { lineStyle: { color: c.grid } },
       },
     ],
     dataZoom: [{ type: 'inside', xAxisIndex: [0, 1], filterMode: 'none' }],
     series: [...(base.series as (LineSeriesOption | ScatterSeriesOption)[]), ...lines],
   } as BodyChartOption
+}
+
+/** The strip's value axis: round mg from zero, or 0 to 100% of each line's peak. */
+function levelAxis(levels: LevelStripInput, c: ChartColors) {
+  if (levels.scale === 'percent') {
+    return { min: 0, max: 100, interval: 50, axisLabel: { color: c.axis, formatter: '{value}%' } }
+  }
+  const ticks = amountTicks(levels.series)
+  return {
+    min: ticks[0],
+    max: ticks[ticks.length - 1],
+    interval: ticks[1]! - ticks[0]!,
+    axisLabel: { color: c.axis, formatter: (v: number) => `${roundTo(v, 2)} mg` },
+  }
 }
