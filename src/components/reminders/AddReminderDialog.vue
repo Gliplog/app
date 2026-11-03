@@ -132,7 +132,7 @@ const notifySubtitle = computed(() => {
                 </li>
               </ul>
               <p v-if="!remindersSupported" class="text-body-small gl-muted">
-                Web apps can't send reminders, but your calendar can.
+                Use your calendar for reminders.
               </p>
             </div>
           </v-window-item>

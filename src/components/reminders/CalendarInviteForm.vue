@@ -150,10 +150,8 @@ async function download() {
         </v-btn>
       </div>
       <p class="text-body-small gl-muted">
-        These send the event's title and times to Google or Microsoft. Google adds it as repeating;
-        in Outlook, set Repeat to
-        {{ describeInterval(medication.intervalDays) }} before saving. Microsoft 365 is for work or
-        school accounts.
+        Sends the event to Google or Microsoft. In Outlook, set Repeat to
+        {{ describeInterval(medication.intervalDays) }} before saving.
       </p>
     </div>
   </div>

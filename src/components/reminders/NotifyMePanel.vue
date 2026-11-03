@@ -178,8 +178,7 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', onVisible
     </div>
 
     <p v-else class="gl-muted">
-      Notifications need {{ nativeApps }}. Add a calendar invite instead, and your calendar will
-      remind you.
+      Notifications need {{ nativeApps }}. Use a calendar invite instead.
     </p>
   </div>
 </template>

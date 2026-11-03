@@ -49,9 +49,7 @@ const content = computed<ShareCardContent | null>(() => {
     title: showName.value ? props.name : 'My estimated levels',
     stats,
     chart: option,
-    caption:
-      `Estimated amount in the body from logged doses, using a simple model with a half-life ` +
-      `of ${halfLife} from ${props.sourceText}. Not a blood test.`,
+    caption: `Estimated from logged doses. Half-life ${halfLife}, from ${props.sourceText}.`,
     madeAt: formatDateTime(nowIso()),
   }
 })

@@ -67,7 +67,7 @@ export function overlapText(overlap: Overlap): { title: string; body: string } {
         : `Gliplog can't tell whether they're the same medicine.`
   return {
     title,
-    body: `${why} If you've switched, mark the one you stopped as no longer in use, so next-dose times and levels stay right. Gliplog is a tracker, not medical advice; your prescriber can confirm your plan.`,
+    body: `${why} If you've switched, mark the old one as stopped.`,
   }
 }
 

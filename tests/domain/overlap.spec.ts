@@ -65,11 +65,11 @@ describe('findOverlap', () => {
 })
 
 describe('overlapText', () => {
-  it('says what the records show and points to the prescriber, without advice', () => {
+  it('says what the records show and how to fix a switch, without advice', () => {
     const t = overlapText(findOverlap([ozempic, mounjaro])!)
     expect(t.title).toBe('Ozempic and Mounjaro are both marked as in use')
     expect(t.body).toContain('different medicines: semaglutide and tirzepatide')
-    expect(t.body).toContain('not medical advice')
+    expect(t.body).toContain('mark the old one as stopped')
   })
 
   it('names the two routes of one molecule', () => {

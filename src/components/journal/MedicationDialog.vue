@@ -217,9 +217,7 @@ async function remove() {
           inputmode="numeric"
           :error-messages="errors.customDays"
         />
-        <p class="text-body-small gl-muted">
-          Used to show when your next dose is due. Follow your prescriber's schedule.
-        </p>
+        <p class="text-body-small gl-muted">Used to show when your next dose is due.</p>
 
         <template v-if="showsConcentration">
           <v-text-field
@@ -254,9 +252,7 @@ async function remove() {
               :error="!!errors.pk"
             />
           </div>
-          <p class="text-body-small gl-muted">
-            Used only for the level chart, which is marked as your values.
-          </p>
+          <p class="text-body-small gl-muted">Used only for the level chart.</p>
         </template>
 
         <v-textarea v-model="form.notes" label="Notes (optional)" />

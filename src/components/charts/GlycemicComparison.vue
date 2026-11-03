@@ -112,11 +112,10 @@ const barWidth = (change: number | null) =>
         </li>
       </ul>
       <p class="text-body-small gl-muted">
-        Trial rows are group averages at week {{ trial.weeks }}, from each group's average starting
-        value. Yours is your latest {{ isA1c ? 'HbA1c' : 'fasting glucose' }} up to week
-        {{ trial.weeks }}, from your reading nearest your first dose.
+        Trial rows are group averages at week {{ trial.weeks }}; yours is your change from your
+        first dose to then.
         <template v-if="comparison.baseline?.basis === 'after-first-dose'"
-          >Your first reading came after your first dose, so some change may be missing.</template
+          >Your first reading is after your first dose.</template
         >
       </p>
       <SourceList v-if="trial.glycemic" :sources="[trial.glycemic.source]" />

@@ -497,7 +497,7 @@ const formatMb = (bytes: number | null) =>
             {{
               remindersSupported
                 ? 'Get a notification on the day a dose is due, or add a calendar invite.'
-                : `Add a calendar invite, and your calendar will remind you. A web app can't send notifications on its own without a server; ${nativeApps} can.`
+                : `Add a calendar invite. For notifications, use ${nativeApps}.`
             }}
           </p>
           <v-alert v-if="notificationsBlocked" type="warning" variant="tonal" density="compact">
@@ -549,8 +549,8 @@ const formatMb = (bytes: number | null) =>
         </v-card-item>
         <v-card-text class="gl-stack">
           <p>
-            Your data is only on this device. Clearing site data or uninstalling deletes it, so keep
-            a backup.
+            Your data is only on this device. Clearing site data or uninstalling deletes it. Back up
+            regularly.
           </p>
           <v-alert v-if="backupStale" type="warning" variant="tonal" density="compact">
             {{
@@ -569,10 +569,7 @@ const formatMb = (bytes: number | null) =>
               color="primary"
               hide-details
             />
-            <p class="text-body-small gl-muted">
-              With photos, the backup is a .zip file. Keep it somewhere private: it holds your
-              photos as ordinary images.
-            </p>
+            <p class="text-body-small gl-muted">Saved as a .zip file that includes your photos.</p>
           </div>
           <div class="d-flex flex-wrap ga-2">
             <v-btn
@@ -699,11 +696,7 @@ const formatMb = (bytes: number | null) =>
           </ul>
           <p class="text-body-small gl-muted">
             Storage:
-            {{
-              storage.state.persisted
-                ? 'protected'
-                : 'not protected (the browser may clear it when space is low)'
-            }}
+            {{ storage.state.persisted ? 'protected' : 'not protected' }}
             <template v-if="storage.state.usageBytes !== null">
               · {{ formatMb(storage.state.usageBytes) }} used
             </template>
@@ -731,7 +724,7 @@ const formatMb = (bytes: number | null) =>
           </p>
           <p>
             Trial figures are group averages from US prescribing information. Level charts are
-            estimates, not blood levels. Compounded medicines are not FDA-approved.
+            estimates. Compounded medicines are not FDA-approved.
           </p>
           <p>
             Ozempic, Wegovy and Rybelsus are trademarks of Novo Nordisk A/S. Mounjaro, Zepbound and

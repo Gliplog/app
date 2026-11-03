@@ -93,9 +93,9 @@ const barWidth = (change: number | null) =>
       </ul>
 
       <p class="text-body-small gl-muted">
-        Trial rows are group averages at week {{ trial.weeks }}. Yours is your latest weigh-in up to
-        week {{ trial.weeks }} after your first dose.
-        <template v-if="trial.measure === 'kg'">This trial reports weight, not percent.</template>
+        Trial rows are group averages at week {{ trial.weeks }}; yours is your latest weigh-in by
+        then.
+        <template v-if="trial.measure === 'kg'">Reported in kg.</template>
       </p>
       <SourceList :sources="[trial.source]" :note="trial.analysis" />
     </v-card-text>

@@ -95,10 +95,7 @@ function timingText(s: SymptomSummary): string {
         </tbody>
       </v-table>
       <p v-else class="gl-muted">Nothing logged in this period.</p>
-      <SourceList
-        :sources="SYMPTOM_SOURCES"
-        note="The list follows the side effects reported in the labels’ clinical trials."
-      />
+      <SourceList :sources="SYMPTOM_SOURCES" note="From the labels’ clinical trials." />
       <div v-if="summary.length" class="gl-actions">
         <v-btn variant="tonal" :prepend-icon="mdiFilePdfBox" @click="emit('export')">
           Export PDF

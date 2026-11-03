@@ -105,7 +105,7 @@ test('notes different medicines in use, until dismissed for that combination', a
   const notice = page.getByRole('status').filter({ hasText: 'marked as in use' })
   await expect(notice).toContainText('Mounjaro, Ozempic and Wegovy are all marked as in use')
   await expect(notice).toContainText('different medicines: tirzepatide and semaglutide')
-  await expect(notice).toContainText('not medical advice')
+  await expect(notice).toContainText('mark the old one as stopped')
 
   await notice.getByRole('button', { name: 'Review Mounjaro' }).click()
   const review = page.getByRole('dialog')
