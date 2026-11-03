@@ -1,0 +1,1 @@
+Gliplog: page titles no longer sit under the app bar on Android 15 and later.
