@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { repository } from '@/db'
 import { A1C_UNITS, GLUCOSE_UNITS, type A1cUnit, type GlucoseUnit } from '@/domain/glucose'
+import { sanitizeDismissed } from '@/domain/overlap'
 import { HEIGHT_UNITS, WEIGHT_UNITS, type HeightUnit, type WeightUnit } from '@/domain/units'
 import {
   DEFAULT_REMINDER,
@@ -35,6 +36,7 @@ const SETTING_KEYS = {
   disclaimerAcceptedAt: 'disclaimerAcceptedAt',
   installHintDismissed: 'installHintDismissed',
   reminders: 'reminders',
+  dismissedOverlaps: 'dismissedOverlaps',
 } as const
 
 const positiveOrNull = (v: unknown) =>
@@ -66,21 +68,35 @@ export const useSettingsStore = defineStore('settings', () => {
   const disclaimerAcceptedAt = ref<string | null>(null)
   const installHintDismissed = ref(false)
   const reminders = ref<ReminderSettings>(sanitizeReminderSettings(null))
+  /** Combinations of medicines whose "both in use" notice the user dismissed (see overlap.ts). */
+  const dismissedOverlaps = ref<string[]>([])
 
   async function load() {
-    const [themePref, wUnit, hUnit, gUnit, aUnit, stored, backup, disclaimer, hint, remind] =
-      await Promise.all([
-        repository.getSetting<ThemePreference>(SETTING_KEYS.theme),
-        repository.getSetting<WeightUnit>(SETTING_KEYS.weightUnit),
-        repository.getSetting<HeightUnit>(SETTING_KEYS.heightUnit),
-        repository.getSetting<GlucoseUnit>(SETTING_KEYS.glucoseUnit),
-        repository.getSetting<A1cUnit>(SETTING_KEYS.a1cUnit),
-        repository.getSetting<unknown>(SETTING_KEYS.profile),
-        repository.getSetting<string>(SETTING_KEYS.lastBackupAt),
-        repository.getSetting<string>(SETTING_KEYS.disclaimerAcceptedAt),
-        repository.getSetting<boolean>(SETTING_KEYS.installHintDismissed),
-        repository.getSetting<unknown>(SETTING_KEYS.reminders),
-      ])
+    const [
+      themePref,
+      wUnit,
+      hUnit,
+      gUnit,
+      aUnit,
+      stored,
+      backup,
+      disclaimer,
+      hint,
+      remind,
+      overlaps,
+    ] = await Promise.all([
+      repository.getSetting<ThemePreference>(SETTING_KEYS.theme),
+      repository.getSetting<WeightUnit>(SETTING_KEYS.weightUnit),
+      repository.getSetting<HeightUnit>(SETTING_KEYS.heightUnit),
+      repository.getSetting<GlucoseUnit>(SETTING_KEYS.glucoseUnit),
+      repository.getSetting<A1cUnit>(SETTING_KEYS.a1cUnit),
+      repository.getSetting<unknown>(SETTING_KEYS.profile),
+      repository.getSetting<string>(SETTING_KEYS.lastBackupAt),
+      repository.getSetting<string>(SETTING_KEYS.disclaimerAcceptedAt),
+      repository.getSetting<boolean>(SETTING_KEYS.installHintDismissed),
+      repository.getSetting<unknown>(SETTING_KEYS.reminders),
+      repository.getSetting<unknown>(SETTING_KEYS.dismissedOverlaps),
+    ])
     theme.value = themePref === 'light' || themePref === 'dark' ? themePref : 'system'
     weightUnit.value = wUnit && WEIGHT_UNITS.includes(wUnit) ? wUnit : 'kg'
     heightUnit.value = hUnit && HEIGHT_UNITS.includes(hUnit) ? hUnit : 'cm'
@@ -91,6 +107,7 @@ export const useSettingsStore = defineStore('settings', () => {
     disclaimerAcceptedAt.value = disclaimer ?? null
     installHintDismissed.value = hint ?? false
     reminders.value = sanitizeReminderSettings(remind)
+    dismissedOverlaps.value = sanitizeDismissed(overlaps)
     loaded.value = true
     // A stored profile can hold fields the app no longer collects (such as gender). Writing the
     // clean copy back removes them from the database, and so from every later backup. It runs
@@ -152,6 +169,15 @@ export const useSettingsStore = defineStore('settings', () => {
     await repository.setSetting(SETTING_KEYS.installHintDismissed, true)
   }
 
+  /** Hide the "both in use" notice for this combination of medicines until it changes. */
+  async function dismissOverlap(key: string) {
+    if (dismissedOverlaps.value.includes(key)) return
+    const next = sanitizeDismissed([...dismissedOverlaps.value, key])
+    // Saved before the notice hides, so closing the app right after cannot bring it back.
+    await repository.setSetting(SETTING_KEYS.dismissedOverlaps, [...next])
+    dismissedOverlaps.value = next
+  }
+
   /** One medication's reminder choices, or the defaults (off, 9:00) if never set. */
   function reminderFor(medicationId: string): MedicationReminder {
     return reminders.value.medications[medicationId] ?? { ...DEFAULT_REMINDER }
@@ -191,6 +217,7 @@ export const useSettingsStore = defineStore('settings', () => {
     disclaimerAcceptedAt,
     installHintDismissed,
     reminders,
+    dismissedOverlaps,
     load,
     setTheme,
     setWeightUnit,
@@ -201,6 +228,7 @@ export const useSettingsStore = defineStore('settings', () => {
     markBackedUp,
     acceptDisclaimer,
     dismissInstallHint,
+    dismissOverlap,
     reminderFor,
     setReminder,
     setReminderNames,

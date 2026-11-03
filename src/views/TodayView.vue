@@ -21,6 +21,7 @@ import { summarizeSymptoms } from '@/domain/symptoms'
 import { toEpochMs } from '@/services/time'
 import MedicationStack from '@/components/journal/MedicationStack.vue'
 import MedicationDialog from '@/components/journal/MedicationDialog.vue'
+import OverlapNotice from '@/components/journal/OverlapNotice.vue'
 import LogDoseDialog from '@/components/journal/LogDoseDialog.vue'
 import LogWeightDialog from '@/components/journal/LogWeightDialog.vue'
 import LogSymptomDialog from '@/components/journal/LogSymptomDialog.vue'
@@ -163,6 +164,8 @@ const daysSinceStart = computed(() =>
         </div>
       </v-card-text>
     </v-card>
+
+    <OverlapNotice class="mb-4" @review="editMedication" />
 
     <div class="today-grid">
       <MedicationStack

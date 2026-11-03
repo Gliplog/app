@@ -55,19 +55,30 @@ const ariaSummary = computed(() => {
   const photos = props.photos?.length
     ? ` ${props.photos.length} progress photo${props.photos.length === 1 ? '' : 's'} pinned to the line.`
     : ''
-  return `${props.measure} from ${fmt(first.value)} to ${fmt(last.value)}, ${formatDateRange(first.at, last.at)}, ${pts.length} entries.${photos}`
+  const levels = props.levels
+    ? ` Estimated levels below, each scaled to its own peak, at the latest entry: ${props.levels
+        .readAt(last.at)
+        .map((r) => `${r.label} ${roundTo(r.percent, 0)}%`)
+        .join(', ')}.`
+    : ''
+  return `${props.measure} from ${fmt(first.value)} to ${fmt(last.value)}, ${formatDateRange(first.at, last.at)}, ${pts.length} entries.${photos}${levels}`
 })
 
-/** Every reading, newest first, with its note when the chart has more than one kind. */
+/**
+ * Every reading, newest first, with its note when the chart has more than one kind, and each
+ * medicine's estimated level at that moment when the level strip is shown.
+ */
 const rows = computed(() =>
-  [...props.points, ...(props.secondary?.points ?? [])].sort((a, b) => b.at - a.at),
+  [...props.points, ...(props.secondary?.points ?? [])]
+    .sort((a, b) => b.at - a.at)
+    .map((row) => ({ ...row, levels: props.levels?.readAt(row.at) ?? [] })),
 )
 </script>
 
 <template>
   <div>
     <v-chart
-      class="body-chart"
+      :class="['body-chart', { 'body-chart--levels': levels }]"
       :option="option"
       autoresize
       role="img"
@@ -83,6 +94,9 @@ const rows = computed(() =>
           <tr>
             <th scope="col">Date</th>
             <th scope="col" class="text-end">{{ measure }}</th>
+            <th v-for="s in levels?.series ?? []" :key="s.key" scope="col" class="text-end">
+              {{ s.label }} level
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -91,6 +105,10 @@ const rows = computed(() =>
             <td class="text-end gl-num">
               {{ fmt(row.value) }}
               <span v-if="row.note" class="d-block text-body-small gl-faint">{{ row.note }}</span>
+            </td>
+            <td v-for="r in row.levels" :key="r.key" class="text-end gl-num">
+              {{ roundTo(r.percent, 0) }}%
+              <span class="d-block text-body-small gl-faint">{{ roundTo(r.mg, 2) }} mg</span>
             </td>
           </tr>
         </tbody>
@@ -105,9 +123,17 @@ const rows = computed(() =>
   height: 260px;
 }
 
+.body-chart--levels {
+  height: 380px;
+}
+
 @media (min-width: 840px) {
   .body-chart {
     height: 320px;
+  }
+
+  .body-chart--levels {
+    height: 440px;
   }
 }
 

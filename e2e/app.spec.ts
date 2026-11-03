@@ -93,6 +93,59 @@ test('logs a medication, a dose and a weight, then shows the next dose, BMI and 
   )
 })
 
+test('notes different medicines in use, until dismissed for that combination', async ({ page }) => {
+  await page.goto('./')
+  await acceptDisclaimer(page)
+  await addMedication(page, 'Wegovy')
+  await addMedication(page, 'Ozempic')
+  // Two brands of one medicine are not flagged.
+  await expect(page.getByText(/marked as in use/)).toHaveCount(0)
+
+  await addMedication(page, 'Mounjaro')
+  const notice = page.getByRole('status').filter({ hasText: 'marked as in use' })
+  await expect(notice).toContainText('Mounjaro, Ozempic and Wegovy are all marked as in use')
+  await expect(notice).toContainText('different medicines: tirzepatide and semaglutide')
+  await expect(notice).toContainText('not medical advice')
+
+  await notice.getByRole('button', { name: 'Review Mounjaro' }).click()
+  const review = page.getByRole('dialog')
+  await expect(review.getByText('I’ve stopped using it')).toBeVisible()
+  await review.getByRole('button', { name: 'Cancel' }).click()
+  await expect(review).toBeHidden()
+
+  await notice.getByRole('button', { name: 'Dismiss' }).click()
+  await expect(page.getByText(/marked as in use/)).toHaveCount(0)
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Log dose' }).first()).toBeVisible()
+  await expect(page.getByText(/marked as in use/)).toHaveCount(0)
+})
+
+test('shows estimated levels under the weight chart on the same dates', async ({ page }) => {
+  await page.goto('./')
+  await acceptDisclaimer(page)
+  await addMedication(page, 'Wegovy')
+  await page.getByRole('button', { name: 'Log dose' }).click()
+  const dose = page.getByRole('dialog', { name: 'Wegovy' })
+  await choose(dose, 'Dose', '0.25 mg')
+  await dose.getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByText('0.25 mg logged')).toBeVisible()
+  await logWeight(page, '100')
+
+  await page.getByRole('link', { name: 'Progress', exact: true }).first().click()
+  const levels = page.getByRole('button', { name: 'Levels', exact: true })
+  await expect(levels).toHaveAttribute('aria-pressed', 'false')
+  await levels.click()
+  await expect(levels).toHaveAttribute('aria-pressed', 'true')
+  await expect(
+    page.getByRole('img', { name: /^Weight .+Estimated levels below.+Semaglutide injection/ }),
+  ).toBeVisible()
+  await expect(page.getByText(/not as its cause/)).toBeVisible()
+  await page.getByRole('button', { name: 'Show as table' }).first().click()
+  await expect(
+    page.getByRole('columnheader', { name: 'Semaglutide injection level' }),
+  ).toBeVisible()
+})
+
 test('the medication stack switches medicines and the levels chart follows', async ({ page }) => {
   await page.goto('./')
   await acceptDisclaimer(page)

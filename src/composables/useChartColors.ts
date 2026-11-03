@@ -9,6 +9,8 @@ export interface ChartColors {
   grid: string
   axis: string
   now: string
+  /** Medication level lines, in slot order. */
+  levels: string[]
   text: string
   surface: string
   font: string
@@ -26,6 +28,7 @@ function readColors(): ChartColors {
     grid: read('--gl-chart-grid'),
     axis: read('--gl-chart-axis'),
     now: read('--gl-chart-now'),
+    levels: [1, 2, 3].map((n) => read(`--gl-chart-level-${n}`)),
     text: read('--gl-text-1'),
     surface: read('--gl-surface'),
     font: read('--gl-font'),

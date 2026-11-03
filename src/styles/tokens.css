@@ -139,6 +139,15 @@
     --gl-chart-grid: #e8ddcc;
     --gl-chart-axis: #7a6c54;
     --gl-chart-now: #877960;
+    /*
+     * Medication levels under a body measure, in slot order. Checked as a set against the light
+     * surface for every pair (colour-vision separation, lightness, 3:1 contrast), and kept off
+     * the teal of the measure line above them. Orange comes last because the
+     * glucose chart already uses it for readings at other times of day.
+     */
+    --gl-chart-level-1: #a34d9c;
+    --gl-chart-level-2: #2a78d6;
+    --gl-chart-level-3: #c0643f;
 
     --gl-syringe-barrel: var(--stone-50);
     --gl-syringe-ink: var(--stone-700);
@@ -208,6 +217,10 @@
     --gl-chart-grid: #3a342a;
     --gl-chart-axis: #b3a286;
     --gl-chart-now: #b3a286;
+    /* The same three hues stepped for the dark surface, checked as a set for every pair. */
+    --gl-chart-level-1: #b866b4;
+    --gl-chart-level-2: #3987e5;
+    --gl-chart-level-3: #bd592f;
 
     --gl-syringe-barrel: var(--stone-800);
     --gl-syringe-ink: var(--stone-200);

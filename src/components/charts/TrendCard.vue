@@ -19,7 +19,17 @@ import type { PhotoRow } from '@/db/database'
 import { useSettingsStore } from '@/stores/settings'
 import { useBodyMetrics } from '@/composables/useBodyMetrics'
 import { toEpochMs } from '@/services/time'
-import { mdiImageOutline, mdiShareVariantOutline } from '@/plugins/icons'
+import { mdiImageOutline, mdiNeedle, mdiShareVariantOutline } from '@/plugins/icons'
+import { findPkProfile } from '@/data'
+import {
+  LEVEL_STRIP_MAX,
+  assignSlots,
+  levelStrip,
+  stripReadings,
+  stripWindow,
+  type StripInput,
+} from '@/domain/levelStrip'
+import type { LevelStripInput } from './bodyChart'
 import SourceList from '@/components/common/SourceList.vue'
 import BodyChart from './BodyChart.vue'
 import ShareTrendDialog from '@/components/share/ShareTrendDialog.vue'
@@ -32,7 +42,7 @@ import ShareTrendDialog from '@/components/share/ShareTrendDialog.vue'
  */
 type TrendMeasure = 'weight' | 'bmi' | 'a1c' | 'glucose'
 
-defineProps<{ now: number }>()
+const props = defineProps<{ now: number }>()
 
 const journal = useJournalStore()
 const settings = useSettingsStore()
@@ -189,6 +199,58 @@ function openPhoto(id: string) {
   photoOpen.value = true
 }
 
+/*
+ * Estimated levels in a strip under the measure, on the same time axis. Off until asked for,
+ * and never in the shared image. Only medicines with a curve take part, the most recently dosed
+ * first, up to LEVEL_STRIP_MAX.
+ */
+const showLevels = ref(false)
+const levelGroups = computed(() => journal.levelGroups.filter((g) => g.pk !== null))
+const stripGroups = computed(() => levelGroups.value.slice(0, LEVEL_STRIP_MAX))
+const slots = ref(new Map<string, number>())
+watch(
+  stripGroups,
+  (groups) =>
+    (slots.value = assignSlots(
+      groups.map((g) => g.key),
+      slots.value,
+    )),
+  { immediate: true },
+)
+
+const stripInputs = computed<StripInput[]>(() =>
+  stripGroups.value.map((g) => ({
+    key: g.key,
+    // A curve from the user's own half-life says so wherever its name appears.
+    label: g.pk!.userSupplied ? `${g.label} (your values)` : g.label,
+    params: g.pk!.params,
+    doses: g.doses,
+  })),
+)
+
+const levels = computed<LevelStripInput | undefined>(() => {
+  if (!showLevels.value || !stripInputs.value.length) return undefined
+  const times = [...chart.value.points, ...(chart.value.secondary?.points ?? [])].map((p) => p.at)
+  const window = stripWindow(times, props.now)
+  const inputs = stripInputs.value
+  const series = levelStrip(inputs, window)
+  return {
+    window,
+    series: series.map((s) => ({ ...s, slot: slots.value.get(s.key) ?? 0 })),
+    readAt: (at: number) => stripReadings(inputs, series, at),
+  }
+})
+
+/** Where each line's half-life and peak come from, shown under the chart. */
+const levelSources = computed(() =>
+  stripGroups.value.map((g) => ({
+    key: g.key,
+    label: g.label,
+    userSupplied: g.pk!.userSupplied,
+    pk: g.pk!.userSupplied ? null : (findPkProfile(g.pkProfile)?.pk ?? null),
+  })),
+)
+
 const convertedUnits = computed(
   () =>
     (mode.value === 'a1c' && settings.a1cUnit !== '%') ||
@@ -211,7 +273,7 @@ const convertedUnits = computed(
       </template>
     </v-card-item>
     <v-card-text class="gl-stack">
-      <div v-if="MEASURES.length > 1 || canPin" class="trend-controls">
+      <div v-if="MEASURES.length > 1 || canPin || levelGroups.length" class="trend-controls">
         <p :id="labelId" class="d-sr-only">Measure</p>
         <v-btn-toggle
           v-if="MEASURES.length > 1"
@@ -233,6 +295,15 @@ const convertedUnits = computed(
         >
           Photos
         </v-btn>
+        <v-btn
+          v-if="levelGroups.length"
+          :prepend-icon="mdiNeedle"
+          :variant="showLevels ? 'tonal' : 'outlined'"
+          :aria-pressed="showLevels"
+          @click="showLevels = !showLevels"
+        >
+          Levels
+        </v-btn>
       </div>
       <BodyChart
         :points="chart.points"
@@ -242,8 +313,29 @@ const convertedUnits = computed(
         :decimals="chart.decimals"
         :guides="chart.guides"
         :photos="chartPhotos"
+        :levels="levels"
         @photo="openPhoto"
       />
+      <template v-if="levels">
+        <p class="text-body-small gl-muted">
+          The lower panel shows estimated medication levels, from each medicine's half-life and time
+          to peak, each scaled to its own peak in this period, so early lower doses read low.
+          They're shown alongside your {{ chart.measure.toLowerCase() }} on the same dates, not as
+          its cause.
+          <template v-if="levelGroups.length > LEVEL_STRIP_MAX">
+            Showing the {{ LEVEL_STRIP_MAX }} most recently taken.
+          </template>
+        </p>
+        <div v-for="src in levelSources" :key="src.key" class="gl-stack gl-stack--tight">
+          <p class="text-body-small">
+            <strong>{{ src.label }}</strong>
+            <span v-if="src.userSupplied" class="gl-badge gl-badge--notice ms-2">
+              <span class="gl-badge__dot" />Your own values
+            </span>
+          </p>
+          <SourceList v-if="src.pk" :sources="src.pk.sources" :note="src.pk.notes" />
+        </div>
+      </template>
       <p v-if="chartPhotos.length" class="text-body-small gl-muted">Tap a photo to open it.</p>
       <p v-if="mode === 'glucose' && !chart.points.length" class="text-body-small gl-muted">
         No fasting readings yet; readings from other times of day show as points.

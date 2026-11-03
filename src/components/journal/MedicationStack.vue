@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
 import type { MedicationRow } from '@/db/database'
-import { dueState } from '@/domain/schedule'
+import { dueState, remainingFraction, type DueState } from '@/domain/schedule'
+import DoseCountdown from './DoseCountdown.vue'
 import { formatDose } from '@/domain/units'
 import { useJournalStore } from '@/stores/journal'
 import { formatDateTime, formatRelativeDays, formatWeekday } from '@/services/time'
@@ -243,12 +244,24 @@ function dueText(med: MedicationRow): string {
       return `Next dose ${formatWeekday(at)}, in ${state.days} day${state.days === 1 ? '' : 's'}`
     case 'soon':
       return `Next dose in about ${state.hours} hour${state.hours === 1 ? '' : 's'}`
+    case 'minutes':
+      return `Next dose within ${state.minutes} minutes`
     case 'due':
       return 'Your next dose is due'
     case 'late':
       return `Due ${formatRelativeDays(state.days)}`
   }
   return ''
+}
+
+/** The ring's reading, or null before the first dose, when there is no schedule to restate. */
+function countdownOf(med: MedicationRow): { state: DueState; remaining: number } | null {
+  const at = journal.nextDueOf(med)
+  if (at === null) return null
+  return {
+    state: dueState(at, props.now),
+    remaining: remainingFraction(at, med.intervalDays, props.now),
+  }
 }
 
 /** Other medications in use that share this one's level estimate (same medicine and route). */
@@ -326,7 +339,14 @@ const announcement = computed(() =>
           </v-card-subtitle>
         </v-card-item>
         <v-card-text class="gl-stack">
-          <p class="text-title-medium">{{ dueText(med) }}</p>
+          <div class="med-stack__due">
+            <DoseCountdown
+              v-if="countdownOf(med)"
+              :state="countdownOf(med)!.state"
+              :remaining="countdownOf(med)!.remaining"
+            />
+            <p class="text-title-medium">{{ dueText(med) }}</p>
+          </div>
           <p v-if="journal.lastDoseOf(med.id)" class="gl-muted">
             Last: <span class="gl-num">{{ formatDose(journal.lastDoseOf(med.id)!.doseMg) }}</span
             >,
@@ -468,6 +488,12 @@ const announcement = computed(() =>
     transform: translate3d(0, 0, 0) scale(1);
     opacity: 1;
   }
+}
+
+.med-stack__due {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .med-stack__controls {
