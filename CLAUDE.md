@@ -22,6 +22,7 @@ All commands run on the Node version in `.nvmrc` (`nvm use`); never system Node.
 | `make ios`               | Build the iOS bundle (`dist-ios/`) and sync it into `ios/`; the app builds in CI, not locally    |
 | `make screenshots`       | Retake the Today and Progress screenshots in `../gliplog.github.io` with sample data             |
 | `make store-screenshots` | Retake the F-Droid and Play phone, tablet and Chromebook screenshots in `fastlane/metadata`      |
+| `make brand-images`      | Redraw the site link preview and store feature graphic from `scripts/brand-images.mjs`           |
 
 ## Skills and rules
 
@@ -49,6 +50,8 @@ F-Droid, App Store) are in `docs/releasing.md`.
   of the arm's starting weight; both are labelled on the chart and in its sources
   (`src/domain/cohort.ts`). PK curves only from human data or clearly labelled user-supplied
   values.
+- All user-facing text is short and direct: no AI slop, no trailing ", so X" clauses, no filler.
+  Legal and safety wording is the exception.
 - Gliplog does arithmetic and shows sourced references; it never recommends a dose.
 - Copy is warm, plain and inclusive: no shame or judgement about weight, every profile field
   optional, and no field the app does not use (so no gender).
