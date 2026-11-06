@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
 import type { MedicationRow } from '@/db/database'
-import { dueState, remainingFraction, type DueState } from '@/domain/schedule'
+import { dueState, intervalText, remainingFraction, type DueState } from '@/domain/schedule'
 import DoseCountdown from './DoseCountdown.vue'
-import { formatDose } from '@/domain/units'
+import LevelBackdrop from '@/components/charts/LevelBackdrop.vue'
+import { outlookShort } from '@/components/charts/projectionText'
+import { levelTrace } from '@/domain/projection'
+import { formatAmount, formatDose } from '@/domain/units'
 import { useJournalStore } from '@/stores/journal'
 import { formatDateTime, formatRelativeDays, formatWeekday } from '@/services/time'
 import {
@@ -231,10 +234,6 @@ function cardStyle(i: number) {
   }
 }
 
-function intervalText(days: number): string {
-  return days === 1 ? 'daily' : days === 7 ? 'weekly' : `every ${days} days`
-}
-
 function dueText(med: MedicationRow): string {
   const at = journal.nextDueOf(med)
   if (at === null) return 'No dose logged yet'
@@ -272,6 +271,29 @@ function sharesWith(med: MedicationRow): string[] {
     .filter((m) => m.id !== med.id && journal.productOf(m)?.pkProfile === profile)
     .map((m) => m.name)
 }
+
+/** Each card's curve and the line that says the same in words; none before a first dose. */
+const levels = computed(
+  () =>
+    new Map(
+      props.medications.flatMap((med) => {
+        const found = journal.projectionOf(med, props.now)
+        if (!found) return []
+        const { projection, userSupplied } = found
+        const reading = `Est. ${formatAmount(projection.summary.now, 'mg')} now`
+        const own = userSupplied ? ' · Your own values' : ''
+        return [
+          [
+            med.id,
+            {
+              trace: levelTrace(projection, props.now),
+              text: `${reading} · ${outlookShort(projection.outlook)}${own}`,
+            },
+          ],
+        ]
+      }),
+    ),
+)
 
 const current = computed(() => props.medications[index.value])
 const announcement = computed(() =>
@@ -320,6 +342,11 @@ const announcement = computed(() =>
         @animationend="onAnimationEnd"
         @click.capture="onClickCapture"
       >
+        <LevelBackdrop
+          v-if="levels.has(med.id)"
+          :trace="levels.get(med.id)!.trace"
+          :active="depthOf(i) === 0"
+        />
         <v-card-item>
           <p class="gl-eyebrow">Medication</p>
           <v-card-title class="text-wrap">{{ med.name }}</v-card-title>
@@ -355,6 +382,10 @@ const announcement = computed(() =>
           <p v-if="sharesWith(med).length" class="text-body-small gl-muted">
             Shares a level estimate with {{ sharesWith(med).join(' and ') }}.
           </p>
+          <p v-if="levels.has(med.id)" class="text-body-small gl-muted gl-num">
+            {{ levels.get(med.id)!.text }}
+          </p>
+          <div v-if="levels.has(med.id)" class="med-stack__band" />
           <div class="gl-actions">
             <v-btn
               color="primary"
@@ -411,6 +442,7 @@ const announcement = computed(() =>
   --stack-ease: cubic-bezier(0.32, 0.72, 0, 1);
   --pull: 0;
   grid-area: 1 / 1;
+  isolation: isolate;
   transform-origin: 50% 100%;
   transform: translate3d(calc(var(--pull) * 1px), calc(var(--depth) * var(--peek)), 0)
     scale(calc(1 - var(--depth) * 0.045)) rotate(calc(var(--pull) * 0.012deg));
@@ -488,6 +520,11 @@ const announcement = computed(() =>
     transform: translate3d(0, 0, 0) scale(1);
     opacity: 1;
   }
+}
+
+/* Keeps text out of the backdrop's line; the button below sits on its fading fill. */
+.med-stack__band {
+  height: 36px;
 }
 
 .med-stack__due {

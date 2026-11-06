@@ -19,6 +19,15 @@ export type LevelsChartOption = ComposeOption<
   | DataZoomComponentOption
 >
 
+export interface LevelsOptionSettings {
+  /** Legend name of the dashed series. */
+  previewName?: string
+  /** Marks the moment levels reach steady state. */
+  steadyAt?: number | null
+  /** Leaves the dose markers off a schedule too dense to read them. */
+  hideDoses?: boolean
+}
+
 const LOGGED_SERIES = 'Logged doses'
 const PREVIEW_SERIES = 'With this dose'
 
@@ -31,10 +40,13 @@ export function levelsOption(
   input: LevelsInput,
   model: LevelsModel,
   c: ChartColors,
+  settings: LevelsOptionSettings = {},
 ): LevelsChartOption {
-  const { preview, unitLabel, now } = input
+  const { unitLabel, now } = input
   const { window, logged, projected, allDoses } = model
   const hasHistory = input.doses.length > 0
+  const hasPreview = projected.length > 0
+  const previewName = settings.previewName ?? PREVIEW_SERIES
   const fontSize = 12
   const nowLine = {
     silent: true,
@@ -43,6 +55,14 @@ export function levelsOption(
     lineStyle: { color: c.now, type: 'solid' as const, width: 1 },
     data: [{ xAxis: now }],
   }
+  const steadyMark = settings.steadyAt
+    ? {
+        xAxis: settings.steadyAt,
+        label: { formatter: 'Steady' },
+        lineStyle: { type: 'dashed' as const },
+      }
+    : null
+  const previewMarks = [...(hasHistory ? [] : nowLine.data), ...(steadyMark ? [steadyMark] : [])]
 
   const series: (LineSeriesOption | ScatterSeriesOption)[] = []
   if (hasHistory) {
@@ -58,30 +78,34 @@ export function levelsOption(
       markLine: nowLine,
     })
   }
-  if (preview) {
+  if (hasPreview) {
     series.push({
-      name: PREVIEW_SERIES,
+      name: previewName,
       type: 'line',
       showSymbol: false,
       lineStyle: { width: 2, color: c.preview, type: 'dashed' },
       itemStyle: { color: c.preview },
       areaStyle: hasHistory ? undefined : { color: c.preview, opacity: 0.1 },
       data: projected.map((p) => [p.at, p.amount]),
-      markLine: hasHistory ? undefined : nowLine,
+      markLine: previewMarks.length ? { ...nowLine, data: previewMarks } : undefined,
     })
   }
-  series.push({
-    name: 'Doses',
-    type: 'scatter',
-    symbol: 'triangle',
-    symbolSize: 10,
-    itemStyle: { color: c.axis, borderColor: c.surface, borderWidth: 2 },
-    tooltip: { show: false },
-    data: allDoses.filter((d) => d.at >= window.start && d.at <= window.end).map((d) => [d.at, 0]),
-    z: 3,
-  })
+  if (!settings.hideDoses) {
+    series.push({
+      name: 'Doses',
+      type: 'scatter',
+      symbol: 'triangle',
+      symbolSize: 10,
+      itemStyle: { color: c.axis, borderColor: c.surface, borderWidth: 2 },
+      tooltip: { show: false },
+      data: allDoses
+        .filter((d) => d.at >= window.start && d.at <= window.end)
+        .map((d) => [d.at, 0]),
+      z: 3,
+    })
+  }
 
-  const legend = hasHistory && preview
+  const legend = hasHistory && hasPreview
   return {
     animation: false,
     textStyle: { fontFamily: c.font, color: c.text, fontSize },
@@ -94,7 +118,7 @@ export function levelsOption(
     },
     legend: legend
       ? {
-          data: [LOGGED_SERIES, PREVIEW_SERIES],
+          data: [LOGGED_SERIES, previewName],
           top: 0,
           left: 0,
           textStyle: { color: c.text, fontFamily: c.font, fontSize },

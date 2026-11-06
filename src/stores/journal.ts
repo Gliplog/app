@@ -7,14 +7,22 @@ import { findPkProfile, findProduct } from '@/data'
 import type { CatalogProduct } from '@/domain/catalog'
 import {
   groupLevels,
+  levelKey,
   type LevelDose,
   type LevelMedication,
   type MedicationLevels,
 } from '@/domain/levels'
-import type { PkParameters } from '@/domain/pk'
+import type { DoseEvent, PkParameters } from '@/domain/pk'
 import { baselineFor, progressSeries, type Baseline, type ProgressPoint } from '@/domain/progress'
+import { projectLevels, type LevelProjection } from '@/domain/projection'
 import { nextDueAt } from '@/domain/schedule'
 import { toEpochMs } from '@/services/time'
+
+export interface MedicationProjection {
+  projection: LevelProjection
+  /** The curve comes from the user's own half-life. */
+  userSupplied: boolean
+}
 
 /**
  * The user's journal: medications, the doses logged against them, weigh-ins, side effects and
@@ -143,6 +151,36 @@ export const useJournalStore = defineStore('journal', () => {
     return levelGroups.value.find((g) => g.key === groupKey)
   }
 
+  /**
+   * Doses already in the body under a catalog profile, or for a medication outside the catalog,
+   * oldest first. Serves the form too, where the medication may not exist yet: someone adding
+   * compounded semaglutide after Ozempic carries the same curve forward.
+   */
+  function historyFor(id: string | undefined, pkProfile: string | null | undefined): DoseEvent[] {
+    const key = levelKey({ id: id ?? '', pkProfile: pkProfile ?? null })
+    return levelGroups.value.find((g) => g.key === key)?.doses ?? []
+  }
+
+  /**
+   * Where a medication's levels are heading on its own schedule, repeating its last logged dose.
+   * Null with no curve to continue: no half-life, or nothing logged yet.
+   */
+  function projectionOf(med: MedicationRow, now: number): MedicationProjection | null {
+    const pk = pkFor(med)
+    const history = historyFor(med.id, findPkProfile(productOf(med)?.pkProfile)?.id)
+    if (!pk || !history.length) return null
+    return {
+      projection: projectLevels({
+        params: pk.params,
+        intervalHours: med.intervalDays * 24,
+        amount: null,
+        history,
+        now,
+      }),
+      userSupplied: pk.userSupplied,
+    }
+  }
+
   const weightPoints = computed(() =>
     weights.value.map((w) => ({ at: toEpochMs(w.measuredAt), kg: w.kg })),
   )
@@ -263,6 +301,8 @@ export const useJournalStore = defineStore('journal', () => {
     nextDueOf,
     pkFor,
     levelGroupOf,
+    historyFor,
+    projectionOf,
     focusMedication,
     addMedication,
     updateMedication,

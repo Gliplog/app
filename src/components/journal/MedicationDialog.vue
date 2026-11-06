@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { computed, reactive, ref, useId, watch } from 'vue'
-import { catalog, findProduct } from '@/data'
+import { catalog, findPkProfile, findProduct } from '@/data'
 import type { MedicationRow } from '@/db/database'
+import type { PkParameters } from '@/domain/pk'
+import { intervalText } from '@/domain/schedule'
+import ProjectionPanel from '@/components/charts/ProjectionPanel.vue'
 import { useJournalStore } from '@/stores/journal'
 import { useNotifyStore } from '@/stores/notify'
 import { useConfirmStore } from '@/stores/confirm'
@@ -84,6 +87,15 @@ const intervalDays = computed(() => {
 })
 
 const isOther = computed(() => form.productId === OTHER)
+
+const pkProfile = computed(() => findPkProfile(product.value?.pkProfile))
+const ownPk = computed<PkParameters | null>(() => {
+  const halfLifeHours = positive(form.halfLife)
+  const tmaxHours = positive(form.tmax)
+  return isOther.value && halfLifeHours && tmaxHours ? { halfLifeHours, tmaxHours } : null
+})
+const history = computed(() => journal.historyFor(props.medication?.id, pkProfile.value?.id))
+
 const showsConcentration = computed(() => product.value?.kind === 'compounded' || isOther.value)
 
 const errors = computed(() => ({
@@ -107,15 +119,12 @@ const valid = computed(() => Object.values(errors.value).every((e) => e === unde
 async function save() {
   if (!valid.value || intervalDays.value === null) return
   saving.value = true
-  const halfLife = positive(form.halfLife)
-  const tmax = positive(form.tmax)
   const input = {
     productId: isOther.value ? null : form.productId,
     name: isOther.value ? form.name.trim() : (product.value?.name ?? form.name),
     intervalDays: intervalDays.value,
     concentrationMgPerMl: showsConcentration.value ? positive(form.concentration) : null,
-    pkOverride:
-      isOther.value && halfLife && tmax ? { halfLifeHours: halfLife, tmaxHours: tmax } : null,
+    pkOverride: ownPk.value,
     notes: form.notes.trim(),
   }
   try {
@@ -254,6 +263,17 @@ async function remove() {
           </div>
           <p class="text-body-small gl-muted">Used only for the level chart.</p>
         </template>
+
+        <v-expand-transition>
+          <ProjectionPanel
+            v-if="intervalDays !== null"
+            :profile="pkProfile"
+            :override="ownPk"
+            :interval-hours="intervalDays * 24"
+            :interval-label="intervalText(intervalDays)"
+            :history="history"
+          />
+        </v-expand-transition>
 
         <v-textarea v-model="form.notes" label="Notes (optional)" />
 

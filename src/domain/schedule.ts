@@ -54,6 +54,11 @@ export function remainingFraction(dueAt: number, intervalDays: number, now: numb
   return Math.min(1, Math.max(0, diff / span))
 }
 
+/** "daily", "weekly", "every 10 days". */
+export function intervalText(days: number): string {
+  return days === 1 ? 'daily' : days === 7 ? 'weekly' : `every ${days} days`
+}
+
 export interface SyringeReading {
   ml: number
   /** Units on a U-100 insulin syringe, the kind compounded vials are drawn with. */

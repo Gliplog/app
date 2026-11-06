@@ -41,6 +41,8 @@ async function addMedication(page: Page, name: string, concentration?: string) {
   if (concentration) await dialog.getByLabel('Vial strength (optional)').fill(concentration)
   await dialog.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('Medication added')).toBeVisible()
+  // The notice can be the previous medication's; the dialog closes only once this one is saved.
+  await expect(dialog).toBeHidden()
 }
 
 async function logWeight(page: Page, value: string) {
@@ -91,6 +93,68 @@ test('logs a medication, a dose and a weight, then shows the next dose, BMI and 
   await expect(page.locator('li', { hasText: 'Semaglutide 2.4 mg' }).first()).toContainText(
     '\u221214.9%',
   )
+})
+
+/** The pulse is infinite, so merely shortening it, as the app's global rule does, would strobe. */
+async function expectStillDotWithReducedMotion(page: Page) {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  const pulse = await page
+    .locator('.level-backdrop__dot--live')
+    .first()
+    .evaluate((dot) => getComputedStyle(dot, '::after').animationName)
+  expect(pulse).toBe('none')
+}
+
+test('projects levels while adding a medication, then draws them on its card', async ({ page }) => {
+  await page.goto('./')
+  await acceptDisclaimer(page)
+  await page.getByRole('button', { name: 'Add medication' }).first().click()
+  const dialog = page.getByRole('dialog', { name: 'Medication' })
+  const panel = dialog.getByRole('region', { name: 'Projected levels' })
+
+  // No dose is logged, so nothing reads in mg and no dose is implied.
+  await expect(panel.getByText('Percent of steady peak.', { exact: false })).toBeVisible()
+  await expect(panel.getByText('Steady by')).toBeVisible()
+  await expect(panel.getByRole('img', { name: /Projected levels\. Steady by/ })).toBeVisible()
+  await expect(panel).not.toContainText(/\d mg/)
+
+  // A new interval redraws it; a bad one takes it away rather than drawing nonsense.
+  await choose(dialog, 'How often', 'Other')
+  await expect(panel).toBeHidden()
+  await dialog.getByLabel('Every').fill('14')
+  await expect(panel.getByRole('img', { name: /Projected levels/ })).toBeVisible()
+  await dialog.getByLabel('Every').fill('0')
+  await expect(panel).toBeHidden()
+  await choose(dialog, 'How often', 'Weekly')
+
+  // A medicine outside the catalog waits for the user's own values, and says whose they are.
+  const field = dialog.getByRole('combobox', { name: 'Medication' })
+  await field.click()
+  await field.fill('Something else')
+  await page.getByRole('option', { name: /^Something else/ }).click()
+  await expect(panel).toBeHidden()
+  await dialog.getByLabel('Name', { exact: true }).fill('Trial drug')
+  await dialog.getByLabel('Half-life', { exact: true }).fill('48')
+  await dialog.getByLabel('Time to peak').fill('6')
+  await expect(panel.getByText('Your own values')).toBeVisible()
+  await dialog.getByRole('button', { name: 'Cancel' }).click()
+
+  await addMedication(page, 'Wegovy')
+  // Nothing has been taken, so the card has no level to show.
+  await expect(page.locator('.level-backdrop')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Log dose' }).click()
+  const dose = page.getByRole('dialog', { name: 'Wegovy' })
+  await choose(dose, 'Dose', '0.25 mg')
+  await dose.getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByText('0.25 mg logged')).toBeVisible()
+  await expect(page.locator('.level-backdrop svg')).toBeVisible()
+  await expect(page.getByText(/^Est\. .+ mg now · Steady by /)).toBeVisible()
+  await expectStillDotWithReducedMotion(page)
+
+  // Now a dose is logged, the form reads in mg.
+  await page.getByRole('listitem').filter({ hasText: 'Wegovy' }).first().click()
+  const edit = page.getByRole('dialog', { name: 'Wegovy' })
+  await expect(edit.getByText('At 0.25 mg weekly.')).toBeVisible()
 })
 
 test('notes different medicines in use, until dismissed for that combination', async ({ page }) => {
@@ -530,6 +594,41 @@ test('the top bar scrolls away when reading and returns on scrolling up', async 
     .first()
     .click({ position: { x: 4, y: 200 } })
   await expect(bar).not.toHaveClass(/gl-app-bar--hidden/)
+})
+
+test('in a browser, Take a photo opens the file chooser from the tap itself', async ({ page }) => {
+  await page.goto('./#/progress')
+  await acceptDisclaimer(page)
+  const chooser = page.waitForEvent('filechooser')
+  await page.getByRole('button', { name: 'Take a photo' }).click()
+  await chooser
+  await expect(page.getByText('Allow the camera')).toBeHidden()
+})
+
+test('a hidden top bar leaves only blank glass behind the status bar', async ({ page }) => {
+  await page.goto('./#/settings')
+  await acceptDisclaimer(page)
+  // What Capacitor sets on a phone that draws edge to edge, such as a Pixel 10 Pro.
+  const inset = 52
+  await page.evaluate((px) => {
+    document.documentElement.style.setProperty('--safe-area-inset-top', `${px}px`)
+  }, inset)
+  const bar = page.locator('.v-app-bar')
+  const row = bar.locator('.v-toolbar__content')
+  await expect(row).toHaveCSS('opacity', '1')
+  await scrollInSteps(page, 150, 4)
+  await expect(bar).toHaveClass(/gl-app-bar--hidden/)
+  await expect(row).toHaveCSS('opacity', '0')
+  await expect(row).toHaveCSS('pointer-events', 'none')
+  await expect
+    .poll(async () => {
+      const box = await bar.boundingBox()
+      return box ? Math.round(box.y + box.height) : null
+    })
+    .toBe(inset)
+
+  await scrollInSteps(page, -80, 1)
+  await expect(row).toHaveCSS('opacity', '1')
 })
 
 /*

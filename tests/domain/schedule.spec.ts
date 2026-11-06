@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { dueState, nextDueAt, remainingFraction, syringeReading } from '@/domain/schedule'
+import {
+  dueState,
+  intervalText,
+  nextDueAt,
+  remainingFraction,
+  syringeReading,
+} from '@/domain/schedule'
 
 const MIN = 60_000
 const H = 60 * MIN
@@ -64,5 +70,13 @@ describe('syringeReading', () => {
     expect(r.ml).toBeCloseTo(0.1, 12)
     expect(r.units).toBeCloseTo(10, 12)
     expect(() => syringeReading(0, 2.5)).toThrow(RangeError)
+  })
+})
+
+describe('intervalText', () => {
+  it('names the common schedules and counts the rest', () => {
+    expect(intervalText(1)).toBe('daily')
+    expect(intervalText(7)).toBe('weekly')
+    expect(intervalText(10)).toBe('every 10 days')
   })
 })

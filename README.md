@@ -27,6 +27,8 @@ Live at [gliplog.com/app](https://gliplog.com/app/). The project site is
   estimate of medicine remaining in the body from the label half-life and time to peak. Doses of
   the same medicine pool across brands, so switching keeps one curve. Semaglutide tablets get no
   curve: under 2% is absorbed.
+- **Projected levels.** Set a frequency and see where levels head, up to 16 weeks out, with the date
+  they turn steady. The medication card draws the same curve behind it.
 - **Compounded vials.** Enter the vial strength once and every dose also reads as units on a
   U-100 syringe.
 - **Private and offline.** No account, no server, no analytics, and nothing you enter is ever
