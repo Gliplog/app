@@ -35,6 +35,8 @@ app signing key and this one is only the upload key.
   brand names out of the title, short description and icon; mention them only in the full
   description, with the trademark line.
 - **Privacy policy.** `https://gliplog.com/privacy.html`.
+- **Camera.** The app asks for the camera only when Take a photo is tapped. Photos stay on the
+  device, so the permission adds nothing to the data safety form.
 - **Data safety.** No data collected, no data shared. The app has no network permission, so no
   data is transmitted; data stays on the device and the user can delete it (Settings, Erase
   everything, or uninstall).
@@ -158,5 +160,8 @@ The workflow proves the app compiles; these need an iPhone, through TestFlight:
 2. Refuse it: the blocked screen appears, and Open settings opens Gliplog's notification page.
 3. Allow notifications there and return: the reminder is on.
 4. A reminder arrives on time, and tapping it opens Log dose for that medication.
-5. Take a progress photo with the camera and choose one from the library.
-6. Save a backup with photos and restore it.
+5. Take a photo shows the explanation first, then the iOS camera dialog, then the camera.
+6. Refuse it: the blocked screen appears, and Open settings opens the app's page in Settings.
+7. Allow the camera there and return: Take a photo opens the camera with no explanation.
+8. Choose a photo from the library.
+9. Save a backup with photos and restore it.

@@ -12,6 +12,12 @@ export const notificationSettingsSteps =
     ? 'Open Settings, then Apps, Gliplog, Notifications.'
     : 'Open Android Settings, then Apps, Gliplog, Notifications.'
 
+/** Where to turn the camera back on when the app cannot open the screen itself. */
+export const cameraSettingsSteps =
+  __PLATFORM__ === 'ios'
+    ? 'Open Settings, then Apps, Gliplog, and turn on Camera.'
+    : 'Open Android Settings, then Apps, Gliplog, Permissions, Camera.'
+
 /**
  * The apps the web build points to for notifications. Update when the iOS app reaches the App
  * Store, so iPhone users are pointed to it too.

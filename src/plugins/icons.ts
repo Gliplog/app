@@ -7,6 +7,7 @@ export {
   mdiBellOutline,
   mdiBellRingOutline,
   mdiCalendarPlus,
+  mdiCameraOffOutline,
   mdiCameraOutline,
   mdiCellphoneArrowDown,
   mdiChartBellCurve,
