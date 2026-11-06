@@ -1,8 +1,8 @@
 {
   "name": "gliplog",
   "private": true,
-  "version": "0.2.4",
-  "versionCode": 204,
+  "version": "0.2.5",
+  "versionCode": 205,
   "license": "AGPL-3.0-only",
   "type": "module",
   "description": "Private, offline GLP-1 journal for doses, weight and BMI (installable PWA).",
