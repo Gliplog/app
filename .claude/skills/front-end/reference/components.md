@@ -21,7 +21,7 @@ Part of the `front-end` skill.
 | `journal/LogGlucoseDialog.vue`                        | Log or edit an HbA1c result or a glucose reading (with when in the day)                 |
 | `journal/MedicationStack.vue`                         | Today's stacked medication cards: swipe, arrows, dots or arrow keys; back cards inert   |
 | `journal/SymptomSummaryCard.vue`                      | Side effects by period, strength and days after a dose; opens the PDF export            |
-| `charts/CohortChart.vue`                              | One medicine's trial readouts merged over weeks (band and points), your line, a table   |
+| `charts/CohortChart.vue`                              | One medicine's trial readouts merged over weeks (band and points), your line            |
 | `charts/CohortSection.vue`                            | Progress cohort section: medication, measure and population switches, trial cards       |
 | `charts/TrendCard.vue`                                | Weight, BMI, HbA1c and glucose in one card; photos, doses, levels strip; share button   |
 | `charts/bodyChart.ts`                                 | The body-measure chart option, shared by `BodyChart` and share images                   |
@@ -39,10 +39,10 @@ Part of the `front-end` skill.
 | `share/ShareCollageDialog.vue`                        | Collage of one pose's photos, picked evenly over a chosen span; post or story shape     |
 | `share/collageCard.ts`, `share/cardCanvas.ts`         | Collage drawing; backdrop, brand row, footer and tokens shared with the trend card      |
 | `charts/GlycemicComparison.vue`                       | Your HbA1c or fasting glucose change beside one trial's arms, with starting values      |
-| `charts/BodyChart.vue`                                | Weight or BMI over time with labelled dashed guides (goal, WHO bands) and a table view  |
+| `charts/BodyChart.vue`                                | Weight or BMI over time with labelled dashed guides (goal, WHO bands)                   |
 | `charts/TrialComparison.vue`                          | Your change beside one trial's endpoint arms as labelled bars, with source and caveats  |
 | `charts/PkPanel.vue`                                  | Chooses catalog or user-supplied PK, shows sources and caveats, or why no curve exists  |
-| `charts/PkChart.vue`                                  | ECharts curve of logged doses, "Now" marker, table view                                 |
+| `charts/PkChart.vue`                                  | ECharts curve of logged doses, "Now" marker                                             |
 | `charts/levelsChart.ts`                               | The curve's model and ECharts option                                                    |
 
 ## Patterns

@@ -206,9 +206,12 @@ test('shows estimated levels under the weight chart on the same dates', async ({
       name: /^Weight .+Estimated amount in the body below.+Semaglutide injection [\d.]+ mg/,
     }),
   ).toBeVisible()
-  await expect(
-    page.getByText('Estimated amount in your body, based on your doses.', { exact: false }),
-  ).toBeVisible()
+  const notes = page.getByText('Estimated amount in your body, based on your doses.', {
+    exact: false,
+  })
+  await expect(notes).toBeHidden()
+  await page.getByRole('button', { name: 'More information' }).first().click()
+  await expect(notes).toBeVisible()
 
   const doses = page.getByRole('button', { name: 'Doses', exact: true })
   await expect(doses).toHaveAttribute('aria-pressed', 'false')
@@ -216,12 +219,7 @@ test('shows estimated levels under the weight chart on the same dates', async ({
   await expect(
     page.getByRole('img', { name: /1 dose marked on the line; strength by date: .+0\.25 mg/ }),
   ).toBeVisible()
-  await page.getByRole('button', { name: 'Show as table' }).first().click()
-  await expect(
-    page.getByRole('columnheader', { name: 'Semaglutide injection level' }),
-  ).toBeVisible()
-  await expect(page.getByRole('columnheader', { name: 'Dose' })).toBeVisible()
-  await expect(page.getByRole('cell', { name: 'Semaglutide injection 0.25 mg' })).toBeVisible()
+  await expect(page.getByText('Diamonds mark doses')).toBeVisible()
 
   // The share image can carry the levels too, off until asked for.
   await page.getByRole('button', { name: 'Share weight as an image' }).click()

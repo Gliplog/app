@@ -11,6 +11,7 @@ import {
   type GlucoseUnit,
 } from '@/domain/glucose'
 import { roundTo } from '@/domain/units'
+import MoreInfo from '@/components/common/MoreInfo.vue'
 import SourceList from '@/components/common/SourceList.vue'
 
 /**
@@ -111,14 +112,16 @@ const barWidth = (change: number | null) =>
           </span>
         </li>
       </ul>
-      <p class="text-body-small gl-muted">
-        Trial rows are group averages at week {{ trial.weeks }}; yours is your change from your
-        first dose to then.
-        <template v-if="comparison.baseline?.basis === 'after-first-dose'"
-          >Your first reading is after your first dose.</template
-        >
-      </p>
-      <SourceList v-if="trial.glycemic" :sources="[trial.glycemic.source]" />
+      <MoreInfo>
+        <p class="text-body-small gl-muted">
+          Trial rows are group averages at week {{ trial.weeks }}; yours is your change from your
+          first dose to then.
+          <template v-if="comparison.baseline?.basis === 'after-first-dose'"
+            >Your first reading is after your first dose.</template
+          >
+        </p>
+        <SourceList v-if="trial.glycemic" flat :sources="[trial.glycemic.source]" />
+      </MoreInfo>
     </v-card-text>
   </v-card>
 </template>

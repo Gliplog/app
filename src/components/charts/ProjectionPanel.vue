@@ -5,6 +5,7 @@ import type { DoseEvent, PkParameters } from '@/domain/pk'
 import { formatAmount } from '@/domain/units'
 import { useNow } from '@/composables/useNow'
 import { formatHours } from '@/services/time'
+import MoreInfo from '@/components/common/MoreInfo.vue'
 import SourceList from '@/components/common/SourceList.vue'
 import ProjectionChart from './ProjectionChart.vue'
 
@@ -58,8 +59,10 @@ const lastDose = computed(() => props.history[props.history.length - 1]?.amount 
       unit-label="mg"
       :now="now"
     />
-    <p class="text-body-small gl-muted">Estimate from a simple model of published data.</p>
-    <SourceList v-if="profile?.pk" :sources="profile.pk.sources" :note="profile.pk.notes" />
+    <MoreInfo>
+      <p class="text-body-small gl-muted">Estimate from a simple model of published data.</p>
+      <SourceList v-if="profile?.pk" flat :sources="profile.pk.sources" :note="profile.pk.notes" />
+    </MoreInfo>
   </section>
   <p v-else-if="profile?.pkUnavailableReason" class="text-body-small gl-muted">
     {{ profile.pkUnavailableReason }}

@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { POPULATION_LABELS } from '@/domain/catalog'
 import type { TrialComparison } from '@/domain/progress'
 import { formatPercentChange, formatWeightChange, roundTo, type WeightUnit } from '@/domain/units'
+import MoreInfo from '@/components/common/MoreInfo.vue'
 import SourceList from '@/components/common/SourceList.vue'
 
 /**
@@ -92,12 +93,14 @@ const barWidth = (change: number | null) =>
         </li>
       </ul>
 
-      <p class="text-body-small gl-muted">
-        Trial rows are group averages at week {{ trial.weeks }}; yours is your latest weigh-in by
-        then.
-        <template v-if="trial.measure === 'kg'">Reported in kg.</template>
-      </p>
-      <SourceList :sources="[trial.source]" :note="trial.analysis" />
+      <MoreInfo>
+        <p class="text-body-small gl-muted">
+          Trial rows are group averages at week {{ trial.weeks }}; yours is your latest weigh-in by
+          then.
+          <template v-if="trial.measure === 'kg'">Reported in kg.</template>
+        </p>
+        <SourceList flat :sources="[trial.source]" :note="trial.analysis" />
+      </MoreInfo>
     </v-card-text>
   </v-card>
 </template>

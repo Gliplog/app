@@ -29,6 +29,7 @@ import { LEVEL_STRIP_MAX, stripScale } from '@/domain/levelStrip'
 import { doseMarks } from '@/domain/doseMarks'
 import { useLevelStrip } from '@/composables/useLevelStrip'
 import { levelStripInput, type LevelStripInput } from './bodyChart'
+import MoreInfo from '@/components/common/MoreInfo.vue'
 import SourceList from '@/components/common/SourceList.vue'
 import BodyChart from './BodyChart.vue'
 import ShareTrendDialog from '@/components/share/ShareTrendDialog.vue'
@@ -237,6 +238,11 @@ const convertedUnits = computed(
     (mode.value === 'a1c' && settings.a1cUnit !== '%') ||
     (mode.value === 'glucose' && settings.glucoseUnit !== 'mg/dL'),
 )
+
+const hasMore = computed(
+  () =>
+    !!levels.value || chartDoses.value.length > 0 || mode.value === 'bmi' || convertedUnits.value,
+)
 </script>
 
 <template>
@@ -310,43 +316,45 @@ const convertedUnits = computed(
         :levels="levels"
         @photo="openPhoto"
       />
-      <template v-if="levels">
-        <p class="text-body-small gl-muted">
-          {{
-            levels.scale === 'amount'
-              ? 'Estimated amount in your body, based on your doses.'
-              : "Estimated levels as a percent of each medicine's peak."
-          }}
-          <template v-if="truncated">Showing the {{ LEVEL_STRIP_MAX }} most recent.</template>
-        </p>
-        <div v-for="src in levelSources" :key="src.key" class="gl-stack gl-stack--tight">
-          <p class="text-body-small">
-            <strong>{{ src.label }}</strong>
-            <span v-if="src.userSupplied" class="gl-badge gl-badge--notice ms-2">
-              <span class="gl-badge__dot" />Your own values
-            </span>
-          </p>
-          <SourceList v-if="src.pk" :sources="src.pk.sources" :note="src.pk.notes" />
-        </div>
-      </template>
-      <p v-if="chartDoses.length" class="text-body-small gl-muted">
-        Diamonds mark doses. Labels show new strengths.
-      </p>
       <p v-if="chartPhotos.length" class="text-body-small gl-muted">Tap a photo to open it.</p>
       <p v-if="mode === 'glucose' && !chart.points.length" class="text-body-small gl-muted">
         No fasting readings yet; readings from other times of day show as points.
       </p>
-      <template v-if="mode === 'bmi'">
-        <p class="text-body-small gl-muted">
-          Dashed lines are the WHO adult bands. BMI is a screening measure and doesn't tell muscle
-          from fat.
-        </p>
-        <SourceList :sources="[BMI_SOURCE]" />
-      </template>
-      <SourceList v-if="convertedUnits" :sources="GLUCOSE_UNIT_SOURCES" />
       <p v-if="mode === 'weight' && !body.heightCm.value" class="text-body-small gl-muted">
         Add your height in Settings to track BMI.
       </p>
+      <MoreInfo v-if="hasMore">
+        <template v-if="levels">
+          <p class="text-body-small gl-muted">
+            {{
+              levels.scale === 'amount'
+                ? 'Estimated amount in your body, based on your doses.'
+                : "Estimated levels as a percent of each medicine's peak."
+            }}
+            <template v-if="truncated">Showing the {{ LEVEL_STRIP_MAX }} most recent.</template>
+          </p>
+          <div v-for="src in levelSources" :key="src.key" class="gl-stack gl-stack--tight">
+            <p class="text-body-small">
+              <strong>{{ src.label }}</strong>
+              <span v-if="src.userSupplied" class="gl-badge gl-badge--notice ms-2">
+                <span class="gl-badge__dot" />Your own values
+              </span>
+            </p>
+            <SourceList v-if="src.pk" flat :sources="src.pk.sources" :note="src.pk.notes" />
+          </div>
+        </template>
+        <p v-if="chartDoses.length" class="text-body-small gl-muted">
+          Diamonds mark doses. Labels show new strengths.
+        </p>
+        <template v-if="mode === 'bmi'">
+          <p class="text-body-small gl-muted">
+            Dashed lines are the WHO adult bands. BMI is a screening measure and doesn't tell muscle
+            from fat.
+          </p>
+          <SourceList flat :sources="[BMI_SOURCE]" />
+        </template>
+        <SourceList v-if="convertedUnits" flat :sources="GLUCOSE_UNIT_SOURCES" />
+      </MoreInfo>
     </v-card-text>
     <ShareTrendDialog
       v-model="shareOpen"

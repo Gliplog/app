@@ -112,7 +112,8 @@ export function levelsOption(
     grid: {
       left: 8,
       right: 16,
-      top: legend ? 40 : 16,
+      // Room for the legend to wrap onto a second row on a phone, clear of the "Now" label.
+      top: legend ? 68 : 16,
       bottom: 8,
       containLabel: true,
     },
@@ -121,6 +122,8 @@ export function levelsOption(
           data: [LOGGED_SERIES, previewName],
           top: 0,
           left: 0,
+          padding: 0,
+          itemGap: 20,
           textStyle: { color: c.text, fontFamily: c.font, fontSize },
           itemWidth: 18,
           itemHeight: 8,

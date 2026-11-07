@@ -18,6 +18,7 @@ import { formatWeight } from '@/domain/units'
 import { useJournalStore } from '@/stores/journal'
 import { useSettingsStore } from '@/stores/settings'
 import { formatDate, toEpochMs } from '@/services/time'
+import MoreInfo from '@/components/common/MoreInfo.vue'
 import SourceList from '@/components/common/SourceList.vue'
 import CohortChart from './CohortChart.vue'
 import GlycemicComparison from './GlycemicComparison.vue'
@@ -151,9 +152,9 @@ const startText = computed(() => {
   return `Week 0 is your first ${product.value?.molecule} dose on ${when}.`
 })
 
-const captionText = computed(() =>
+const notesText = computed(() =>
   [
-    startText.value,
+    ...(firstDoseAt.value === null ? [] : [startText.value]),
     ...cohortNotes(summary.value, measure.value, population.value, mixedPopulations.value),
   ].join(' '),
 )
@@ -263,8 +264,11 @@ const trialCount = computed(() =>
           :glucose-unit="settings.glucoseUnit"
         />
 
-        <p class="text-body-small gl-muted">{{ captionText }}</p>
-        <SourceList :sources="summary.sources" />
+        <p v-if="firstDoseAt === null" class="text-body-small gl-muted">{{ startText }}</p>
+        <MoreInfo v-if="notesText || summary.sources.length">
+          <p v-if="notesText" class="text-body-small gl-muted">{{ notesText }}</p>
+          <SourceList flat :sources="summary.sources" />
+        </MoreInfo>
       </v-card-text>
     </v-card>
 

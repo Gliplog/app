@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { use } from 'echarts/core'
 import { LineChart, ScatterChart } from 'echarts/charts'
 import {
@@ -42,7 +42,6 @@ function onClick(event: { seriesName?: string; data?: unknown }) {
 }
 
 const { colors } = useChartColors()
-const showTable = ref(false)
 
 const fmt = (v: number) => `${roundTo(v, props.decimals)} ${props.unitLabel}`.trim()
 
@@ -75,30 +74,6 @@ const ariaSummary = computed(() => {
     : ''
   return `${props.measure} from ${fmt(first.value)} to ${fmt(last.value)}, ${formatDateRange(first.at, last.at)}, ${pts.length} entries.${photos}${doses}${levels}`
 })
-
-interface TableRow {
-  at: number
-  value?: number
-  note?: string
-  dose?: string
-}
-
-/**
- * Every reading and marked dose, newest first: a reading with its note when the chart has more
- * than one kind, a dose with its medicine and strength, and each medicine's estimated level at
- * that moment when the level strip is shown.
- */
-const rows = computed(() =>
-  [
-    ...[...props.points, ...(props.secondary?.points ?? [])].map<TableRow>((p) => p),
-    ...(props.doses ?? []).map<TableRow>((d) => ({
-      at: d.at,
-      dose: `${d.label} ${formatDose(d.mg)}`,
-    })),
-  ]
-    .sort((a, b) => b.at - a.at)
-    .map((row) => ({ ...row, levels: props.levels?.readAt(row.at) ?? [] })),
-)
 </script>
 
 <template>
@@ -111,45 +86,6 @@ const rows = computed(() =>
       :aria-label="ariaSummary"
       @click="onClick"
     />
-    <v-btn variant="text" size="small" class="mt-1" @click="showTable = !showTable">
-      {{ showTable ? 'Hide table' : 'Show as table' }}
-    </v-btn>
-    <v-expand-transition>
-      <v-table v-if="showTable" density="compact" class="body-chart__table">
-        <thead>
-          <tr>
-            <th scope="col">Date</th>
-            <th scope="col" class="text-end">{{ measure }}</th>
-            <th v-if="doses?.length" scope="col">Dose</th>
-            <th v-for="s in levels?.series ?? []" :key="s.key" scope="col" class="text-end">
-              {{ s.label }} level
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(row, i) in rows" :key="`${row.at}-${i}`">
-            <td>{{ formatDate(row.at) }}</td>
-            <td class="text-end gl-num">
-              <template v-if="row.value !== undefined">{{ fmt(row.value) }}</template>
-              <span v-if="row.note" class="d-block text-body-small gl-faint">{{ row.note }}</span>
-            </td>
-            <td v-if="doses?.length">{{ row.dose }}</td>
-            <td v-for="r in row.levels" :key="r.key" class="text-end gl-num">
-              <template v-if="levels?.scale === 'amount'">
-                {{ formatDose(r.mg) }}
-                <span class="d-block text-body-small gl-faint"
-                  >{{ roundTo(r.percent, 0) }}% of peak</span
-                >
-              </template>
-              <template v-else>
-                {{ roundTo(r.percent, 0) }}%
-                <span class="d-block text-body-small gl-faint">{{ formatDose(r.mg) }}</span>
-              </template>
-            </td>
-          </tr>
-        </tbody>
-      </v-table>
-    </v-expand-transition>
   </div>
 </template>
 
@@ -171,9 +107,5 @@ const rows = computed(() =>
   .body-chart--levels {
     height: 440px;
   }
-}
-
-.body-chart__table {
-  background: transparent;
 }
 </style>

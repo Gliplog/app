@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import type { PkProfile } from '@/domain/catalog'
 import { lookbackHoursFor, type DoseEvent, type PkParameters } from '@/domain/pk'
 import { formatHours } from '@/services/time'
+import MoreInfo from '@/components/common/MoreInfo.vue'
 import SourceList from '@/components/common/SourceList.vue'
 import PkChart from './PkChart.vue'
 import ShareLevelsDialog from '@/components/share/ShareLevelsDialog.vue'
@@ -76,10 +77,17 @@ const shareInput = computed(() =>
           :now="now"
           :lookback-hours="lookbackHours"
         />
-        <p class="text-body-small gl-muted">
-          Estimated amount in your body, from a simple model of published data.
-        </p>
-        <SourceList v-if="profile?.pk" :sources="profile.pk.sources" :note="profile.pk.notes" />
+        <MoreInfo>
+          <p class="text-body-small gl-muted">
+            Estimated amount in your body, from a simple model of published data.
+          </p>
+          <SourceList
+            v-if="profile?.pk"
+            flat
+            :sources="profile.pk.sources"
+            :note="profile.pk.notes"
+          />
+        </MoreInfo>
       </template>
       <v-alert v-else type="info" variant="tonal" density="comfortable">
         {{

@@ -144,6 +144,7 @@ function measureOption(
       ? {
           top: 0,
           left: 0,
+          itemGap: 20,
           itemWidth: 14,
           itemHeight: 10,
           textStyle: { color: c.axis, fontFamily: c.font, fontSize: 11 },
@@ -347,6 +348,7 @@ function withLevelStrip(
       {
         top: '60%',
         left: 0,
+        itemGap: 20,
         itemWidth: 28,
         itemHeight: 10,
         textStyle: { color: c.axis, fontFamily: c.font, fontSize: 11 },

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { use, type ComposeOption } from 'echarts/core'
 import {
   LineChart,
@@ -59,7 +59,6 @@ const props = defineProps<{
 }>()
 
 const { colors } = useChartColors()
-const showTable = ref(false)
 
 /** A stored change (percent, HbA1c points, mg/dL) in the unit the axis shows. */
 function toDisplay(change: number): number {
@@ -238,11 +237,11 @@ const option = computed<Option>(() => {
     animationDuration: 600,
     animationEasing: 'cubicOut',
     textStyle: { fontFamily: c.font, color: c.text, fontSize },
-    // Room for the legend to wrap onto a second row on a phone, and for the "You" end label.
+    // Room for the legend to wrap on a phone, three rows at five entries, and for the "You" label.
     grid: {
       left: 8,
       right: props.user.length > 1 ? 40 : 16,
-      top: 64,
+      top: legend.length > 4 ? 88 : 64,
       bottom: 28,
       containLabel: true,
     },
@@ -303,8 +302,6 @@ const ariaSummary = computed(() => {
   for (const b of band.slice(1)) parts.push(`Week ${b.weeks}: ${fmt(b.high)} to ${fmt(b.low)}.`)
   return parts.join(' ')
 })
-
-const userRows = computed(() => props.user.filter((p) => p.weeks > 0))
 </script>
 
 <template>
@@ -317,37 +314,6 @@ const userRows = computed(() => props.user.filter((p) => p.weeks > 0))
       role="img"
       :aria-label="ariaSummary"
     />
-    <v-btn variant="text" size="small" class="mt-1" @click="showTable = !showTable">
-      {{ showTable ? 'Hide table' : 'Show as table' }}
-    </v-btn>
-    <v-expand-transition>
-      <v-table v-if="showTable" density="compact" class="cohort-chart__table">
-        <thead>
-          <tr>
-            <th scope="col">Week</th>
-            <th scope="col">Group</th>
-            <th scope="col" class="text-end">Change</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="row in userRows" :key="`you-${row.weeks}`">
-            <td class="gl-num">{{ roundTo(row.weeks, 1) }}</td>
-            <td class="font-weight-bold">You</td>
-            <td class="text-end gl-num">{{ fmt(row.change) }}</td>
-          </tr>
-          <tr v-for="r in summary.readouts" :key="`${r.trialId}-${r.armLabel}`">
-            <td class="gl-num">{{ r.weeks }}</td>
-            <td>
-              {{ r.trialName }} · {{ r.armLabel }}
-              <span v-if="r.printedKg !== null" class="d-block text-body-small gl-faint"
-                >Printed as {{ formatWeightChange(r.printedKg, 'kg') }}</span
-              >
-            </td>
-            <td class="text-end gl-num">{{ fmt(r.change) }}</td>
-          </tr>
-        </tbody>
-      </v-table>
-    </v-expand-transition>
   </div>
 </template>
 
@@ -361,9 +327,5 @@ const userRows = computed(() => props.user.filter((p) => p.weeks > 0))
   .cohort-chart {
     height: 360px;
   }
-}
-
-.cohort-chart__table {
-  background: transparent;
 }
 </style>

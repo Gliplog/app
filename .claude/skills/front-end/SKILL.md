@@ -37,8 +37,9 @@ One-line rules; detail lives in `reference/`. Read a reference when its trigger 
    toggles carry `role="group"` and a visible label (`aria-labelledby`).
 9. Destructive actions await `useConfirmStore().ask()`; feedback goes through
    `useNotifyStore().show()`; never a local `v-snackbar`.
-10. Every chart has a text summary (`aria-label`) and a table view (or, for trial bars, a value
-    in text on every row); series identity never relies on colour alone.
+10. Every chart has a text summary (`aria-label`), and notes and sources sit under `MoreInfo`
+    below it; trial bars carry a value in text on every row; series identity never relies on
+    colour alone.
 11. Charts use ECharts through `echarts/core` with only the parts registered; colours come from
     `useChartColors()`, never literals.
 
