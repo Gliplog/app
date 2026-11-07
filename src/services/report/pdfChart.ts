@@ -133,6 +133,8 @@ function drawTimeLabels(
 function swatch(page: PdfPage, x: number, y: number, s: ReportSeries) {
   if (s.style === 'line' || s.style === 'area') {
     page.line([x, y], [x + 10, y], { color: TONE[s.tone], width: 2 })
+  } else if (s.style === 'dashed') {
+    page.line([x, y], [x + 10, y], { color: TONE[s.tone], width: 1.5, dash: [2.5, 1.5] })
   } else mark(page, x + 5, y, s)
 }
 
@@ -280,6 +282,11 @@ export function drawChart(page: PdfPage, box: Box, chart: ReportChart, options: 
     } else if (s.style === 'line') {
       page.polyline(line, { color, width: 1.5 })
       if (line.length < 60) for (const [x, y] of line) page.circle(x, y, 1.8, { fill: color })
+    } else if (s.style === 'dashed') {
+      page.polyline(line, { color, width: 1.5, dash: [3, 2] })
+      if (line.length < 60)
+        for (const [x, y] of line)
+          page.circle(x, y, 1.9, { fill: PAPER, stroke: { color, width: 1 } })
     } else if (s.style === 'hollow') {
       for (const [x, y] of line) mark(page, x, y, s)
     }

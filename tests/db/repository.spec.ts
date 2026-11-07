@@ -114,6 +114,12 @@ describe('repository', () => {
       context: 'fasting',
       notes: '',
     })
+    await repo.addVital({
+      kind: 'hr',
+      measuredAt: '2026-10-02T07:00:00.000Z',
+      bpm: 64,
+      notes: '',
+    })
     await repo.setSetting('theme', 'dark')
     await repo.eraseAll()
     expect(await repo.listMedications()).toEqual([])
@@ -121,7 +127,36 @@ describe('repository', () => {
     expect(await repo.listWeights()).toEqual([])
     expect(await repo.listSymptoms()).toEqual([])
     expect(await repo.listGlucose()).toEqual([])
+    expect(await repo.listVitals()).toEqual([])
     expect(await repo.getSetting('theme')).toBeUndefined()
+  })
+
+  it('lists vitals newest first, and an edit that changes kind leaves no stale numbers', async () => {
+    const repo = createRepository(db, fixedClock)
+    const bp = await repo.addVital({
+      kind: 'bp',
+      measuredAt: '2026-10-01T07:00:00.000Z',
+      systolic: 128,
+      diastolic: 82,
+      notes: '',
+    })
+    await repo.addVital({ kind: 'hr', measuredAt: '2026-10-03T07:00:00.000Z', bpm: 61, notes: '' })
+    expect((await repo.listVitals()).map((v) => v.kind)).toEqual(['hr', 'bp'])
+    await repo.updateVital(bp.id, {
+      kind: 'hr',
+      measuredAt: bp.measuredAt,
+      bpm: 70,
+      notes: 'watch',
+    })
+    const edited = (await repo.listVitals()).find((v) => v.id === bp.id)!
+    expect(edited).toEqual({
+      id: bp.id,
+      kind: 'hr',
+      measuredAt: bp.measuredAt,
+      bpm: 70,
+      notes: 'watch',
+      createdAt: bp.createdAt,
+    })
   })
 })
 
@@ -164,6 +199,13 @@ describe('backup', () => {
       context: null,
       notes: '',
     })
+    await repo.addVital({
+      kind: 'bp',
+      measuredAt: '2026-09-30T08:00:00.000Z',
+      systolic: 131,
+      diastolic: 84,
+      notes: '',
+    })
     await repo.setSetting('profile', {
       heightCm: 170,
       goalKg: null,
@@ -180,6 +222,7 @@ describe('backup', () => {
     expect(parsed.weights).toHaveLength(1)
     expect(parsed.symptoms).toHaveLength(1)
     expect(parsed.glucose).toHaveLength(1)
+    expect(parsed.vitals).toHaveLength(1)
 
     const other = createDatabase(`test-${++counter}`)
     await other.open()
@@ -190,13 +233,23 @@ describe('backup', () => {
     expect(await restored.getSetting('profile')).toMatchObject({ heightCm: 170 })
     expect((await restored.listSymptoms())[0]!.symptom).toBe('nausea')
     expect((await restored.listGlucose())[0]!.value).toBe(7.4)
+    expect((await restored.listVitals())[0]).toMatchObject({ systolic: 131, diastolic: 84 })
     await other.delete()
+  })
+
+  it('restores a version 3 backup, which predates vitals', async () => {
+    await seed()
+    const { vitals: _vitals, ...rest } = await exportBackup(db, fixedClock)
+    const parsed = parseBackup(JSON.stringify({ ...rest, version: 3 }))
+    expect(parsed.vitals).toEqual([])
+    await restoreBackup(db, parsed)
+    expect(await createRepository(db).listVitals()).toEqual([])
   })
 
   it('restores a version 1 backup, which predates side effects and blood sugar', async () => {
     await seed()
     const current = await exportBackup(db, fixedClock)
-    const { symptoms: _symptoms, glucose: _glucose, ...rest } = current
+    const { symptoms: _symptoms, glucose: _glucose, vitals: _vitals, ...rest } = current
     const v1 = { ...rest, version: 1 }
     const parsed = parseBackup(JSON.stringify(v1))
     expect(parsed.symptoms).toEqual([])
@@ -214,6 +267,8 @@ describe('backup', () => {
     expect(() => parseBackup(JSON.stringify(badSymptom))).toThrow(/Side effect 1/)
     const badUnit = { ...backup, glucose: [{ ...backup.glucose[0]!, enteredUnit: 'mg/dL' }] }
     expect(() => parseBackup(JSON.stringify(badUnit))).toThrow(/Blood sugar reading 1/)
+    const flipped = { ...backup, vitals: [{ ...backup.vitals[0]!, systolic: 70, diastolic: 90 }] }
+    expect(() => parseBackup(JSON.stringify(flipped))).toThrow(/Vitals reading 1/)
   })
 
   it('rejects files that are not Gliplog backups', () => {
@@ -255,7 +310,7 @@ describe('backup', () => {
     const photo = await seedPhoto()
     const { bytes: zip } = await exportBackupArchive(db, fixedClock)
     const { backup, photoFiles } = readBackupFile(zip)
-    expect(backup.version).toBe(3)
+    expect(backup.version).toBe(4)
     expect(backup.photos).toHaveLength(1)
     expect(backup.doses).toHaveLength(1)
 

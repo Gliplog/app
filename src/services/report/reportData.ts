@@ -11,6 +11,7 @@ export const REPORT_SECTIONS = [
   'combined',
   'weight',
   'sugar',
+  'vitals',
   'cohort',
   'levels',
   'symptoms',
@@ -29,10 +30,11 @@ interface ReportPoint {
 export interface ReportSeries {
   label: string
   /**
-   * `area` is a curve filled down to zero (estimated levels); `line` joins readings; the rest
-   * are unjoined points, told apart by shape rather than colour alone.
+   * `area` is a curve filled down to zero (estimated levels); `line` joins readings, and
+   * `dashed` joins a second set beside it (diastolic under systolic); the rest are unjoined
+   * points, told apart by shape rather than colour alone.
    */
-  style: 'line' | 'area' | 'points' | 'hollow' | 'diamond' | 'triangle'
+  style: 'line' | 'dashed' | 'area' | 'points' | 'hollow' | 'diamond' | 'triangle'
   tone: 'logged' | 'preview' | 'trial' | 'placebo'
   /** Oldest first, in the unit the chart is labelled in. */
   points: readonly ReportPoint[]
@@ -139,6 +141,15 @@ export interface ReportSugar {
   glucose: ReportTable
 }
 
+export interface ReportVitals {
+  stats: ReportStats
+  /** Null with fewer than two readings at different times. */
+  bloodPressureChart: ReportChart | null
+  heartRateChart: ReportChart | null
+  bloodPressure: ReportTable
+  heartRate: ReportTable
+}
+
 export interface ReportData {
   pageSize: PageSize
   generated: string
@@ -148,6 +159,7 @@ export interface ReportData {
   combined: ReportCombined | null
   weight: ReportWeight | null
   sugar: ReportSugar | null
+  vitals: ReportVitals | null
   cohort: readonly ReportCohort[] | null
   levels: readonly ReportLevels[] | null
   symptoms: { table: ReportTable; notes: readonly string[] } | null

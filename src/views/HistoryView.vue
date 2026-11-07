@@ -1,27 +1,35 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import type { DoseRow, GlucoseRow, SymptomRow, WeightRow } from '@/db/database'
+import type { DoseRow, GlucoseRow, SymptomRow, VitalRow, WeightRow } from '@/db/database'
 import { formatA1c, formatGlucose, GLUCOSE_CONTEXT_LABELS } from '@/domain/glucose'
 import { SEVERITY_LABELS, symptomName } from '@/domain/symptoms'
+import { formatBloodPressure, formatHeartRate } from '@/domain/vitals'
 import { sortByTime, type SortDirection } from '@/domain/listing'
 import { formatDose, formatWeight } from '@/domain/units'
 import { useJournalStore } from '@/stores/journal'
 import { useSettingsStore } from '@/stores/settings'
 import { usePaging } from '@/composables/usePaging'
 import { formatDateTime, toEpochMs } from '@/services/time'
-import { mdiNeedle, mdiScaleBathroom, mdiStethoscope, mdiWaterOutline } from '@/plugins/icons'
+import {
+  mdiHeartPulse,
+  mdiNeedle,
+  mdiScaleBathroom,
+  mdiStethoscope,
+  mdiWaterOutline,
+} from '@/plugins/icons'
 import ListPager from '@/components/common/ListPager.vue'
 import SortToggle from '@/components/common/SortToggle.vue'
 import LogDoseDialog from '@/components/journal/LogDoseDialog.vue'
 import LogWeightDialog from '@/components/journal/LogWeightDialog.vue'
 import LogSymptomDialog from '@/components/journal/LogSymptomDialog.vue'
 import LogGlucoseDialog from '@/components/journal/LogGlucoseDialog.vue'
+import LogVitalsDialog from '@/components/journal/LogVitalsDialog.vue'
 import { SITE_LABELS } from '@/components/journal/siteLabels'
 
 const journal = useJournalStore()
 const settings = useSettingsStore()
 
-const tab = ref<'doses' | 'weights' | 'glucose' | 'symptoms'>('doses')
+const tab = ref<'doses' | 'weights' | 'glucose' | 'vitals' | 'symptoms'>('doses')
 const direction = ref<SortDirection>('desc')
 
 const doses = computed(() =>
@@ -37,16 +45,21 @@ const symptoms = computed(() =>
 const readings = computed(() =>
   sortByTime(journal.glucose, (g) => toEpochMs(g.measuredAt), direction.value),
 )
+const vitals = computed(() =>
+  sortByTime(journal.vitals, (v) => toEpochMs(v.measuredAt), direction.value),
+)
 
 const dosePages = usePaging(doses)
 const weightPages = usePaging(weights)
 const symptomPages = usePaging(symptoms)
 const readingPages = usePaging(readings)
+const vitalPages = usePaging(vitals)
 watch([direction, tab], () => {
   dosePages.reset()
   weightPages.reset()
   symptomPages.reset()
   readingPages.reset()
+  vitalPages.reset()
 })
 
 const doseDialog = ref(false)
@@ -79,6 +92,23 @@ function editReading(row: GlucoseRow) {
   glucoseDialog.value = true
 }
 
+const vitalsDialog = ref(false)
+const editingVital = ref<VitalRow | null>(null)
+
+function editVital(row: VitalRow) {
+  editingVital.value = row
+  vitalsDialog.value = true
+}
+
+function vitalTitle(v: VitalRow): string {
+  return v.kind === 'bp' ? formatBloodPressure(v.systolic, v.diastolic) : formatHeartRate(v.bpm)
+}
+
+function vitalSubtitle(v: VitalRow): string {
+  const when = formatDateTime(v.measuredAt)
+  return `${v.kind === 'bp' ? 'Blood pressure' : 'Resting heart rate'} · ${when}`
+}
+
 function readingTitle(g: GlucoseRow): string {
   return g.kind === 'a1c'
     ? `HbA1c ${formatA1c(g.value, settings.a1cUnit)}`
@@ -109,6 +139,7 @@ function doseSubtitle(d: DoseRow): string {
         <v-tab value="doses">Doses ({{ journal.doses.length }})</v-tab>
         <v-tab value="weights">Weights ({{ journal.weights.length }})</v-tab>
         <v-tab value="glucose">Blood sugar ({{ journal.glucose.length }})</v-tab>
+        <v-tab value="vitals">Vitals ({{ journal.vitals.length }})</v-tab>
         <v-tab value="symptoms">Side effects ({{ journal.symptoms.length }})</v-tab>
       </v-tabs>
       <v-card-text class="gl-stack">
@@ -180,6 +211,27 @@ function doseSubtitle(d: DoseRow): string {
           />
         </template>
 
+        <template v-else-if="tab === 'vitals'">
+          <p v-if="!journal.vitals.length" class="gl-muted">No vitals logged yet.</p>
+          <v-list v-else class="bg-transparent" density="comfortable">
+            <v-list-item
+              v-for="row in vitalPages.current.value.items"
+              :key="row.id"
+              :prepend-icon="mdiHeartPulse"
+              :subtitle="vitalSubtitle(row)"
+              @click="editVital(row)"
+            >
+              <v-list-item-title class="gl-num">{{ vitalTitle(row) }}</v-list-item-title>
+              <p v-if="row.notes" class="text-body-small gl-muted note">{{ row.notes }}</p>
+            </v-list-item>
+          </v-list>
+          <ListPager
+            v-model="vitalPages.state.page"
+            :current="vitalPages.current.value"
+            noun="readings"
+          />
+        </template>
+
         <template v-else>
           <p v-if="!journal.weights.length" class="gl-muted">No weigh-ins yet.</p>
           <v-list v-else class="bg-transparent" density="comfortable">
@@ -209,6 +261,7 @@ function doseSubtitle(d: DoseRow): string {
     <LogWeightDialog v-model="weightDialog" :weight="editingWeight" />
     <LogSymptomDialog v-model="symptomDialog" :symptom="editingSymptom" />
     <LogGlucoseDialog v-model="glucoseDialog" :reading="editingReading" />
+    <LogVitalsDialog v-model="vitalsDialog" :reading="editingVital" />
   </div>
 </template>
 

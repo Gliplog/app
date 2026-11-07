@@ -83,6 +83,17 @@ export type GlucoseRow = {
   | { kind: 'glucose'; enteredUnit: GlucoseUnit; context: GlucoseContext }
 )
 
+/**
+ * A blood pressure or resting heart rate reading, as the cuff or monitor showed it: mmHg for
+ * blood pressure, beats per minute for heart rate.
+ */
+export type VitalRow = {
+  id: string
+  measuredAt: string
+  notes: string
+  createdAt: string
+} & ({ kind: 'bp'; systolic: number; diastolic: number } | { kind: 'hr'; bpm: number })
+
 /** A progress photo's details. Its pixels live in `photoImages` and `photoThumbs`, by id. */
 export interface PhotoRow {
   id: string
@@ -116,6 +127,7 @@ export type GliplogDb = Dexie & {
   weights: EntityTable<WeightRow, 'id'>
   symptoms: EntityTable<SymptomRow, 'id'>
   glucose: EntityTable<GlucoseRow, 'id'>
+  vitals: EntityTable<VitalRow, 'id'>
   photos: EntityTable<PhotoRow, 'id'>
   photoImages: EntityTable<PhotoBytesRow, 'id'>
   photoThumbs: EntityTable<PhotoBytesRow, 'id'>
@@ -147,6 +159,10 @@ export function createDatabase(name = DB_NAME): GliplogDb {
     photos: 'id, takenAt',
     photoImages: 'id',
     photoThumbs: 'id',
+  })
+  // Blood pressure and heart rate: a new table only, so existing rows need no upgrade.
+  db.version(4).stores({
+    vitals: 'id, kind, measuredAt',
   })
   return db
 }

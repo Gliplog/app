@@ -31,6 +31,7 @@ export function useReportExport() {
       weights: journal.weights,
       symptoms: journal.symptoms,
       glucose: journal.glucose,
+      vitals: journal.vitals,
       levelGroups: journal.levelGroups,
       units: { weight: settings.weightUnit, a1c: settings.a1cUnit, glucose: settings.glucoseUnit },
       profile: settings.profile,

@@ -32,6 +32,10 @@ const SECTIONS: Record<ReportSection, { title: string; detail: string }> = {
   },
   weight: { title: 'Weight and BMI', detail: 'Change over the period, with charts' },
   sugar: { title: 'Blood sugar', detail: 'HbA1c and glucose charts and readings' },
+  vitals: {
+    title: 'Blood pressure and heart rate',
+    detail: 'Charts and readings',
+  },
   cohort: {
     title: 'Trial comparison',
     detail: 'Your change beside published trial averages, from your first dose',

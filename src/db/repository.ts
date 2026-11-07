@@ -6,6 +6,7 @@ import type {
   PhotoRow,
   SymptomRow,
   GliplogDb,
+  VitalRow,
   WeightRow,
 } from './database'
 import { nowIso, systemClock, type Clock } from '@/services/time'
@@ -16,6 +17,7 @@ export type NewWeight = Omit<WeightRow, 'id' | 'createdAt'>
 export type NewSymptom = Omit<SymptomRow, 'id' | 'createdAt'>
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never
 export type NewGlucose = DistributiveOmit<GlucoseRow, 'id' | 'createdAt'>
+export type NewVital = DistributiveOmit<VitalRow, 'id' | 'createdAt'>
 export type NewPhoto = Omit<PhotoRow, 'id' | 'createdAt'>
 export type PhotoChanges = Partial<Pick<PhotoRow, 'takenAt' | 'pose' | 'notes'>>
 
@@ -125,6 +127,27 @@ export function createRepository(db: GliplogDb, clock: Clock = systemClock) {
 
     async deleteGlucose(id: string): Promise<void> {
       await db.glucose.delete(id)
+    },
+
+    async listVitals(): Promise<VitalRow[]> {
+      return db.vitals.orderBy('measuredAt').reverse().toArray()
+    },
+
+    async addVital(input: NewVital): Promise<VitalRow> {
+      const row = { ...input, id: crypto.randomUUID(), createdAt: nowIso(clock) } as VitalRow
+      await db.vitals.add(row)
+      return row
+    },
+
+    /** Replaces the reading's fields, so a change of kind leaves no stale numbers behind. */
+    async updateVital(id: string, changes: NewVital): Promise<void> {
+      const row = await db.vitals.get(id)
+      if (!row) return
+      await db.vitals.put({ ...changes, id, createdAt: row.createdAt } as VitalRow)
+    },
+
+    async deleteVital(id: string): Promise<void> {
+      await db.vitals.delete(id)
     },
 
     async listPhotos(): Promise<PhotoRow[]> {

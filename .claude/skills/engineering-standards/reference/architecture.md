@@ -9,8 +9,8 @@ src/
   domain/        pure logic: units (weight, height, formatting), body (age, BMI, WHO bands),
                  progress (baseline, change series, trial comparison, cohort overlay), schedule
                  (next dose, syringe units), pk, levels (pooling and the curve model), glucose
-                 (HbA1c and glucose units, glycemic comparison), symptoms (side-effect list and
-                 summary), reminders (when to remind, notification wording), photos (sizing,
+                 (HbA1c and glucose units, glycemic comparison), vitals (blood pressure and
+                 heart rate ranges and formatting), symptoms (side-effect list and summary), reminders (when to remind, notification wording), photos (sizing,
                  nearest weigh-in, comparison pair), listing, catalog types
   data/          medications.json, its JSON Schema, typed loader (index.ts)
   db/            Dexie database (schema history), repository, backup export/restore
@@ -46,7 +46,7 @@ that must survive a reload goes into the database.
 
 - IndexedDB via Dexie, database `gliplog`. Tables: `medications`, `doses`, `weights`,
   `symptoms` and `glucose` (both from version 2), `photos`, `photoImages` and `photoThumbs`
-  (version 3), `settings` (key/value; the profile is the `profile` key and reminder choices
+  (version 3), `vitals` (version 4: blood pressure and resting heart rate), `settings` (key/value; the profile is the `profile` key and reminder choices
   the `reminders` key, both sanitised on load).
 - Photo bytes are JPEG ArrayBuffers, not Blobs (older Safari and fake-indexeddb cannot store
   Blobs), with thumbnails in their own table so the grid never reads full images. Every photo
@@ -54,6 +54,8 @@ that must survive a reload goes into the database.
   WebView's camera capture file is deleted once stored. Photos never go to the gallery.
 - HbA1c is stored in NGSP percent and glucose in mg/dL, unrounded, with the unit typed;
   Settings chooses the display units, as for weight.
+- Blood pressure (mmHg) and resting heart rate (bpm) have no unit setting: stored as typed,
+  shown as whole numbers.
 - Ids are `crypto.randomUUID()`; timestamps are UTC ISO strings.
 - Deleting a medication deletes its doses in the same transaction. Stopping one keeps both.
 - `navigator.storage.persist()` is requested on launch (Settings shows the result). Safari may

@@ -390,6 +390,45 @@ test('logs side effects and blood sugar, in the units chosen in Settings', async
   await expect(page.getByText('Stomach pain')).toBeVisible()
 })
 
+test('logs blood pressure and heart rate, charts them and lists them in History', async ({
+  page,
+}) => {
+  await page.goto('./')
+  await acceptDisclaimer(page)
+  await addMedication(page, 'Ozempic')
+
+  await page.getByRole('button', { name: 'Log vitals' }).click()
+  const vitals = page.getByRole('dialog', { name: 'Vitals' })
+  await vitals.getByLabel('Systolic').fill('82')
+  await vitals.getByLabel('Diastolic').fill('90')
+  await expect(vitals.getByText('Lower than systolic')).toBeVisible()
+  await expect(vitals.getByRole('button', { name: 'Save' })).toBeDisabled()
+  await vitals.getByLabel('Systolic').fill('128')
+  await vitals.getByLabel('Diastolic').fill('82')
+  await vitals.getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByText('Reading logged')).toBeVisible()
+  await expect(page.getByText('128/82 mmHg', { exact: true })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Log vitals' }).click()
+  await choose(vitals, 'Reading', 'Heart rate')
+  await vitals.getByLabel('Resting heart rate').fill('64')
+  await vitals.getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByText('Reading logged')).toBeVisible()
+  await expect(page.getByText('64 bpm', { exact: true })).toBeVisible()
+
+  await page.getByRole('link', { name: 'Progress', exact: true }).first().click()
+  await choose(page, 'Measure', 'Blood pressure')
+  await expect(page.getByRole('img', { name: /^Systolic from 128 mmHg/ })).toBeVisible()
+  await page.getByRole('button', { name: 'Share blood pressure as an image' }).click()
+  await expect(page.getByRole('dialog', { name: 'Share as an image' })).toBeVisible()
+  await page.keyboard.press('Escape')
+
+  await page.getByRole('link', { name: 'History', exact: true }).first().click()
+  await page.getByRole('tab', { name: /Vitals/ }).click()
+  await expect(page.getByText('128/82 mmHg', { exact: true })).toBeVisible()
+  await expect(page.getByText('64 bpm', { exact: true })).toBeVisible()
+})
+
 test('a compounded vial shows the dose as syringe units', async ({ page }) => {
   await page.goto('./')
   await acceptDisclaimer(page)

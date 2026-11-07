@@ -19,11 +19,12 @@ Part of the `front-end` skill.
 | `journal/LogWeightDialog.vue`                         | Log or edit a weigh-in in kg or lb                                                      |
 | `journal/LogSymptomDialog.vue`                        | Log one or more side effects at one strength, or edit one entry                         |
 | `journal/LogGlucoseDialog.vue`                        | Log or edit an HbA1c result or a glucose reading (with when in the day)                 |
+| `journal/LogVitalsDialog.vue`                         | Log or edit blood pressure (systolic over diastolic) or resting heart rate              |
 | `journal/MedicationStack.vue`                         | Today's stacked medication cards: swipe, arrows, dots or arrow keys; back cards inert   |
 | `journal/SymptomSummaryCard.vue`                      | Side effects by period, strength and days after a dose; opens the PDF export            |
 | `charts/CohortChart.vue`                              | One medicine's trial readouts merged over weeks (band and points), your line            |
 | `charts/CohortSection.vue`                            | Progress cohort section: medication, measure and population switches, trial cards       |
-| `charts/TrendCard.vue`                                | Weight, BMI, HbA1c and glucose in one card; photos, doses, levels strip; share button   |
+| `charts/TrendCard.vue`                                | Weight, BMI, HbA1c, glucose, BP and heart rate; photos, doses, levels strip; share      |
 | `charts/bodyChart.ts`                                 | The body-measure chart option, shared by `BodyChart` and share images                   |
 | `share/ShareImageDialog.vue`                          | Preview and share an image card (content or a render function); privacy in its slot     |
 | `share/ShareTrendDialog.vue`, `ShareLevelsDialog.vue` | Image cards for a trend (numbers, doses, levels opt-in) and estimated levels            |

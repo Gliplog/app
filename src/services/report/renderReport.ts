@@ -206,6 +206,26 @@ function drawSugar(layout: Layout, data: ReportData) {
   layout.rule()
 }
 
+function drawVitals(layout: Layout, data: ReportData) {
+  const vitals = data.vitals!
+  layout.heading('Blood pressure and heart rate')
+  layout.stats(vitals.stats)
+  if (vitals.bloodPressureChart) chart(layout, data, vitals.bloodPressureChart, 150)
+  if (vitals.heartRateChart) {
+    layout.gap(6)
+    chart(layout, data, vitals.heartRateChart, 130)
+  }
+  layout.rule()
+  if (vitals.bloodPressure.rows.length) {
+    layout.table('Blood pressure', vitals.bloodPressure)
+    layout.rule()
+  }
+  if (vitals.heartRate.rows.length) {
+    layout.table('Resting heart rate', vitals.heartRate)
+    layout.rule()
+  }
+}
+
 function drawCohort(layout: Layout, data: ReportData, cohort: readonly ReportCohort[]) {
   // The section's heading and introduction stay with its first chart.
   layout.ensure(300)
@@ -242,6 +262,7 @@ export function renderReport(data: ReportData): Uint8Array<ArrayBuffer> {
   if (data.combined) drawCombined(layout, data)
   if (data.weight) drawWeight(layout, data)
   if (data.sugar) drawSugar(layout, data)
+  if (data.vitals) drawVitals(layout, data)
   if (data.cohort?.length) drawCohort(layout, data, data.cohort)
   if (data.levels) {
     if (data.levels.length) {

@@ -11,6 +11,7 @@ import { useBodyMetrics } from '@/composables/useBodyMetrics'
 import { formatDateTime, daysBetween } from '@/services/time'
 import {
   mdiChevronRight,
+  mdiHeartPulse,
   mdiPlus,
   mdiScaleBathroom,
   mdiStethoscope,
@@ -18,6 +19,7 @@ import {
 } from '@/plugins/icons'
 import { formatA1c, formatGlucose, GLUCOSE_CONTEXT_LABELS } from '@/domain/glucose'
 import { summarizeSymptoms } from '@/domain/symptoms'
+import { formatBloodPressure, formatHeartRate } from '@/domain/vitals'
 import { toEpochMs } from '@/services/time'
 import MedicationStack from '@/components/journal/MedicationStack.vue'
 import MedicationDialog from '@/components/journal/MedicationDialog.vue'
@@ -26,6 +28,7 @@ import LogDoseDialog from '@/components/journal/LogDoseDialog.vue'
 import LogWeightDialog from '@/components/journal/LogWeightDialog.vue'
 import LogSymptomDialog from '@/components/journal/LogSymptomDialog.vue'
 import LogGlucoseDialog from '@/components/journal/LogGlucoseDialog.vue'
+import LogVitalsDialog from '@/components/journal/LogVitalsDialog.vue'
 import PkPanel from '@/components/charts/PkPanel.vue'
 import AddReminderDialog from '@/components/reminders/AddReminderDialog.vue'
 
@@ -41,6 +44,7 @@ const doseFor = ref<string | undefined>()
 const weightDialog = ref(false)
 const symptomDialog = ref(false)
 const glucoseDialog = ref(false)
+const vitalsDialog = ref(false)
 
 function addMedication() {
   editing.value = null
@@ -137,6 +141,9 @@ const recentSymptoms = computed(() =>
 
 const latestA1c = computed(() => journal.glucose.find((g) => g.kind === 'a1c'))
 const latestGlucose = computed(() => journal.glucose.find((g) => g.kind === 'glucose'))
+
+const latestBp = computed(() => journal.vitals.find((v) => v.kind === 'bp'))
+const latestHr = computed(() => journal.vitals.find((v) => v.kind === 'hr'))
 
 const daysSinceStart = computed(() =>
   baseline.value ? daysBetween(baseline.value.startAt, now.value) : null,
@@ -290,6 +297,40 @@ const daysSinceStart = computed(() =>
 
       <v-card v-if="journal.medications.length">
         <v-card-item>
+          <p class="gl-eyebrow">Vitals</p>
+          <v-card-title>
+            <span v-if="latestBp?.kind === 'bp'" class="gl-num">{{
+              formatBloodPressure(latestBp.systolic, latestBp.diastolic)
+            }}</span>
+            <span v-else-if="latestHr?.kind === 'hr'" class="gl-num">{{
+              formatHeartRate(latestHr.bpm)
+            }}</span>
+            <span v-else>No readings yet</span>
+          </v-card-title>
+          <v-card-subtitle v-if="latestBp ?? latestHr">{{
+            formatDateTime((latestBp ?? latestHr)!.measuredAt)
+          }}</v-card-subtitle>
+        </v-card-item>
+        <v-card-text class="gl-stack">
+          <dl v-if="latestBp && latestHr?.kind === 'hr'" class="stats">
+            <div>
+              <dt class="gl-faint">Resting heart rate</dt>
+              <dd class="gl-num">{{ formatHeartRate(latestHr.bpm) }}</dd>
+            </div>
+          </dl>
+          <p v-else-if="!latestBp && !latestHr" class="gl-muted">
+            Log blood pressure and resting heart rate.
+          </p>
+          <div class="gl-actions">
+            <v-btn variant="tonal" :prepend-icon="mdiHeartPulse" @click="vitalsDialog = true">
+              Log vitals
+            </v-btn>
+          </div>
+        </v-card-text>
+      </v-card>
+
+      <v-card v-if="journal.medications.length">
+        <v-card-item>
           <p class="gl-eyebrow">Side effects</p>
           <v-card-title>Last {{ RECENT_DAYS }} days</v-card-title>
         </v-card-item>
@@ -351,6 +392,7 @@ const daysSinceStart = computed(() =>
     <LogWeightDialog v-model="weightDialog" :weight="null" />
     <LogSymptomDialog v-model="symptomDialog" :symptom="null" />
     <LogGlucoseDialog v-model="glucoseDialog" :reading="null" />
+    <LogVitalsDialog v-model="vitalsDialog" :reading="null" />
   </div>
 </template>
 

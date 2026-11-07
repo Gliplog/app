@@ -67,9 +67,32 @@ export function sampleBackup() {
     notes: '',
     createdAt: created,
   }))
+  // A home cuff every few weeks and a watch's resting heart rate, easing down over the course.
+  const vitals = [0, 4, 8, 12, 16, 19].flatMap((week, i) => {
+    const measuredAt = iso(at(Math.max(1, firstDoseDaysAgo - week * 7 + 1), 8))
+    return [
+      {
+        id: `bp${i}`,
+        kind: 'bp',
+        systolic: [138, 136, 132, 129, 126, 124][i],
+        diastolic: [88, 87, 85, 83, 81, 80][i],
+        measuredAt,
+        notes: '',
+        createdAt: created,
+      },
+      {
+        id: `hr${i}`,
+        kind: 'hr',
+        bpm: [74, 73, 71, 70, 68, 67][i],
+        measuredAt,
+        notes: '',
+        createdAt: created,
+      },
+    ]
+  })
   return {
     format: 'gliplog-backup',
-    version: 2,
+    version: 4,
     exportedAt: iso(now),
     medications: [
       {
@@ -89,6 +112,8 @@ export function sampleBackup() {
     weights,
     symptoms,
     glucose,
+    vitals,
+    photos: [],
     // Restore replaces settings too: keep the notice accepted and the install hint away.
     settings: [
       {

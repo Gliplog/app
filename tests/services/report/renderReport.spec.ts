@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import type { DoseRow, GlucoseRow, MedicationRow, SymptomRow, WeightRow } from '@/db/database'
+import type {
+  DoseRow,
+  GlucoseRow,
+  MedicationRow,
+  SymptomRow,
+  VitalRow,
+  WeightRow,
+} from '@/db/database'
 import type { ReportPeriod } from '@/domain/report'
 import { SYMPTOM_LABELS, SYMPTOM_LABEL_TERMS, SYMPTOM_SOURCES } from '@/domain/symptoms'
 import { findPkProfile, findProduct } from '@/data'
@@ -89,6 +96,34 @@ function source(period: ReportPeriod = '90d'): ReportSource {
       createdAt: created,
     },
   ]
+  const vitals: VitalRow[] = [
+    {
+      id: 'v1',
+      kind: 'bp',
+      systolic: 134,
+      diastolic: 86,
+      measuredAt: iso(NOW - 20 * DAY),
+      notes: '',
+      createdAt: created,
+    },
+    {
+      id: 'v2',
+      kind: 'bp',
+      systolic: 126,
+      diastolic: 81,
+      measuredAt: iso(NOW - 4 * DAY),
+      notes: '',
+      createdAt: created,
+    },
+    {
+      id: 'v3',
+      kind: 'hr',
+      bpm: 66,
+      measuredAt: iso(NOW - 4 * DAY),
+      notes: '',
+      createdAt: created,
+    },
+  ]
   const profile = findPkProfile(findProduct(med.productId)!.pkProfile)!
   const levelGroups = groupLevels(
     [
@@ -111,6 +146,7 @@ function source(period: ReportPeriod = '90d'): ReportSource {
     weights,
     symptoms,
     glucose,
+    vitals,
     levelGroups,
     units: { weight: 'kg', a1c: '%', glucose: 'mg/dL' },
     profile: { heightCm: 170, goalKg: 85 },
@@ -156,6 +192,9 @@ describe('renderReport', () => {
       '(Indigestion \\(dyspepsia\\))',
       '(6.8%)',
       '(118 mg/dL)',
+      '(Blood pressure and heart rate)',
+      '(126/81 mmHg)',
+      '(66 bpm)',
     ]) {
       expect(all).toContain(text)
     }
@@ -169,6 +208,7 @@ describe('renderReport', () => {
       '(Weight)',
       '(HbA1c)',
       '(Blood glucose)',
+      '(Blood pressure and heart rate)',
       '(Compared with trial cohorts)',
       '(Estimated levels)',
       '(Side effects)',
@@ -269,15 +309,29 @@ describe('collectReport', () => {
     expect(only(['combined']).combined).toBeNull()
   })
 
+  it('charts systolic and diastolic, with the change in both', () => {
+    const vitals = only(['vitals']).vitals!
+    expect(vitals.stats).toContainEqual(['Latest blood pressure', '126/81 mmHg'])
+    expect(vitals.stats).toContainEqual(['Change', '−8/−5 mmHg'])
+    expect(vitals.bloodPressureChart!.series.map((s) => [s.label, s.style])).toEqual([
+      ['Systolic', 'line'],
+      ['Diastolic', 'dashed'],
+    ])
+    // One heart rate reading has no span to chart; it still prints in the table.
+    expect(vitals.heartRateChart).toBeNull()
+    expect(vitals.heartRate.rows).toEqual([[expect.any(String), '66 bpm', '', '']])
+    const combined = only(['combined', 'vitals']).combined!
+    expect(combined.panels.map((p) => p.title)).toEqual([
+      'Blood pressure (mmHg)',
+      'Resting heart rate (bpm)',
+    ])
+  })
+
   it('offers only the parts with something to print', () => {
     const { sections: _, ...rest } = source('30d')
-    expect([...availableSections({ ...rest, symptoms: [], glucose: [] })].sort()).toEqual([
-      'cohort',
-      'combined',
-      'doses',
-      'levels',
-      'weight',
-    ])
+    expect(
+      [...availableSections({ ...rest, symptoms: [], glucose: [], vitals: [] })].sort(),
+    ).toEqual(['cohort', 'combined', 'doses', 'levels', 'weight'])
     // The active medication is listed even with no dose in the period.
     const later = availableSections({ ...rest, now: NOW + 400 * DAY })
     expect([...later].sort()).toEqual(['cohort', 'doses'])
