@@ -1,0 +1,1 @@
+Charts are cleaner, with notes under More information. Chart legends no longer overlap on phones.
