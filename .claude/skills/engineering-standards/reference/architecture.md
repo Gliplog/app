@@ -10,20 +10,24 @@ src/
                  progress (baseline, change series, trial comparison, cohort overlay), schedule
                  (next dose, syringe units), pk, levels (pooling and the curve model), glucose
                  (HbA1c and glucose units, glycemic comparison), vitals (blood pressure and
-                 heart rate ranges and formatting), symptoms (side-effect list and summary), reminders (when to remind, notification wording), photos (sizing,
-                 nearest weigh-in, comparison pair), listing, catalog types
+                 heart rate ranges and formatting), healthSync (what to import and export,
+                 matching), symptoms (side-effect list and summary), reminders (when to
+                 remind, notification wording), photos (sizing, nearest weigh-in, comparison
+                 pair), listing, catalog types
   data/          medications.json, its JSON Schema, typed loader (index.ts)
   db/            Dexie database (schema history), repository, backup export/restore
-  stores/        Pinia: journal (medications, doses, weights, side effects, blood sugar, the
-                 focused medication), settings (units, theme, profile, reminders), photos
-                 (details and thumbnail URLs), notify, confirm
+  stores/        Pinia: journal (medications, doses, weights, side effects, blood sugar, vitals,
+                 the focused medication), settings (units, theme, profile, reminders), photos
+                 (details and thumbnail URLs), healthSync (Health apps choices), notify, confirm
   composables/   useBodyMetrics, useChartColors, useInstallPrompt, useStoragePersistence, useNow,
-                 usePaging, useHideOnScroll, useReminderSync
+                 usePaging, useHideOnScroll, useReminderSync, useHealthAutoSync
   services/      time.ts (the only clock and date formatter), fileTransfer.ts (share/download),
                  pdf/ (dependency-free PDF writer), report/ (journal report data and layout),
-                 photos/ (canvas re-encode), reminders/ (native local notifications)
+                 photos/ (canvas re-encode), reminders/ (native local notifications),
+                 health/ (Apple Health and Health Connect through @capgo/capacitor-health,
+                 loaded only in the apps; runSync, the sync loop)
   components/    journal/ (dialogs), charts/, common/, photos/
-  views/         one per route: Today, Progress, History, Settings
+  views/         one per route: Today, Progress, History, Settings, Health (apps only)
   plugins/       vuetify.ts (themes, defaults), icons.ts (inline SVG icons), fonts.ts
   styles/        tokens.css (design tokens), theme.css (global and Vuetify overrides)
 public/          icons, favicon, layers.css (cascade layer order, linked before bundles)
@@ -69,6 +73,12 @@ that must survive a reload goes into the database.
   atomically. Older files restore with the newer tables empty, so restoring a `.json` removes
   photos (the confirmation says so). The Android share path writes binary files in 3 MB
   appended slices so a large zip never crosses the bridge as one string.
+
+- Health apps sync is off until the user turns it on, and only adds: neither health store lets
+  an app edit or delete another app's records. The `healthSync` setting keeps the user's
+  choices and the ids of rows already in the store, so nothing is sent or taken twice; a
+  reading counts as present on the other side at the same minute and value. Imported rows are
+  ordinary journal rows with a "From Apple Health" or "From Health Connect" note.
 
 ## Reminders
 

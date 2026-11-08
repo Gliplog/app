@@ -10,6 +10,7 @@ Gliplog is a calm, private journal for people taking a GLP-1 medicine, whether a
 <li>For compounded vials, enter the strength once and every dose also shows the units to draw on a U-100 syringe.</li>
 <li>Note side effects, HbA1c, blood glucose, blood pressure and resting heart rate, and keep progress photos that only you can see.</li>
 <li>Set dose reminders, and export a PDF report to take to an appointment.</li>
+<li>Turn on Health Connect sync for weight, glucose, blood pressure and heart rate.</li>
 </ul>
 
 <b>Private by design</b>

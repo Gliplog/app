@@ -25,6 +25,7 @@ import type { A1cUnit, GlucoseUnit } from '@/domain/glucose'
 import { useSettingsStore, type ThemePreference } from '@/stores/settings'
 import { useJournalStore } from '@/stores/journal'
 import { usePhotosStore } from '@/stores/photos'
+import { useHealthSyncStore } from '@/stores/healthSync'
 import { useNotifyStore } from '@/stores/notify'
 import { useConfirmStore } from '@/stores/confirm'
 import { useStoragePersistence } from '@/composables/useStoragePersistence'
@@ -43,7 +44,7 @@ import {
   requestNotificationAccess,
   type NotificationAccess,
 } from '@/services/reminders/notificationAccess'
-import { nativeApps, notificationSettingsSteps } from '@/services/platform'
+import { healthStoreName, nativeApps, notificationSettingsSteps } from '@/services/platform'
 import type { MedicationRow } from '@/db/database'
 import { saveFile } from '@/services/fileTransfer'
 import { daysBetween, formatDateTime, systemClock } from '@/services/time'
@@ -54,6 +55,7 @@ import {
   mdiCloudOffOutline,
   mdiDeleteOutline,
   mdiDownload,
+  mdiHeartPulse,
   mdiShieldLockOutline,
   mdiTrayArrowUp,
 } from '@/plugins/icons'
@@ -61,6 +63,9 @@ import {
 const settings = useSettingsStore()
 const journal = useJournalStore()
 const photos = usePhotosStore()
+const healthSync = useHealthSyncStore()
+/** Health sync needs the phone's health store, so only the apps offer it. */
+const healthSupported = __NATIVE__
 const notify = useNotifyStore()
 const confirm = useConfirmStore()
 const theme = useTheme()
@@ -231,7 +236,7 @@ async function importData(event: Event) {
     })
     if (!ok) return
     await restoreBackup(db, backup, photoFiles)
-    await Promise.all([journal.load(), settings.load(), photos.load()])
+    await Promise.all([journal.load(), settings.load(), photos.load(), healthSync.load()])
     theme.change(settings.theme)
     notify.show('Backup restored', 'success')
   } catch (e) {
@@ -248,7 +253,7 @@ async function eraseEverything() {
   })
   if (!ok) return
   await repository.eraseAll()
-  await Promise.all([journal.load(), settings.load(), photos.load()])
+  await Promise.all([journal.load(), settings.load(), photos.load(), healthSync.load()])
   theme.change(settings.theme)
   notify.show('Everything erased', 'success')
 }
@@ -541,6 +546,26 @@ const formatMb = (bytes: number | null) =>
       </v-card>
 
       <AddReminderDialog v-model="reminderOpen" :medication="reminderFor" />
+
+      <v-card v-if="healthSupported">
+        <v-card-item>
+          <p class="gl-eyebrow">Health apps</p>
+          <v-card-title>{{ healthStoreName }}</v-card-title>
+          <v-card-subtitle>{{
+            healthSync.settings.enabled && healthSync.settings.schedule === 'ongoing'
+              ? 'Sync is on'
+              : 'Sync is off'
+          }}</v-card-subtitle>
+        </v-card-item>
+        <v-card-text class="gl-stack">
+          <p>Import and export weight, glucose, blood pressure and heart rate.</p>
+          <div class="gl-actions">
+            <v-btn variant="tonal" :prepend-icon="mdiHeartPulse" :to="{ name: 'health' }">
+              Set up sync
+            </v-btn>
+          </div>
+        </v-card-text>
+      </v-card>
 
       <v-card>
         <v-card-item>

@@ -18,6 +18,18 @@ export const cameraSettingsSteps =
     ? 'Open Settings, then Apps, Gliplog, and turn on Camera.'
     : 'Open Android Settings, then Apps, Gliplog, Permissions, Camera.'
 
+/** The phone's health store, as copy names it. */
+export const healthStoreName = __PLATFORM__ === 'ios' ? 'Apple Health' : 'Health Connect'
+
+/** Where to change Gliplog's access to Apple Health; Health Connect opens its own screen. */
+export const healthAccessSteps = 'Open Settings, then Privacy & Security, Health, Gliplog.'
+
+/**
+ * The app's id on both stores (`appId` in capacitor.config.ts). The health store reports it as
+ * the source of what Gliplog wrote, so sync never takes back its own readings.
+ */
+export const appSourceId = 'io.github.gliplog.app'
+
 /**
  * The apps the web build points to for notifications. Update when the iOS app reaches the App
  * Store, so iPhone users are pointed to it too.

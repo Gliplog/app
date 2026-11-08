@@ -131,6 +131,28 @@ describe('repository', () => {
     expect(await repo.getSetting('theme')).toBeUndefined()
   })
 
+  it('imports readings from a health store in one go, returning their ids', async () => {
+    const repo = createRepository(db, fixedClock)
+    const ids = await repo.importReadings({
+      weights: [{ measuredAt: '2026-10-01T07:00:00.000Z', kg: 80, enteredUnit: 'kg', notes: '' }],
+      glucose: [
+        {
+          kind: 'glucose',
+          measuredAt: '2026-10-01T07:05:00.000Z',
+          value: 96,
+          enteredUnit: 'mg/dL',
+          context: 'other',
+          notes: '',
+        },
+      ],
+      vitals: [{ kind: 'hr', measuredAt: '2026-10-01T07:10:00.000Z', bpm: 61, notes: '' }],
+    })
+    expect(ids).toHaveLength(3)
+    expect((await repo.listWeights())[0]!.id).toBe(ids[0])
+    expect((await repo.listGlucose())[0]!.id).toBe(ids[1])
+    expect((await repo.listVitals())[0]!.id).toBe(ids[2])
+  })
+
   it('lists vitals newest first, and an edit that changes kind leaves no stale numbers', async () => {
     const repo = createRepository(db, fixedClock)
     const bp = await repo.addVital({
@@ -235,6 +257,30 @@ describe('backup', () => {
     expect((await restored.listGlucose())[0]!.value).toBe(7.4)
     expect((await restored.listVitals())[0]).toMatchObject({ systolic: 131, diastolic: 84 })
     await other.delete()
+  })
+
+  it('restores health sync choices but turns sync off and starts its bookkeeping over', async () => {
+    const repo = await seed()
+    await repo.setSetting('healthSync', {
+      measures: ['weight'],
+      direction: 'export',
+      schedule: 'ongoing',
+      enabled: true,
+      lastSyncAt: '2026-10-20T08:00:00.000Z',
+      inHealth: ['w1'],
+      taken: [{ id: 'p1', at: 1 }],
+    })
+    const backup = parseBackup(JSON.stringify(await exportBackup(db, fixedClock)))
+    await restoreBackup(db, backup)
+    expect(await repo.getSetting('healthSync')).toEqual({
+      measures: ['weight'],
+      direction: 'export',
+      schedule: 'ongoing',
+      enabled: false,
+      lastSyncAt: null,
+      inHealth: [],
+      taken: [],
+    })
   })
 
   it('restores a version 3 backup, which predates vitals', async () => {

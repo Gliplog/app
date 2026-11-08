@@ -8,6 +8,8 @@ import { usePhotosStore } from '@/stores/photos'
 import { useInstallPrompt } from '@/composables/useInstallPrompt'
 import { useHideOnScroll } from '@/composables/useHideOnScroll'
 import { useReminderSync } from '@/composables/useReminderSync'
+import { useHealthAutoSync } from '@/composables/useHealthAutoSync'
+import { useHealthSyncStore } from '@/stores/healthSync'
 import AppLogo from '@/components/common/AppLogo.vue'
 import AppSnackbar from '@/components/common/AppSnackbar.vue'
 import AppConfirm from '@/components/common/AppConfirm.vue'
@@ -24,12 +26,14 @@ import {
 const settings = useSettingsStore()
 const journal = useJournalStore()
 const photos = usePhotosStore()
+const healthSync = useHealthSyncStore()
 const theme = useTheme()
 const display = useDisplay()
 const route = useRoute()
 const router = useRouter()
 const install = useInstallPrompt()
 useReminderSync()
+useHealthAutoSync()
 
 const NAV = [
   { name: 'today', title: 'Today', icon: mdiWaves },
@@ -41,7 +45,8 @@ const NAV = [
 // Phones get bottom navigation within thumb reach; tablets and desktops a side rail.
 const wide = computed(() => display.mdAndUp.value)
 
-const activeNav = computed(() => String(route.name ?? ''))
+// A page under a tab, such as Health apps under Settings, keeps that tab lit.
+const activeNav = computed(() => String(route.meta.nav ?? route.name ?? ''))
 
 const bar = useHideOnScroll()
 
@@ -104,7 +109,7 @@ const showInstallBanner = computed(
 )
 
 onMounted(async () => {
-  await Promise.all([settings.load(), journal.load(), photos.load()])
+  await Promise.all([settings.load(), journal.load(), photos.load(), healthSync.load()])
   theme.change(settings.theme)
 })
 </script>

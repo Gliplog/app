@@ -150,6 +150,28 @@ export function createRepository(db: GliplogDb, clock: Clock = systemClock) {
       await db.vitals.delete(id)
     },
 
+    /**
+     * Adds readings taken from the phone's health store, all or none. Returns the new ids in
+     * input order: weights, then blood sugar, then vitals.
+     */
+    async importReadings(input: {
+      weights: NewWeight[]
+      glucose: NewGlucose[]
+      vitals: NewVital[]
+    }): Promise<string[]> {
+      const createdAt = nowIso(clock)
+      const stamp = <T>(row: T) => ({ ...row, id: crypto.randomUUID(), createdAt })
+      const weights = input.weights.map(stamp) as WeightRow[]
+      const glucose = input.glucose.map(stamp) as GlucoseRow[]
+      const vitals = input.vitals.map(stamp) as VitalRow[]
+      await db.transaction('rw', db.weights, db.glucose, db.vitals, async () => {
+        await db.weights.bulkAdd(weights)
+        await db.glucose.bulkAdd(glucose)
+        await db.vitals.bulkAdd(vitals)
+      })
+      return [...weights, ...glucose, ...vitals].map((r) => r.id)
+    },
+
     async listPhotos(): Promise<PhotoRow[]> {
       return db.photos.orderBy('takenAt').reverse().toArray()
     },
