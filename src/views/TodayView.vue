@@ -8,7 +8,7 @@ import { useJournalStore } from '@/stores/journal'
 import { useSettingsStore } from '@/stores/settings'
 import { useNow } from '@/composables/useNow'
 import { useBodyMetrics } from '@/composables/useBodyMetrics'
-import { formatDateTime, daysBetween } from '@/services/time'
+import { formatDate, formatDateTime, daysBetween } from '@/services/time'
 import {
   mdiChevronRight,
   mdiHeartPulse,
@@ -141,6 +141,7 @@ const recentSymptoms = computed(() =>
 
 const latestA1c = computed(() => journal.glucose.find((g) => g.kind === 'a1c'))
 const latestGlucose = computed(() => journal.glucose.find((g) => g.kind === 'glucose'))
+const latestDay = computed(() => journal.glucose.find((g) => g.kind === 'daily'))
 
 const latestBp = computed(() => journal.vitals.find((v) => v.kind === 'bp'))
 const latestHr = computed(() => journal.vitals.find((v) => v.kind === 'hr'))
@@ -265,6 +266,9 @@ const daysSinceStart = computed(() =>
             <span v-else-if="latestGlucose" class="gl-num">{{
               formatGlucose(latestGlucose.value, settings.glucoseUnit)
             }}</span>
+            <span v-else-if="latestDay" class="gl-num"
+              >Average {{ formatGlucose(latestDay.value, settings.glucoseUnit) }}</span
+            >
             <span v-else>No readings yet</span>
           </v-card-title>
           <v-card-subtitle v-if="latestA1c">{{
@@ -283,6 +287,9 @@ const daysSinceStart = computed(() =>
           <p v-else-if="latestGlucose" class="gl-muted">
             {{ GLUCOSE_CONTEXT_LABELS[latestGlucose.context] }},
             {{ formatDateTime(latestGlucose.measuredAt) }}
+          </p>
+          <p v-else-if="latestDay" class="gl-muted">
+            Glucose monitor, {{ formatDate(latestDay.measuredAt) }}
           </p>
           <p v-else-if="!latestA1c" class="gl-muted">
             Log an HbA1c result or a glucose reading to follow them over time.

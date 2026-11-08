@@ -96,6 +96,20 @@ function source(period: ReportPeriod = '90d'): ReportSource {
       createdAt: created,
     },
   ]
+  glucose.push({
+    id: 'g3',
+    kind: 'daily',
+    measuredAt: iso(NOW - 6 * DAY),
+    value: 112.4,
+    enteredUnit: 'mg/dL',
+    context: null,
+    median: 108,
+    min: 71,
+    max: 183,
+    count: 288,
+    notes: '',
+    createdAt: created,
+  })
   const vitals: VitalRow[] = [
     {
       id: 'v1',
@@ -307,6 +321,15 @@ describe('collectReport', () => {
     expect(combined.panels.map((p) => p.title)).toEqual(['Weight (kg)'])
     expect(combined.timeline).toEqual([])
     expect(only(['combined']).combined).toBeNull()
+  })
+
+  it('prints glucose monitor days as a table, never as single readings', () => {
+    const sugar = only(['sugar']).sugar!
+    expect(sugar.monitor.rows).toEqual([
+      [expect.any(String), '112 mg/dL', '108 mg/dL', '71 to 183 mg/dL', '288'],
+    ])
+    expect(sugar.glucose.rows).toHaveLength(1)
+    expect(text(['sugar'])).toContain('(Glucose monitor, daily)')
   })
 
   it('charts systolic and diastolic, with the change in both', () => {

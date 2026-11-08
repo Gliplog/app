@@ -228,6 +228,18 @@ describe('backup', () => {
       diastolic: 84,
       notes: '',
     })
+    await repo.addGlucose({
+      kind: 'daily',
+      measuredAt: '2026-09-29T00:00:00.000Z',
+      value: 112.4,
+      enteredUnit: 'mg/dL',
+      context: null,
+      median: 108,
+      min: 71,
+      max: 183,
+      count: 288,
+      notes: '',
+    })
     await repo.setSetting('profile', {
       heightCm: 170,
       goalKg: null,
@@ -243,7 +255,8 @@ describe('backup', () => {
     expect(parsed.doses).toHaveLength(1)
     expect(parsed.weights).toHaveLength(1)
     expect(parsed.symptoms).toHaveLength(1)
-    expect(parsed.glucose).toHaveLength(1)
+    expect(parsed.glucose).toHaveLength(2)
+    expect(parsed.glucose.find((g) => g.kind === 'daily')).toMatchObject({ count: 288, min: 71 })
     expect(parsed.vitals).toHaveLength(1)
 
     const other = createDatabase(`test-${++counter}`)
@@ -311,8 +324,12 @@ describe('backup', () => {
     const backup = await exportBackup(db, fixedClock)
     const badSymptom = { ...backup, symptoms: [{ ...backup.symptoms[0]!, severity: 'awful' }] }
     expect(() => parseBackup(JSON.stringify(badSymptom))).toThrow(/Side effect 1/)
-    const badUnit = { ...backup, glucose: [{ ...backup.glucose[0]!, enteredUnit: 'mg/dL' }] }
+    const a1c = backup.glucose.find((g) => g.kind === 'a1c')!
+    const badUnit = { ...backup, glucose: [{ ...a1c, enteredUnit: 'mg/dL' }] }
     expect(() => parseBackup(JSON.stringify(badUnit))).toThrow(/Blood sugar reading 1/)
+    const day = backup.glucose.find((g) => g.kind === 'daily')!
+    const noCount = { ...backup, glucose: [{ ...day, count: 0 }] }
+    expect(() => parseBackup(JSON.stringify(noCount))).toThrow(/Blood sugar reading 1/)
     const flipped = { ...backup, vitals: [{ ...backup.vitals[0]!, systolic: 70, diastolic: 90 }] }
     expect(() => parseBackup(JSON.stringify(flipped))).toThrow(/Vitals reading 1/)
   })
@@ -356,7 +373,7 @@ describe('backup', () => {
     const photo = await seedPhoto()
     const { bytes: zip } = await exportBackupArchive(db, fixedClock)
     const { backup, photoFiles } = readBackupFile(zip)
-    expect(backup.version).toBe(4)
+    expect(backup.version).toBe(5)
     expect(backup.photos).toHaveLength(1)
     expect(backup.doses).toHaveLength(1)
 

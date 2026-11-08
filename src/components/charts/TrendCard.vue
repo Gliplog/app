@@ -41,7 +41,7 @@ import ShareTrendDialog from '@/components/share/ShareTrendDialog.vue'
  * draws systolic as the line and diastolic as a dashed line below it. Whatever is shown can be shared as an image.
  * Progress photos and doses can be marked on the weight line, at the date of each.
  */
-type TrendMeasure = 'weight' | 'bmi' | 'a1c' | 'glucose' | 'bp' | 'hr'
+type TrendMeasure = 'weight' | 'bmi' | 'a1c' | 'glucose' | 'cgm' | 'bp' | 'hr'
 
 const props = defineProps<{ now: number }>()
 
@@ -53,6 +53,7 @@ const shareOpen = ref(false)
 
 const a1c = computed(() => journal.glucose.filter((g) => g.kind === 'a1c'))
 const glucose = computed(() => journal.glucose.filter((g) => g.kind === 'glucose'))
+const monitorDays = computed(() => journal.glucose.flatMap((g) => (g.kind === 'daily' ? [g] : [])))
 const pressure = computed(() => journal.vitals.flatMap((v) => (v.kind === 'bp' ? [v] : [])))
 const heartRate = computed(() => journal.vitals.flatMap((v) => (v.kind === 'hr' ? [v] : [])))
 
@@ -63,6 +64,7 @@ const MEASURES = computed(() =>
       { value: 'bmi', label: 'BMI', on: body.bmiSeries.value.length > 0 },
       { value: 'a1c', label: 'HbA1c', on: a1c.value.length > 0 },
       { value: 'glucose', label: 'Glucose', on: glucose.value.length > 0 },
+      { value: 'cgm', label: 'CGM', on: monitorDays.value.length > 0 },
       { value: 'bp', label: 'Blood pressure', on: pressure.value.length > 0 },
       { value: 'hr', label: 'Heart rate', on: heartRate.value.length > 0 },
     ] as const
@@ -84,6 +86,7 @@ const TITLES: Record<TrendMeasure, string> = {
   bmi: 'Body mass index',
   a1c: 'HbA1c',
   glucose: 'Glucose',
+  cgm: 'Glucose monitor',
   bp: 'Blood pressure',
   hr: 'Resting heart rate',
 }
@@ -141,6 +144,24 @@ const chart = computed(() => {
           : undefined,
         unitLabel: settings.glucoseUnit,
         measure: 'Fasting glucose',
+        decimals: decimalsFor(settings.glucoseUnit),
+        guides: [],
+      }
+    }
+    case 'cgm': {
+      const at = (g: (typeof monitorDays.value)[number]) => toEpochMs(g.measuredAt)
+      const shown = (mgDl: number) => fromMgDl(mgDl, settings.glucoseUnit)
+      return {
+        points: oldestFirst(monitorDays.value.map((g) => ({ at: at(g), value: shown(g.value) }))),
+        secondary: {
+          name: 'Median',
+          joined: true,
+          points: oldestFirst(
+            monitorDays.value.map((g) => ({ at: at(g), value: shown(g.median) })),
+          ),
+        },
+        unitLabel: settings.glucoseUnit,
+        measure: 'Daily average',
         decimals: decimalsFor(settings.glucoseUnit),
         guides: [],
       }
@@ -268,12 +289,16 @@ const chartDoses = computed(() => (showDoses.value ? marks.value : []))
 const convertedUnits = computed(
   () =>
     (mode.value === 'a1c' && settings.a1cUnit !== '%') ||
-    (mode.value === 'glucose' && settings.glucoseUnit !== 'mg/dL'),
+    ((mode.value === 'glucose' || mode.value === 'cgm') && settings.glucoseUnit !== 'mg/dL'),
 )
 
 const hasMore = computed(
   () =>
-    !!levels.value || chartDoses.value.length > 0 || mode.value === 'bmi' || convertedUnits.value,
+    !!levels.value ||
+    chartDoses.value.length > 0 ||
+    mode.value === 'bmi' ||
+    mode.value === 'cgm' ||
+    convertedUnits.value,
 )
 </script>
 
@@ -375,6 +400,9 @@ const hasMore = computed(
             <SourceList v-if="src.pk" flat :sources="src.pk.sources" :note="src.pk.notes" />
           </div>
         </template>
+        <p v-if="mode === 'cgm'" class="text-body-small gl-muted">
+          One point per day from your glucose monitor: the average, and the median dashed.
+        </p>
         <p v-if="chartDoses.length" class="text-body-small gl-muted">
           Diamonds mark doses. Labels show new strengths.
         </p>

@@ -24,6 +24,7 @@ import {
   formatA1c,
   formatA1cChange,
   formatGlucose,
+  formatGlucoseRange,
   fromA1cPercent,
   fromMgDl,
   GLUCOSE_CONTEXT_LABELS,
@@ -140,6 +141,10 @@ function inPeriod(source: Source) {
       source.glucose.filter((g) => g.kind === 'glucose'),
       (g) => g.measuredAt,
     ),
+    monitor: within(
+      source.glucose.flatMap((g) => (g.kind === 'daily' ? [g] : [])),
+      (g) => g.measuredAt,
+    ),
     pressure: within(
       source.vitals.flatMap((v) => (v.kind === 'bp' ? [v] : [])),
       (v) => v.measuredAt,
@@ -181,7 +186,7 @@ export function availableSections(source: Source): Set<ReportSection> {
   // A prescriber needs the medications taken even when no dose was logged in the period.
   if (rows.doses.length || source.medications.some((m) => m.status === 'active')) out.add('doses')
   if (rows.weights.length) out.add('weight')
-  if (rows.a1c.length || rows.glucose.length) out.add('sugar')
+  if (rows.a1c.length || rows.glucose.length || rows.monitor.length) out.add('sugar')
   if (rows.pressure.length || rows.heartRate.length) out.add('vitals')
   if (rows.symptoms.length) out.add('symptoms')
   const logged =
@@ -189,6 +194,7 @@ export function availableSections(source: Source): Set<ReportSection> {
     rows.weights.length +
     rows.a1c.length +
     rows.glucose.length +
+    rows.monitor.length +
     rows.pressure.length +
     rows.heartRate.length +
     rows.symptoms.length
@@ -365,6 +371,27 @@ function glucoseChart(source: Source, rows: Rows, window: ReportChart['window'])
   ])
 }
 
+/** A glucose monitor's daily average as the line and its median dashed, as on the app's chart. */
+function monitorChart(source: Source, rows: Rows, window: ReportChart['window']): ReportChart {
+  const unit = source.units.glucose
+  const days = chronological(rows.monitor)
+  const at = (g: (typeof days)[number]) => toEpochMs(g.measuredAt)
+  return timeChart(`Glucose monitor, daily (${unit})`, window, unit, decimalsFor(unit), [
+    {
+      label: 'Average',
+      style: 'line',
+      tone: 'logged',
+      points: days.map((g) => ({ at: at(g), value: fromMgDl(g.value, unit) })),
+    },
+    {
+      label: 'Median',
+      style: 'dashed',
+      tone: 'preview',
+      points: days.map((g) => ({ at: at(g), value: fromMgDl(g.median, unit) })),
+    },
+  ])
+}
+
 /** The span of a list of readings, or null with fewer than two distinct times. */
 function spanOf(times: readonly number[]): ReportChart['window'] | null {
   if (times.length < 2) return null
@@ -436,7 +463,26 @@ function collectSugar(source: Source, rows: Rows): ReportSugar {
   const { units } = source
   const a1cWindow = spanOf(rows.a1c.map((g) => toEpochMs(g.measuredAt)))
   const glucoseWindow = spanOf(rows.glucose.map((g) => toEpochMs(g.measuredAt)))
+  const monitorWindow = spanOf(rows.monitor.map((g) => toEpochMs(g.measuredAt)))
   return {
+    monitorChart: monitorWindow ? monitorChart(source, rows, monitorWindow) : null,
+    monitor: {
+      columns: [
+        { title: 'Date', width: 0.18, align: 'left' },
+        { title: 'Average', width: 0.16, align: 'right' },
+        { title: 'Median', width: 0.16, align: 'right' },
+        { title: 'Range', width: 0.3, align: 'right' },
+        { title: 'Readings', width: 0.2, align: 'right' },
+      ],
+      rows: rows.monitor.map((g) => [
+        formatDate(g.measuredAt),
+        formatGlucose(g.value, units.glucose),
+        formatGlucose(g.median, units.glucose),
+        formatGlucoseRange(g.min, g.max, units.glucose),
+        String(g.count),
+      ]),
+      empty: 'No glucose monitor days in this period.',
+    },
     a1cChart: a1cWindow ? a1cChart(source, rows, a1cWindow) : null,
     glucoseChart: glucoseWindow ? glucoseChart(source, rows, glucoseWindow) : null,
     a1c: {
@@ -606,6 +652,7 @@ function collectCombined(
     panels.push(atWindow(weightChart(source, rows, window)))
   if (sugar && rows.a1c.length) panels.push(atWindow(a1cChart(source, rows, window)))
   if (sugar && rows.glucose.length) panels.push(atWindow(glucoseChart(source, rows, window)))
+  if (sugar && rows.monitor.length) panels.push(atWindow(monitorChart(source, rows, window)))
   const vitals = chosen.has('vitals')
   if (vitals && rows.pressure.length) panels.push(atWindow(bloodPressureChart(rows, window)))
   if (vitals && rows.heartRate.length) panels.push(atWindow(heartRateChart(rows, window)))
@@ -820,6 +867,7 @@ export function collectReport(source: ReportSource): ReportData {
     ...rows.symptoms.map((s) => s.occurredAt),
     ...rows.a1c.map((g) => g.measuredAt),
     ...rows.glucose.map((g) => g.measuredAt),
+    ...rows.monitor.map((g) => g.measuredAt),
     ...rows.pressure.map((v) => v.measuredAt),
     ...rows.heartRate.map((v) => v.measuredAt),
   ].map(toEpochMs)
