@@ -1,12 +1,20 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   atLocalTime,
+  calendarFirstDayOfWeek,
+  dateOfDay,
+  dayOfDate,
+  dayOfIsoDate,
   daysBetween,
+  firstDayOfWeek,
   formatDate,
   formatDay,
   formatHours,
+  formatMonth,
   formatTime,
   fromLocalInputValue,
+  monthStartOf,
+  monthYearOf,
   nowIso,
   toLocalInputValue,
 } from '@/services/time'
@@ -54,5 +62,45 @@ describe('formatDay and formatTime', () => {
   it('formats a local time of day', () => {
     const text = formatTime(new Date(2026, 10, 16, 8, 5).getTime())
     expect(text).toMatch(/8:05/)
+  })
+})
+
+describe('calendar time helpers', () => {
+  it('round-trips local day between epoch ms, Date, and ISO date', () => {
+    const midDay = new Date(2026, 10, 16, 15, 42).getTime()
+    const expectedStart = new Date(2026, 10, 16, 0, 0, 0, 0).getTime()
+    expect(dayOfDate(dateOfDay(midDay))).toBe(expectedStart)
+    expect(dayOfIsoDate('2026-11-16')).toBe(expectedStart)
+    expect(dayOfIsoDate('bad')).toBeNaN()
+  })
+
+  it('extracts and builds 0-indexed month and year and formats month title', () => {
+    const d = new Date(2026, 10, 16, 9, 0).getTime()
+    expect(monthYearOf(d)).toEqual({ month: 10, year: 2026 })
+    expect(monthStartOf(2026, 10)).toBe(new Date(2026, 10, 1).getTime())
+    const label = formatMonth(d)
+    expect(label).toContain('2026')
+    expect(label.length).toBeGreaterThan(5)
+  })
+
+  it('maps Sunday to 0 in calendarFirstDayOfWeek and defaults to Monday when unavailable', () => {
+    expect(firstDayOfWeek('en-US')).toBe(7)
+    expect(calendarFirstDayOfWeek('en-US')).toBe(0)
+    expect(calendarFirstDayOfWeek('de-DE')).toBe(1)
+
+    const OriginalLocale = Intl.Locale
+    vi.stubGlobal(
+      'Intl',
+      Object.assign({}, Intl, {
+        Locale: function MockLocale() {
+          return {}
+        },
+      }),
+    )
+    try {
+      expect(calendarFirstDayOfWeek('en-US')).toBe(1)
+    } finally {
+      vi.stubGlobal('Intl', Object.assign({}, Intl, { Locale: OriginalLocale }))
+    }
   })
 })

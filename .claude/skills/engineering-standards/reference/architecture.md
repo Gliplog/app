@@ -18,7 +18,7 @@ src/
                  collage), doseBands (dose bands and callout pills on a trend), overlap
                  (different medicines in use together), progressStats (headline weight change and
                  weekly rate), projection (levels ahead), range (chart window ranges), report
-                 (periods and axis ticks), due (due-card sorting), listing, entries, entryText, catalog types
+                 (periods and axis ticks), due (due-card sorting), listing, entries, entryDays (calendar day marks), entryText, catalog types
   brand.ts       per-app strings read by shared components (wordmark, health sync summary)
   logKinds.ts    loggable entry kind definitions (labels, icons, routes, order)
   data/          medications.json, its JSON Schema, typed loader (index.ts)
@@ -27,7 +27,7 @@ src/
                  (details and thumbnail URLs), healthSync (Health apps choices), log, notify, confirm
   composables/   useBodyMetrics, useCameraAccess, useChartColors, useDoseBands, useDueItems, useInstallPrompt,
                  useStoragePersistence, useNow, useEntries, usePaging, useHideOnScroll,
-                 usePhotoPins, useReminderSync, useReportExport, useSystemRows, useHealthAutoSync,
+                 usePhotoPins, useReminderSync, useReportExport, useScheduledDays, useSystemRows, useHealthAutoSync,
                  useWeightSummary
   services/      time.ts (the only clock and date formatter), locale.ts (device region and
                  measurement system), fileTransfer.ts (share/download),

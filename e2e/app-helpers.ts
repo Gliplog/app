@@ -86,3 +86,12 @@ export async function saveRepeatedDueDose(page: Page) {
   await dialog.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('0.25 mg logged')).toBeVisible()
 }
+
+/** Verifies scheduled future days on the calendar (Zepbound is weekly from the Nov 16 dose). */
+export async function verifyScheduledCalendar(page: Page) {
+  await page.goto(`./#/${TIMELINE_HASH}?view=calendar`)
+  const nextDueCell = page.locator('[data-v-date="2026-11-23"]')
+  await expect(nextDueCell.locator('.cal-mark--scheduled')).toBeVisible()
+  await nextDueCell.click()
+  await expect(page.locator('.day-panel')).toContainText('Scheduled: Zepbound')
+}

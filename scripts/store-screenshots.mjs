@@ -106,6 +106,18 @@ const SHOTS = [
     },
   },
   {
+    scheme: 'light',
+    show: async (page) => {
+      await openTab(page, 'Progress')
+      await page.getByRole('link', { name: /^All entries/ }).click()
+      await page
+        .getByRole('group', { name: 'View' })
+        .getByRole('button', { name: 'Calendar' })
+        .click()
+      await page.locator('.entries-calendar').waitFor()
+    },
+  },
+  {
     scheme: 'dark',
     show: async (page) => {
       await openTab(page, 'Today')
