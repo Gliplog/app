@@ -2,7 +2,8 @@
 import { computed } from 'vue'
 import { POPULATION_LABELS } from '@/domain/catalog'
 import type { TrialComparison } from '@/domain/progress'
-import { formatPercentChange, formatWeightChange, roundTo, type WeightUnit } from '@/domain/units'
+import { formatPercentChange, formatWeightChange, type WeightUnit } from '@/domain/bodyUnits'
+import { roundTo } from '@/domain/units'
 import MoreInfo from '@/components/common/MoreInfo.vue'
 import SourceList from '@/components/common/SourceList.vue'
 

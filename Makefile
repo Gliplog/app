@@ -42,7 +42,7 @@ android:
 ios:
 	$(NODE) npm run build:ios
 
-## Retake the Today and Progress screenshots for the project site (writes to ../gliplog.github.io).
+## Retake screenshots for the project site (writes to ../gliplog.github.io).
 screenshots:
 	$(NODE) npm run screenshots:site
 

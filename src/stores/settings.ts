@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { repository } from '@/db'
 import { A1C_UNITS, GLUCOSE_UNITS, type A1cUnit, type GlucoseUnit } from '@/domain/glucose'
 import { sanitizeDismissed } from '@/domain/overlap'
-import { HEIGHT_UNITS, WEIGHT_UNITS, type HeightUnit, type WeightUnit } from '@/domain/units'
+import { HEIGHT_UNITS, WEIGHT_UNITS, type HeightUnit, type WeightUnit } from '@/domain/bodyUnits'
 import {
   DEFAULT_REMINDER,
   sanitizeReminderSettings,

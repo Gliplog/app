@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, reactive, ref, shallowRef, useId, watch } fr
 import type { PhotoRow } from '@/db/database'
 import { initialCrop, isFullFrame, type CropRect } from '@/domain/crop'
 import { nearestWeight, PHOTO_POSES, POSE_LABELS, type PhotoPose } from '@/domain/photos'
-import { formatWeight } from '@/domain/units'
+import { formatWeight } from '@/domain/bodyUnits'
 import { cropPhoto, type PreparedPhoto } from '@/services/photos/preparePhoto'
 import { mdiCrop } from '@/plugins/icons'
 import PhotoCropper from './PhotoCropper.vue'

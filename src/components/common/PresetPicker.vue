@@ -24,7 +24,7 @@ const isPreset = (v: number | null) => v !== null && props.presets.includes(v)
 /*
  * Custom mode is explicit (the user tapped "Custom") or implied (the value is not a preset).
  * Selection is derived from the value and the preset list together, because a parent can
- * change both in the same tick (switching medication swaps presets and the default dose).
+ * change both in the same tick (switching product swaps presets and the default dose).
  */
 const customMode = ref(false)
 const customText = ref('')
@@ -73,8 +73,12 @@ const customError = computed(() => {
 </script>
 
 <template>
-  <fieldset class="preset-picker">
-    <legend class="gl-label">{{ label }}</legend>
+  <!-- Named by the label alone so a button in the action slot is not read as part of it. -->
+  <fieldset class="preset-picker" :aria-labelledby="`${inputId}-label`">
+    <legend class="preset-picker__legend">
+      <span :id="`${inputId}-label`" class="gl-label">{{ label }}</span>
+      <slot name="action" />
+    </legend>
     <v-chip-group :model-value="selected" color="primary" column @update:model-value="choose">
       <v-chip
         v-for="value in presets"
@@ -119,6 +123,21 @@ const customError = computed(() => {
   margin: 0;
   padding: 0;
   min-width: 0;
+}
+
+.preset-picker__legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 8px;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+/* The row owns the gap below; a margin on the label alone would lift it off the button's centre. */
+.preset-picker__legend > .gl-label {
+  margin-bottom: 0;
 }
 
 .preset-picker__custom {

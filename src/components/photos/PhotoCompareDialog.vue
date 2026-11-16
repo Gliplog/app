@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, useId, watch } from 'vue'
 import { defaultComparison, nearestWeight, photoGap, POSE_LABELS } from '@/domain/photos'
-import { formatWeight, formatWeightChange } from '@/domain/units'
+import { formatWeight, formatWeightChange } from '@/domain/bodyUnits'
 import { useJournalStore } from '@/stores/journal'
 import { usePhotosStore } from '@/stores/photos'
 import { useSettingsStore } from '@/stores/settings'

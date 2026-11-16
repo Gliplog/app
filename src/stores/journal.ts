@@ -9,6 +9,9 @@ import type {
   VitalRow,
   WeightRow,
 } from '@/db/database'
+
+/** Alias shared with PepCalc's journal store so LogWeightDialog takes one entry type. */
+export type WeightEntry = WeightRow
 import type {
   NewDose,
   NewGlucose,

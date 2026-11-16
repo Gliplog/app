@@ -9,7 +9,7 @@ import {
   spreadEvenly,
   type PhotoPose,
 } from '@/domain/photos'
-import { formatPercentChange } from '@/domain/units'
+import { formatPercentChange } from '@/domain/bodyUnits'
 import { useChartColors } from '@/composables/useChartColors'
 import { formatDate, formatDateTime, nowIso, toEpochMs } from '@/services/time'
 import { useJournalStore } from '@/stores/journal'

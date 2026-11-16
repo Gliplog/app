@@ -7,9 +7,9 @@ import {
   formatGlucose,
   formatGlucoseChange,
   type A1cUnit,
-  type GlycemicComparison,
   type GlucoseUnit,
 } from '@/domain/glucose'
+import type { GlycemicComparison } from '@/domain/glycemic'
 import { roundTo } from '@/domain/units'
 import MoreInfo from '@/components/common/MoreInfo.vue'
 import SourceList from '@/components/common/SourceList.vue'

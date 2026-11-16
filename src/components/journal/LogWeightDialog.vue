@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { computed, reactive, ref, useId, watch } from 'vue'
-import type { WeightRow } from '@/db/database'
-import { formatWeight, fromKg, roundTo, toKg } from '@/domain/units'
-import { useJournalStore } from '@/stores/journal'
+import { formatWeight, fromKg, toKg } from '@/domain/bodyUnits'
+import { roundTo } from '@/domain/units'
+import { useJournalStore, type WeightEntry } from '@/stores/journal'
 import { useSettingsStore } from '@/stores/settings'
 import { useNotifyStore } from '@/stores/notify'
 import { useConfirmStore } from '@/stores/confirm'
 import { fromLocalInputValue, nowIso, toLocalInputValue } from '@/services/time'
 
 /** Log a weigh-in, or edit or delete one. Entry is in the weight unit chosen in Settings. */
-const props = defineProps<{ weight: WeightRow | null }>()
+const props = defineProps<{ weight: WeightEntry | null }>()
 const open = defineModel<boolean>({ required: true })
 
 const journal = useJournalStore()

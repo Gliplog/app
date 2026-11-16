@@ -9,13 +9,8 @@ import {
   fromA1cPercent,
   fromMgDl,
 } from '@/domain/glucose'
-import {
-  formatPercentChange,
-  formatWeight,
-  formatWeightChange,
-  fromKg,
-  roundTo,
-} from '@/domain/units'
+import { formatPercentChange, formatWeight, formatWeightChange, fromKg } from '@/domain/bodyUnits'
+import { roundTo } from '@/domain/units'
 import {
   formatBloodPressure,
   formatBloodPressureChange,

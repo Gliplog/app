@@ -6,17 +6,19 @@ Part of the `engineering-standards` skill.
 
 ```
 src/
-  domain/        pure logic: units (weight, height, formatting), body (age, BMI, WHO bands),
-                 progress (baseline, change series, trial comparison, cohort overlay), schedule
-                 (next dose, syringe units), pk, levels (pooling and the curve model), glucose
-                 (HbA1c and glucose units, glycemic comparison), vitals (blood pressure and
-                 heart rate ranges and formatting), healthSync (what to import and export,
-                 matching), symptoms (side-effect list and summary), reminders (when to
-                 remind, notification wording), photos (sizing, nearest weigh-in, comparison
-                 pair), calendar (calendar invites), cohort (merged trial readouts), collage
-                 and crop (photo collage), doseMarks and levelStrip (doses and levels on a
-                 trend), overlap (different medicines in use together), projection (levels
-                 ahead), report (periods and axis ticks), listing, catalog types
+  domain/        pure logic: units (dose formatting, rounding), bodyUnits (weight, height),
+                 body (age, BMI, WHO bands), progress (baseline, change series, trial
+                 comparison, cohort overlay), schedule (next dose, syringe units), pk, levels
+                 (pooling and the curve model), glucose (HbA1c and glucose units), glycemic
+                 (trial comparison), vitals (blood pressure and heart rate ranges and
+                 formatting), healthSync (what to import and export, matching), symptoms
+                 (side-effect list and summary), reminders (when to remind, notification
+                 wording), photos (sizing, nearest weigh-in, comparison pair), calendar
+                 (calendar invites), cohort (merged trial readouts), collage and crop (photo
+                 collage), doseMarks and levelStrip (doses and levels on a trend), overlap
+                 (different medicines in use together), projection (levels ahead), report
+                 (periods and axis ticks), listing, catalog types
+  brand.ts       per-app strings read by shared components (wordmark, health sync summary)
   data/          medications.json, its JSON Schema, typed loader (index.ts)
   db/            Dexie database (schema history), repository, backup export/restore
   stores/        Pinia: journal (medications, doses, weights, side effects, blood sugar, vitals,
@@ -40,7 +42,7 @@ src/
 public/          icons, favicon, layers.css (cascade layer order, linked before bundles)
 tests/           Vitest, mirrors src/
 e2e/             Playwright against `vite preview` of the production build
-scripts/         gate scripts (contrast, tokens, markdown), Android icons
+scripts/       gate scripts (contrast, tokens, markdown, parity), Android icons
 vendor/          patched copies of build-time dependencies (see testing-and-gates.md)
 build/           Vite plugins that patch a dependency at build time (see testing-and-gates.md)
 fastlane/        store listing metadata (F-Droid reads it; Play mirrors it)
@@ -183,3 +185,9 @@ Gliplog's notification settings. iOS is built and uploaded only by `.github/work
   every URL resolves to `index.html` on GitHub Pages and offline.
 - A production-only meta CSP (`default-src 'self'`) is injected by `vite.config.ts`, because
   GitHub Pages cannot set headers. Styles need `'unsafe-inline'` for Vuetify's theme tag.
+
+## Sibling app
+
+`parity.json` at the repository root and `scripts/parity.mjs` enforce parity with PepCalc.
+Every path under `roots` that exists in both apps is shared (identical after neutralising the
+brand) unless `diverged` lists it with a one-sentence reason.

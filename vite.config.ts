@@ -19,6 +19,10 @@ function webBase(): string {
   return normalizeBase(process.env.GLIPLOG_BASE ?? '/app/')
 }
 
+function siteUrl(): string {
+  return (process.env.GLIPLOG_SITE_URL || 'https://gliplog.com/').replace(/\/?$/, '/')
+}
+
 function normalizeBase(value: string): string {
   const trimmed = value.replace(/^\/+|\/+$/g, '')
   return trimmed ? `/${trimmed}/` : '/'
@@ -73,6 +77,7 @@ export default defineConfig(({ command, mode }) => {
       __APP_VERSION__: JSON.stringify(pkg.version),
       __NATIVE__: JSON.stringify(native),
       __PLATFORM__: JSON.stringify(platform),
+      __SITE_URL__: JSON.stringify(siteUrl()),
     },
     plugins: [
       vuetifyRipplePatch({ required: command === 'build' }),

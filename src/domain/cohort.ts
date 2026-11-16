@@ -1,4 +1,4 @@
-import { glycemicSeries, type Reading } from './glucose'
+import { glycemicSeries, type Reading } from './glycemic'
 import { baselineFor, progressSeries, type WeightPoint } from './progress'
 import type { Population, SourceRef, Trial } from './catalog'
 

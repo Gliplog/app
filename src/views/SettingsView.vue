@@ -16,11 +16,11 @@ import {
   feetInchesToCm,
   formatHeight,
   fromKg,
-  roundTo,
   toKg,
   type HeightUnit,
   type WeightUnit,
-} from '@/domain/units'
+} from '@/domain/bodyUnits'
+import { roundTo } from '@/domain/units'
 import type { A1cUnit, GlucoseUnit } from '@/domain/glucose'
 import { useSettingsStore, type ThemePreference } from '@/stores/settings'
 import { useJournalStore } from '@/stores/journal'

@@ -42,7 +42,7 @@ describe('niceTicks', () => {
   })
 })
 
-describe('reportWindow for short-acting medicines', () => {
+describe('reportWindow for short-acting products', () => {
   const tesamorelin = { halfLifeHours: 0.5, tmaxHours: 0.15 }
   const daily = Array.from({ length: 90 }, (_, i) => ({ at: i * DAY, amount: 2 }))
 
@@ -58,7 +58,7 @@ describe('reportWindow for short-acting medicines', () => {
     expect(w.start).toBeLessThan(88 * DAY)
   })
 
-  it('never trims a long-acting medicine', () => {
+  it('never trims a long-acting product', () => {
     const w = reportWindow(daily, { halfLifeHours: 168, tmaxHours: 56 }, 95 * DAY, 0)
     expect(w.trimmed).toBe(false)
   })

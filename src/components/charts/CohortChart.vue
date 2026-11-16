@@ -21,14 +21,15 @@ import { CanvasRenderer } from 'echarts/renderers'
 import VChart from 'vue-echarts'
 import type { CohortMeasure, CohortReadout, CohortSummary } from '@/domain/cohort'
 import {
-  a1cChangeIn,
   formatA1cChange,
   formatGlucoseChange,
   fromMgDl,
   type A1cUnit,
   type GlucoseUnit,
 } from '@/domain/glucose'
-import { formatPercentChange, formatWeightChange, roundTo } from '@/domain/units'
+import { a1cChangeIn } from '@/domain/glycemic'
+import { formatPercentChange, formatWeightChange } from '@/domain/bodyUnits'
+import { roundTo } from '@/domain/units'
 import { useChartColors } from '@/composables/useChartColors'
 
 use([

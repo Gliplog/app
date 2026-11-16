@@ -1,4 +1,4 @@
-/** Ordering and paging of the dose and weight lists. */
+/** Ordering and paging of journal and shelf lists. */
 
 export const PAGE_SIZE = 10
 

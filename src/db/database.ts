@@ -4,7 +4,7 @@ import type { A1cUnit, GlucoseContext, GlucoseUnit } from '@/domain/glucose'
 import type { PhotoPose } from '@/domain/photos'
 import type { PkParameters } from '@/domain/pk'
 import type { Severity, Symptom } from '@/domain/symptoms'
-import type { WeightUnit } from '@/domain/units'
+import type { WeightUnit } from '@/domain/bodyUnits'
 
 /** A medication the user takes or has taken. Timestamps are UTC ISO-8601. */
 export interface MedicationRow {

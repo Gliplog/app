@@ -15,7 +15,7 @@ import {
 import { A1C_UNITS, GLUCOSE_CONTEXTS, GLUCOSE_UNITS } from '@/domain/glucose'
 import { PHOTO_POSES } from '@/domain/photos'
 import { SEVERITIES, SYMPTOMS } from '@/domain/symptoms'
-import { WEIGHT_UNITS } from '@/domain/units'
+import { WEIGHT_UNITS } from '@/domain/bodyUnits'
 import { isValidBloodPressure, isValidHeartRate } from '@/domain/vitals'
 import { restoredHealthSync } from '@/domain/healthSync'
 import { nowIso, systemClock, type Clock } from '@/services/time'

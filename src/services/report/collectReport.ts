@@ -19,7 +19,6 @@ import {
   type CohortMeasure,
 } from '@/domain/cohort'
 import {
-  a1cChangeIn,
   decimalsFor,
   formatA1c,
   formatA1cChange,
@@ -31,6 +30,7 @@ import {
   type A1cUnit,
   type GlucoseUnit,
 } from '@/domain/glucose'
+import { a1cChangeIn } from '@/domain/glycemic'
 import type { MedicationLevels } from '@/domain/levels'
 import { amountAt, rateConstants, simulate, summarizeLevels } from '@/domain/pk'
 import { periodStart, reportWindow, type ReportPeriod } from '@/domain/report'
@@ -42,15 +42,13 @@ import {
   summarizeSymptoms,
 } from '@/domain/symptoms'
 import {
-  formatAmount,
-  formatDose,
   formatPercentChange,
   formatWeight,
   formatWeightChange,
   fromKg,
-  roundTo,
   type WeightUnit,
-} from '@/domain/units'
+} from '@/domain/bodyUnits'
+import { formatAmount, formatDose, roundTo } from '@/domain/units'
 import {
   formatBloodPressure,
   formatBloodPressureChange,

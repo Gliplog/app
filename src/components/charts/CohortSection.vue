@@ -12,9 +12,9 @@ import {
   type CohortMeasure,
   type CohortPopulation,
 } from '@/domain/cohort'
-import { compareGlycemic } from '@/domain/glucose'
+import { compareGlycemic } from '@/domain/glycemic'
 import { baselineFor, compareToTrial, progressSeries } from '@/domain/progress'
-import { formatWeight } from '@/domain/units'
+import { formatWeight } from '@/domain/bodyUnits'
 import { useJournalStore } from '@/stores/journal'
 import { useSettingsStore } from '@/stores/settings'
 import { formatDate, toEpochMs } from '@/services/time'

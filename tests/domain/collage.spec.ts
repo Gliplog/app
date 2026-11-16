@@ -50,7 +50,7 @@ describe('coverCrop', () => {
 
 describe('weekLabel', () => {
   const WEEK = 7 * 86_400_000
-  it('counts weeks from the first dose', () => {
+  it('counts weeks from the start', () => {
     expect(weekLabel(6 * WEEK + 1, 0)).toBe('Week 6')
     expect(weekLabel(-1, 0)).toBe('Before week 1')
     expect(weekLabel(0, null)).toBeNull()

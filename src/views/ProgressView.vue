@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { findPkProfile } from '@/data'
-import { formatPercentChange, formatWeight, formatWeightChange, roundTo } from '@/domain/units'
+import { formatPercentChange, formatWeight, formatWeightChange } from '@/domain/bodyUnits'
+import { roundTo } from '@/domain/units'
 import { useJournalStore } from '@/stores/journal'
 import { useSettingsStore } from '@/stores/settings'
 import { useNow } from '@/composables/useNow'

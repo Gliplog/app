@@ -8,7 +8,7 @@ import {
   GLUCOSE_CONTEXT_LABELS,
   GLUCOSE_UNIT_SOURCES,
 } from '@/domain/glucose'
-import { fromKg } from '@/domain/units'
+import { fromKg } from '@/domain/bodyUnits'
 import { spreadEvenly, valueAt } from '@/domain/photos'
 import { useJournalStore } from '@/stores/journal'
 import { usePhotosStore } from '@/stores/photos'

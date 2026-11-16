@@ -79,11 +79,11 @@ export function coverCrop(srcW: number, srcH: number, dstW: number, dstH: number
 const WEEK_MS = 7 * 86_400_000
 
 /**
- * "Week 6" counted from the first dose, as trials count it, or "Before week 1" for a photo
- * taken before it. Null when no dose is logged, so the caller falls back to dates.
+ * "Week 6" counted from `startAt`, or "Before week 1" for a photo taken before it. Null without
+ * a start, so the caller falls back to dates.
  */
-export function weekLabel(at: number, firstDoseAt: number | null): string | null {
-  if (firstDoseAt === null) return null
-  if (at < firstDoseAt) return 'Before week 1'
-  return `Week ${Math.floor((at - firstDoseAt) / WEEK_MS)}`
+export function weekLabel(at: number, startAt: number | null): string | null {
+  if (startAt === null) return null
+  if (at < startAt) return 'Before week 1'
+  return `Week ${Math.floor((at - startAt) / WEEK_MS)}`
 }
