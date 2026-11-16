@@ -103,7 +103,7 @@ export interface ReminderRule {
 }
 
 export interface PlannedReminder {
-  /** What the reminder is for: a medication's id in Gliplog, a protocol's in PepCalc. */
+  /** What the reminder is for, such as a medication or protocol id. */
   subjectId: string
   kind: ReminderKind
   /** Epoch ms. */

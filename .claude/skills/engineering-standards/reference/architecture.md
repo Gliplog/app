@@ -105,12 +105,16 @@ Dose reminders exist only in the native app: a web app can notify on time only t
 server, which Gliplog will not run. `domain/reminderDays.ts` turns a medication's next due time
 and interval into the days to remind about (a weekly medicine: the due day; a daily one: the
 next seven days). `domain/reminders.ts` places reminders on those days at the user's time of
-day: the day itself, optionally the day before, and the day after for a schedule that does not
-repeat. The planner knows nothing about medications, so another schedule can feed it.
-`useReminderSync` (mounted in App) replaces every pending notification whenever the journal or the settings change and when
-the app returns to the foreground. Alarms are inexact and `SCHEDULE_EXACT_ALARM` is removed
-from the manifest. Text is generic unless the user turns on names. A tap routes to
-`#/?log=<medication id>`, which Today turns into Log dose for that medication.
+day (`planReminders`, alongside `planAtTimes` for time-based schedules): the day itself,
+optionally the day before, and the day after for a schedule that does not repeat. Reminder choices
+live in the `subjects` map keyed by subject id (`subjectId`), with a read-time fallback from the
+legacy `medications` key and a `leadMinutes` field. `groupByMinute` merges same-minute reminders of
+the same kind and `capReminders` caps pending notifications at 60 (`MAX_PENDING`).
+`useReminderSync` (mounted in App) replaces every pending notification whenever the journal or the
+settings change and when the app returns to the foreground. Alarms are inexact and
+`SCHEDULE_EXACT_ALARM` is removed from the manifest. Text is generic unless the user turns on
+names. A single-subject tap routes to `#/?log=<medication id>`, which Today turns into Log dose
+for that medication; a grouped tap routes to `#/`.
 
 The bell on a medication's card and each row in Settings open Add reminder
 (`components/reminders/AddReminderDialog.vue`): Notify me or Add calendar invite. Notify me
@@ -123,10 +127,10 @@ shows Notify me disabled with the reason.
 
 Both builds can add a medication's schedule to a calendar (`domain/calendar.ts`,
 `components/reminders/CalendarInviteForm.vue`): an `.ics` file made on the device (floating
-local time, a repeat rule and an alert), or links that open Google Calendar (repeating, local
-time with `ctz`) or Outlook on the web (one event in UTC; its link has no repeat parameter).
-The links send the event's title and times to that service only when the user taps one, so the
-title is generic unless the user names the medicine.
+local time, `Recurrence` rule or `RDATE` lines, and an alert), or links that open Google Calendar
+(repeating, local time with `ctz`) or Outlook on the web (one event in UTC; its link has no repeat
+parameter). The links send the event's title and times to that service only when the user taps one,
+so the title is generic unless the user names the medicine.
 
 ## Progress and trials
 
