@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import { findPkProfile } from '@/data'
 import { anyDoseInEffect } from '@/domain/pk'
+import { describeInterval, type CalendarSpec } from '@/domain/calendar'
 import { dueDaysFor } from '@/domain/reminderDays'
 import { planReminders } from '@/domain/reminders'
 import {
@@ -118,6 +119,19 @@ const nextDueAt = computed(() => (med.value ? journal.nextDueOf(med.value) : nul
 const reminderOn = computed(
   () => remindersSupported && !!med.value && settings.reminderFor(med.value.id).enabled,
 )
+
+const calendarSpec = computed<CalendarSpec>(() => {
+  const m = med.value
+  if (!m || nextDueAt.value === null) return { kind: 'needsDose' }
+  const intervalText = describeInterval(m.intervalDays)
+  return {
+    kind: 'atChosenTime',
+    startDayMs: nextDueAt.value,
+    recurrence: { kind: 'everyDays', days: m.intervalDays },
+    description: `Repeats ${intervalText}, from your last logged dose in Gliplog. If your dose day changes, add it again.`,
+    summary: intervalText,
+  }
+})
 
 const reminderPlan = computed(() => {
   const m = med.value
@@ -344,7 +358,7 @@ async function deleteMedication() {
         :subject-id="med.id"
         :name="med.name"
         :due-at="nextDueAt"
-        :interval-days="med.intervalDays"
+        :calendar="calendarSpec"
         :repeating="reminderPlan.repeating"
         :last-taken-at="lastDose?.takenAt ?? null"
         :next-reminder-at="reminderPlan.nextReminderAt"

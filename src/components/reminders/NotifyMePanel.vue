@@ -28,12 +28,21 @@ import ReminderControls from './ReminderControls.vue'
 const props = withDefaults(
   defineProps<{
     subjectId: string
+    mode?: 'times' | 'days'
     repeating?: boolean
     hasDue?: boolean
     lastTakenAt?: string | null
     nextReminderAt?: number | null
+    capped?: boolean
   }>(),
-  { repeating: false, hasDue: false, lastTakenAt: null, nextReminderAt: null },
+  {
+    mode: 'days',
+    repeating: false,
+    hasDue: false,
+    lastTakenAt: null,
+    nextReminderAt: null,
+    capped: false,
+  },
 )
 const emit = defineEmits<{ calendar: [] }>()
 
@@ -117,7 +126,11 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', onVisible
       <ul class="notify__points">
         <li>
           <v-icon :icon="mdiBellRingOutline" size="20" />
-          <span>On the day your dose is due, at a time you choose.</span>
+          <span>{{
+            mode === 'times'
+              ? 'At your scheduled dose times, or just before.'
+              : 'On the day your dose is due, at a time you choose.'
+          }}</span>
         </li>
         <li>
           <v-icon :icon="mdiGestureTap" size="20" />
@@ -166,10 +179,14 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', onVisible
         </div>
         <ReminderControls
           :subject-id="subjectId"
+          :mode="mode"
           :repeating="repeating"
           :has-due="hasDue"
           :next-reminder-at="nextReminderAt"
         />
+        <p v-if="capped" class="text-body-small gl-muted">
+          Open Gliplog now and then to keep reminders coming.
+        </p>
         <div>
           <v-btn variant="text" @click="setOff">Turn off reminder</v-btn>
         </div>

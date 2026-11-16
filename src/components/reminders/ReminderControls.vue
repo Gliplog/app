@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { fromTimeValue, toTimeValue } from '@/domain/reminders'
+import { fromTimeValue, LEAD_MINUTES_OPTIONS, toTimeValue } from '@/domain/reminders'
 import { formatDateTime } from '@/services/time'
 import { useSettingsStore } from '@/stores/settings'
 
@@ -7,14 +7,29 @@ import { useSettingsStore } from '@/stores/settings'
 const props = withDefaults(
   defineProps<{
     subjectId: string
+    mode?: 'times' | 'days'
     repeating?: boolean
     hasDue?: boolean
     nextReminderAt?: number | null
   }>(),
-  { repeating: false, hasDue: false, nextReminderAt: null },
+  { mode: 'days', repeating: false, hasDue: false, nextReminderAt: null },
 )
 
 const settings = useSettingsStore()
+
+const LEAD_LABELS: Record<number, string> = {
+  0: 'At the time',
+  5: '5 minutes before',
+  10: '10 minutes before',
+  15: '15 minutes before',
+  30: '30 minutes before',
+  60: '1 hour before',
+}
+
+const leadItems = LEAD_MINUTES_OPTIONS.map((value) => ({
+  title: LEAD_LABELS[value] ?? `${value} minutes before`,
+  value,
+}))
 
 function setTime(value: string) {
   const time = fromTimeValue(value)
@@ -32,20 +47,30 @@ function nextReminderText(): string {
 
 <template>
   <div class="gl-stack">
-    <v-text-field
-      :model-value="toTimeValue(settings.reminderFor(subjectId))"
-      label="Time of day"
-      type="time"
-      @change="setTime(($event.target as HTMLInputElement).value)"
-    />
-    <v-switch
-      v-if="!repeating"
-      :model-value="settings.reminderFor(subjectId).dayBefore"
-      label="Also remind me the day before"
-      color="primary"
-      hide-details
-      @update:model-value="settings.setReminder(subjectId, { dayBefore: !!$event })"
-    />
+    <template v-if="mode === 'times'">
+      <v-select
+        :model-value="settings.reminderFor(subjectId).leadMinutes"
+        :items="leadItems"
+        label="Remind me"
+        @update:model-value="settings.setReminder(subjectId, { leadMinutes: Number($event) })"
+      />
+    </template>
+    <template v-else>
+      <v-text-field
+        :model-value="toTimeValue(settings.reminderFor(subjectId))"
+        label="Time of day"
+        type="time"
+        @change="setTime(($event.target as HTMLInputElement).value)"
+      />
+      <v-switch
+        v-if="!repeating"
+        :model-value="settings.reminderFor(subjectId).dayBefore"
+        label="Also remind me the day before"
+        color="primary"
+        hide-details
+        @update:model-value="settings.setReminder(subjectId, { dayBefore: !!$event })"
+      />
+    </template>
     <p class="text-body-small gl-muted">{{ nextReminderText() }}</p>
   </div>
 </template>

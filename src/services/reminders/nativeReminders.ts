@@ -1,11 +1,11 @@
 import { registerPlugin } from '@capacitor/core'
 import { LocalNotifications } from '@capacitor/local-notifications'
-import type { PlannedReminder } from '@/domain/reminders'
+import type { GroupedReminder } from '@/domain/reminders'
 import { toDate } from '@/services/time'
 
 const CHANNEL_ID = 'doses'
 
-export interface ScheduledReminder extends PlannedReminder {
+export interface ScheduledReminder extends GroupedReminder {
   title: string
   body: string
 }
@@ -72,7 +72,7 @@ export async function scheduleReminders(reminders: ScheduledReminder[]): Promise
       channelId: CHANNEL_ID,
       schedule: { at: toDate(r.at), allowWhileIdle: true },
       isExactNotification: false,
-      extra: { medicationId: r.subjectId },
+      extra: r.subjectIds.length === 1 ? { medicationId: r.subjectIds[0] } : {},
     })),
   })
 }

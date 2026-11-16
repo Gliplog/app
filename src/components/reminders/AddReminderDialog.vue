@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, useId, watch } from 'vue'
+import type { CalendarSpec } from '@/domain/calendar'
 import { toTimeValue } from '@/domain/reminders'
 import { remindersSupported } from '@/composables/useReminderSync'
-import { formatDate, formatWeekday } from '@/services/time'
+import { formatDate, formatDateTime, formatWeekday } from '@/services/time'
 import { nativeApps } from '@/services/platform'
 import { useSettingsStore } from '@/stores/settings'
 import {
@@ -26,12 +27,20 @@ const props = withDefaults(
     subjectId: string
     name: string
     dueAt: number | null
-    intervalDays: number
+    calendar: CalendarSpec
+    mode?: 'times' | 'days'
     repeating?: boolean
     lastTakenAt?: string | null
     nextReminderAt?: number | null
+    capped?: boolean
   }>(),
-  { repeating: false, lastTakenAt: null, nextReminderAt: null },
+  {
+    mode: 'days',
+    repeating: false,
+    lastTakenAt: null,
+    nextReminderAt: null,
+    capped: false,
+  },
 )
 const open = defineModel<boolean>({ required: true })
 
@@ -55,16 +64,24 @@ const notifyOn = computed(
   () => remindersSupported && !!props.subjectId && settings.reminderFor(props.subjectId).enabled,
 )
 
-const nextDose = computed(() =>
-  props.dueAt === null
-    ? 'No dose logged yet'
-    : `Next dose ${formatWeekday(props.dueAt)}, ${formatDate(props.dueAt)}`,
-)
+const nextDose = computed(() => {
+  if (props.dueAt === null) return 'No dose logged yet'
+  return props.mode === 'times'
+    ? `Next dose ${formatDateTime(props.dueAt)}`
+    : `Next dose ${formatWeekday(props.dueAt)}, ${formatDate(props.dueAt)}`
+})
 
 const notifySubtitle = computed(() => {
   if (!remindersSupported) return `Needs ${nativeApps}`
-  if (!props.subjectId || !notifyOn.value) return 'A notification on the day your dose is due'
+  if (!props.subjectId || !notifyOn.value) {
+    return props.mode === 'times'
+      ? 'A notification at your scheduled times'
+      : 'A notification on the day your dose is due'
+  }
   const r = settings.reminderFor(props.subjectId)
+  if (props.mode === 'times') {
+    return r.leadMinutes === 0 ? 'On at scheduled times' : `On ${r.leadMinutes} minutes before`
+  }
   return `On at ${toTimeValue(r)}${r.dayBefore && !props.repeating ? ', and the day before' : ''}`
 })
 </script>
@@ -147,10 +164,12 @@ const notifySubtitle = computed(() => {
             <NotifyMePanel
               v-if="step === 'notify'"
               :subject-id="subjectId"
+              :mode="mode"
               :repeating="repeating"
               :has-due="dueAt !== null"
               :last-taken-at="lastTakenAt"
               :next-reminder-at="nextReminderAt"
+              :capped="capped"
               @calendar="step = 'calendar'"
             />
           </v-window-item>
@@ -160,8 +179,7 @@ const notifySubtitle = computed(() => {
               v-if="step === 'calendar'"
               :subject-id="subjectId"
               :name="name"
-              :due-at="dueAt"
-              :interval-days="intervalDays"
+              :calendar="calendar"
             />
           </v-window-item>
         </v-window>

@@ -1,6 +1,12 @@
 import { onBeforeUnmount, onMounted, watch } from 'vue'
 import { dueDaysFor } from '@/domain/reminderDays'
-import { planReminders, reminderText } from '@/domain/reminders'
+import {
+  capReminders,
+  groupByMinute,
+  MAX_PENDING,
+  planReminders,
+  reminderText,
+} from '@/domain/reminders'
 import { useJournalStore } from '@/stores/journal'
 import { useSettingsStore } from '@/stores/settings'
 import { atLocalTime, systemClock } from '@/services/time'
@@ -22,17 +28,25 @@ export function useReminderSync() {
   function plan() {
     const now = systemClock().getTime()
     const { showNames } = settings.reminders
-    return journal.activeMedications
-      .flatMap((med) =>
-        planReminders({
-          subjectId: med.id,
-          ...dueDaysFor({ dueAt: journal.nextDueOf(med), intervalDays: med.intervalDays, now }),
-          rule: settings.reminderFor(med.id),
-          now,
-          atLocalTime,
-        }).map((r) => ({ ...r, ...reminderText(r.kind, showNames ? med.name : null) })),
-      )
-      .sort((a, b) => a.at - b.at)
+    const names = new Map(journal.activeMedications.map((m) => [m.id, m.name]))
+    const planned = journal.activeMedications.flatMap((med) =>
+      planReminders({
+        subjectId: med.id,
+        ...dueDaysFor({ dueAt: journal.nextDueOf(med), intervalDays: med.intervalDays, now }),
+        rule: settings.reminderFor(med.id),
+        now,
+        atLocalTime,
+      }),
+    )
+    const grouped = capReminders(groupByMinute(planned), MAX_PENDING)
+    return grouped.map((g) => ({
+      ...g,
+      ...reminderText(
+        g.kind,
+        showNames ? g.subjectIds.map((id) => names.get(id) ?? '').filter(Boolean) : null,
+        { count: g.subjectIds.length },
+      ),
+    }))
   }
 
   // Serialised so a burst of writes cannot interleave cancel and schedule calls.
