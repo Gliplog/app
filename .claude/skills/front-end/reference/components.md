@@ -67,6 +67,8 @@ Part of the `front-end` skill.
 - The app bar scrolls away while reading (`useHideOnScroll`) and returns on a scroll up, a tap
   on a non-interactive part of the page, a route change, or focus. Re-tapping the current tab
   scrolls to the top. The bar keeps its layout slot, so content never jumps.
+- A unit default comes from `unitDefaultsFor`; never hard-code `kg` or `cm` as a fallback in a
+  component.
 
 ## Spacing and alignment
 

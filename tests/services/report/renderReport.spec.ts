@@ -167,7 +167,7 @@ function source(period: ReportPeriod = '90d'): ReportSource {
     sections: REPORT_SECTIONS,
     period,
     now: NOW,
-    locale: 'en-US',
+    region: 'US',
   }
 }
 
@@ -262,9 +262,9 @@ describe('renderReport', () => {
   })
 
   it('picks Letter paper for the US and A4 elsewhere', () => {
-    expect(pageSizeFor('en-US')).toBe(LETTER)
-    expect(pageSizeFor('en-GB')).toBe(A4)
-    expect(pageSizeFor('not a locale')).toBe(A4)
+    expect(pageSizeFor('US')).toBe(LETTER)
+    expect(pageSizeFor('DE')).toBe(A4)
+    expect(pageSizeFor(null)).toBe(A4)
   })
 })
 

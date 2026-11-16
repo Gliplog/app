@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { acceptDisclaimer, choose, waitForServiceWorker } from './helpers'
+import { acceptDisclaimer, choose, chooseUnits, waitForServiceWorker } from './helpers'
 
 /** Adds a medication from the catalog through the empty-state button or the list. */
 async function addMedication(page: Page, name: string, concentration?: string) {
@@ -32,6 +32,7 @@ test('logs a medication, a dose and a weight, then shows the next dose, BMI and 
 }) => {
   await page.goto('./')
   await acceptDisclaimer(page)
+  await chooseUnits(page, { weight: 'kg', height: 'cm' })
   await expect(page.getByText('Start with what you take')).toBeVisible()
 
   await addMedication(page, 'Wegovy')
@@ -439,6 +440,7 @@ test('editing a medication keeps a custom interval instead of resetting it to th
 test('weights switch between kilograms and pounds without rounding drift', async ({ page }) => {
   await page.goto('./')
   await acceptDisclaimer(page)
+  await chooseUnits(page, { weight: 'kg' })
   await logWeight(page, '81.3')
   await page.getByRole('link', { name: 'Settings', exact: true }).first().click()
   await choose(page, 'Weight unit', 'Pounds')

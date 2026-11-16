@@ -7,5 +7,6 @@ class MainViewController: CAPBridgeViewController {
     override open func capacitorDidLoad() {
         bridge?.registerPluginInstance(NotificationSettingsPlugin())
         bridge?.registerPluginInstance(CameraAccessPlugin())
+        bridge?.registerPluginInstance(RegionalPreferencesPlugin())
     }
 }

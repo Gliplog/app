@@ -10,6 +10,7 @@ import {
 } from '@/services/report/collectReport'
 import type { ReportSection } from '@/services/report/reportData'
 import { saveFile } from '@/services/fileTransfer'
+import { regionalPreferences } from '@/services/locale'
 import { fileDate, systemClock } from '@/services/time'
 
 /**
@@ -24,7 +25,11 @@ export function useReportExport() {
   const notify = useNotifyStore()
   const state = reactive({ busy: false })
 
-  function sourceFor(period: ReportPeriod, now: number): Omit<ReportSource, 'sections'> {
+  function sourceFor(
+    period: ReportPeriod,
+    now: number,
+    region: string | null = null,
+  ): Omit<ReportSource, 'sections'> {
     return {
       medications: journal.medications,
       doses: journal.doses,
@@ -37,7 +42,7 @@ export function useReportExport() {
       profile: settings.profile,
       period,
       now,
-      locale: navigator.language,
+      region,
     }
   }
 
@@ -53,7 +58,8 @@ export function useReportExport() {
     state.busy = true
     try {
       const now = systemClock().getTime()
-      const data = collectReport({ ...sourceFor(period, now), sections })
+      const { region } = await regionalPreferences()
+      const data = collectReport({ ...sourceFor(period, now, region), sections })
       const { renderReport } = await import('@/services/report/renderReport')
       const pdf = new Blob([renderReport(data)], { type: 'application/pdf' })
       const result = await saveFile(`gliplog-report-${fileDate(now)}.pdf`, pdf)

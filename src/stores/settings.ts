@@ -1,9 +1,18 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { repository } from '@/db'
-import { A1C_UNITS, GLUCOSE_UNITS, type A1cUnit, type GlucoseUnit } from '@/domain/glucose'
+import { type A1cUnit, type GlucoseUnit } from '@/domain/glucose'
 import { sanitizeDismissed } from '@/domain/overlap'
-import { HEIGHT_UNITS, WEIGHT_UNITS, type HeightUnit, type WeightUnit } from '@/domain/bodyUnits'
+import { type HeightUnit, type WeightUnit } from '@/domain/bodyUnits'
+import {
+  hasMissingUnit,
+  LEGACY_UNITS,
+  resolveUnits,
+  unitDefaultsFor,
+  type RegionalPreferences,
+  type UnitDefaults,
+} from '@/domain/unitDefaults'
+import { regionalPreferences } from '@/services/locale'
 import {
   DEFAULT_REMINDER,
   sanitizeReminderSettings,
@@ -59,10 +68,10 @@ const hasUnkeptFields = (stored: unknown, clean: Profile) =>
 export const useSettingsStore = defineStore('settings', () => {
   const loaded = ref(false)
   const theme = ref<ThemePreference>('system')
-  const weightUnit = ref<WeightUnit>('kg')
-  const heightUnit = ref<HeightUnit>('cm')
-  const glucoseUnit = ref<GlucoseUnit>('mg/dL')
-  const a1cUnit = ref<A1cUnit>('%')
+  const weightUnit = ref<WeightUnit>(LEGACY_UNITS.weightUnit)
+  const heightUnit = ref<HeightUnit>(LEGACY_UNITS.heightUnit)
+  const glucoseUnit = ref<GlucoseUnit>(LEGACY_UNITS.glucoseUnit)
+  const a1cUnit = ref<A1cUnit>(LEGACY_UNITS.a1cUnit)
   const profile = ref<Profile>({ ...EMPTY_PROFILE })
   const lastBackupAt = ref<string | null>(null)
   const disclaimerAcceptedAt = ref<string | null>(null)
@@ -97,17 +106,43 @@ export const useSettingsStore = defineStore('settings', () => {
       repository.getSetting<unknown>(SETTING_KEYS.reminders),
       repository.getSetting<unknown>(SETTING_KEYS.dismissedOverlaps),
     ])
+    const storedUnits = {
+      weightUnit: wUnit,
+      heightUnit: hUnit,
+      glucoseUnit: gUnit,
+      a1cUnit: aUnit,
+    }
+    const existingInstall = disclaimer !== undefined && disclaimer !== null
+    let prefs: RegionalPreferences | null = null
+    if (!existingInstall && hasMissingUnit(storedUnits)) {
+      try {
+        prefs = await regionalPreferences()
+      } catch {
+        prefs = { region: null, measurementSystem: null }
+      }
+    }
+    const { units, toStore } = resolveUnits(storedUnits, existingInstall, () =>
+      unitDefaultsFor(prefs ?? { region: null, measurementSystem: null }),
+    )
     theme.value = themePref === 'light' || themePref === 'dark' ? themePref : 'system'
-    weightUnit.value = wUnit && WEIGHT_UNITS.includes(wUnit) ? wUnit : 'kg'
-    heightUnit.value = hUnit && HEIGHT_UNITS.includes(hUnit) ? hUnit : 'cm'
-    glucoseUnit.value = gUnit && GLUCOSE_UNITS.includes(gUnit) ? gUnit : 'mg/dL'
-    a1cUnit.value = aUnit && A1C_UNITS.includes(aUnit) ? aUnit : '%'
+    weightUnit.value = units.weightUnit
+    heightUnit.value = units.heightUnit
+    glucoseUnit.value = units.glucoseUnit
+    a1cUnit.value = units.a1cUnit
     profile.value = sanitizeProfile(stored)
     lastBackupAt.value = backup ?? null
     disclaimerAcceptedAt.value = disclaimer ?? null
     installHintDismissed.value = hint ?? false
     reminders.value = sanitizeReminderSettings(remind)
     dismissedOverlaps.value = sanitizeDismissed(overlaps)
+    await Promise.all(
+      (Object.keys(toStore) as (keyof UnitDefaults)[]).map((key) => {
+        const value = toStore[key]
+        return value !== undefined
+          ? repository.setSetting(SETTING_KEYS[key], value).catch(() => {})
+          : Promise.resolve()
+      }),
+    )
     loaded.value = true
     // A stored profile can hold fields the app no longer collects (such as gender). Writing the
     // clean copy back removes them from the database, and so from every later backup. It runs

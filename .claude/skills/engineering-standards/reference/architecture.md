@@ -7,7 +7,7 @@ Part of the `engineering-standards` skill.
 ```
 src/
   domain/        pure logic: units (dose formatting, rounding), bodyUnits (weight, height),
-                 body (age, BMI, WHO bands), progress (baseline, change series, trial
+                 unitDefaults (regional default display units from CLDR), body (age, BMI, WHO bands), progress (baseline, change series, trial
                  comparison, cohort overlay), schedule (next dose, syringe units), pk, levels
                  (pooling and the curve model), glucose (HbA1c and glucose units), glycemic
                  (trial comparison), vitals (blood pressure and heart rate ranges and
@@ -27,7 +27,8 @@ src/
   composables/   useBodyMetrics, useCameraAccess, useChartColors, useInstallPrompt,
                  useStoragePersistence, useNow, usePaging, useHideOnScroll, useLevelStrip,
                  usePhotoPins, useReminderSync, useReportExport, useHealthAutoSync
-  services/      time.ts (the only clock and date formatter), fileTransfer.ts (share/download),
+  services/      time.ts (the only clock and date formatter), locale.ts (device region and
+                 measurement system), fileTransfer.ts (share/download),
                  nativeFileTransfer.ts (the same through the apps' share sheet), platform.ts
                  (words that depend on the build),
                  pdf/ (dependency-free PDF writer), report/ (journal report data and layout),
@@ -175,7 +176,8 @@ medicine and route share one curve.
 names the phone's system comes from `services/platform.ts`. Both apps share the reminder code;
 Android-only calls (notification channels, clearing the camera's capture file) check
 `__PLATFORM__`. Each has an app-local `NotificationSettings` plugin (Java and Swift) that opens
-Gliplog's notification settings. iOS is built and uploaded only by `.github/workflows/ios.yml`.
+Gliplog's notification settings, and an app-local `RegionalPreferences` plugin (Java and Swift)
+that reads the device's region and measurement system. iOS is built and uploaded only by `.github/workflows/ios.yml`.
 
 ## PWA and hosting
 

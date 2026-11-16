@@ -3,7 +3,12 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { findPkProfile } from '@/data'
 import type { MedicationRow } from '@/db/database'
-import { formatPercentChange, formatWeight, formatWeightChange } from '@/domain/bodyUnits'
+import {
+  formatPercentChange,
+  formatWeight,
+  formatWeightChange,
+  unitsSummary,
+} from '@/domain/bodyUnits'
 import { roundTo } from '@/domain/units'
 import { useJournalStore } from '@/stores/journal'
 import { useSettingsStore } from '@/stores/settings'
@@ -163,6 +168,10 @@ const daysSinceStart = computed(() =>
       <v-card-text class="gl-stack">
         <p class="text-title-large gl-display">Start with what you take</p>
         <p>Add your medicine and a weigh-in to get started. Everything stays on this device.</p>
+        <p class="text-body-small gl-muted d-flex align-center flex-wrap ga-1">
+          <span>Units: {{ unitsSummary(settings.weightUnit, settings.heightUnit) }}.</span>
+          <v-btn variant="text" :to="{ name: 'settings', hash: '#units' }">Change</v-btn>
+        </p>
         <div class="d-flex flex-wrap ga-2">
           <v-btn color="primary" variant="flat" :prepend-icon="mdiPlus" @click="addMedication">
             Add medication

@@ -95,8 +95,8 @@ export interface ReportSource {
   sections: readonly ReportSection[]
   period: ReportPeriod
   now: number
-  /** BCP 47 locale, which picks the paper size. */
-  locale: string
+  /** ISO 3166-1 alpha-2 region, or null, which picks the paper size. */
+  region: string | null
 }
 
 type Source = Omit<ReportSource, 'sections'>
@@ -104,13 +104,8 @@ type Source = Omit<ReportSource, 'sections'>
 /** Regions that use US Letter paper; everywhere else uses A4. */
 const LETTER_REGIONS = new Set(['US', 'CA', 'MX', 'PH', 'CL', 'CO', 'VE', 'PR'])
 
-export function pageSizeFor(locale: string): PageSize {
-  try {
-    const region = new Intl.Locale(locale).maximize().region
-    return region && LETTER_REGIONS.has(region) ? LETTER : A4
-  } catch {
-    return A4
-  }
+export function pageSizeFor(region: string | null): PageSize {
+  return region && LETTER_REGIONS.has(region.toUpperCase()) ? LETTER : A4
 }
 
 const DAY_MS = 86_400_000
@@ -980,7 +975,7 @@ export function collectReport(source: ReportSource): ReportData {
     : null
 
   return {
-    pageSize: pageSizeFor(source.locale),
+    pageSize: pageSizeFor(source.region),
     generated: formatDateTime(now),
     periodLabel,
     summary,
