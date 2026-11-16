@@ -3,6 +3,8 @@
  * and unused icons are tree-shaken out of the bundle.
  */
 export {
+  mdiArchiveArrowDownOutline,
+  mdiArchiveArrowUpOutline,
   mdiBellOffOutline,
   mdiBellOutline,
   mdiBellRingOutline,
@@ -28,6 +30,8 @@ export {
   mdiImageOutline,
   mdiLockOutline,
   mdiNeedle,
+  mdiPencilOutline,
+  mdiPill,
   mdiPlus,
   mdiRefresh,
   mdiScaleBathroom,

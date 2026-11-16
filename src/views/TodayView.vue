@@ -17,7 +17,6 @@ import { useNow } from '@/composables/useNow'
 import { useBodyMetrics } from '@/composables/useBodyMetrics'
 import { formatDate, formatDateTime, daysBetween } from '@/services/time'
 import {
-  mdiChevronRight,
   mdiHeartPulse,
   mdiPlus,
   mdiScaleBathroom,
@@ -30,7 +29,6 @@ import { formatBloodPressure, formatHeartRate } from '@/domain/vitals'
 import { toEpochMs } from '@/services/time'
 import MedicationStack from '@/components/journal/MedicationStack.vue'
 import MedicationDialog from '@/components/journal/MedicationDialog.vue'
-import OverlapNotice from '@/components/journal/OverlapNotice.vue'
 import PkPanel from '@/components/charts/PkPanel.vue'
 import AddReminderDialog from '@/components/reminders/AddReminderDialog.vue'
 
@@ -41,15 +39,8 @@ const now = useNow()
 const body = useBodyMetrics()
 
 const medDialog = ref(false)
-const editing = ref<MedicationRow | null>(null)
 
 function addMedication() {
-  editing.value = null
-  medDialog.value = true
-}
-
-function editMedication(med: MedicationRow) {
-  editing.value = med
   medDialog.value = true
 }
 
@@ -173,8 +164,6 @@ const daysSinceStart = computed(() =>
       </v-card-text>
     </v-card>
 
-    <OverlapNotice class="mb-4" @review="editMedication" />
-
     <div class="today-grid">
       <MedicationStack
         v-if="journal.activeMedications.length"
@@ -189,10 +178,11 @@ const daysSinceStart = computed(() =>
         <PkPanel
           v-if="group"
           :key="group.key"
-          :profile="profile"
+          :source="profile"
           :override="current.pkOverride"
           :doses="group.doses"
           :preview="null"
+          unit-label="mg"
           :now="now"
           :title="profile?.name ?? current.name"
           :caption="groupCaption"
@@ -358,42 +348,9 @@ const daysSinceStart = computed(() =>
           </div>
         </v-card-text>
       </v-card>
-
-      <v-card v-if="journal.medications.length">
-        <v-card-item>
-          <p class="gl-eyebrow">Your medications</p>
-          <v-card-title>In use</v-card-title>
-        </v-card-item>
-        <v-list density="comfortable" class="bg-transparent">
-          <v-list-item
-            v-for="med in journal.activeMedications"
-            :key="med.id"
-            :title="med.name"
-            :subtitle="journal.productOf(med)?.molecule ?? 'Not in the catalog'"
-            @click="editMedication(med)"
-          >
-            <template #append><v-icon :icon="mdiChevronRight" /></template>
-          </v-list-item>
-          <v-list-subheader v-if="journal.archivedMedications.length">Past</v-list-subheader>
-          <v-list-item
-            v-for="med in journal.archivedMedications"
-            :key="med.id"
-            :title="med.name"
-            subtitle="Stopped"
-            @click="editMedication(med)"
-          >
-            <template #append><v-icon :icon="mdiChevronRight" /></template>
-          </v-list-item>
-        </v-list>
-        <v-card-actions>
-          <v-btn :prepend-icon="mdiPlus" variant="text" @click="addMedication"
-            >Add medication</v-btn
-          >
-        </v-card-actions>
-      </v-card>
     </div>
 
-    <MedicationDialog v-model="medDialog" :medication="editing" />
+    <MedicationDialog v-model="medDialog" :medication="null" />
     <AddReminderDialog v-model="reminderDialog" :medication="reminderMed" />
   </div>
 </template>

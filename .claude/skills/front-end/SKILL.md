@@ -53,3 +53,7 @@ One-line rules; detail lives in `reference/`. Read a reference when its trigger 
     user's own prescriber decides.
 14. Inclusive by default: every profile field optional, no gender field (nothing uses it), no
     gendered imagery or pink and blue coding.
+
+## Screens
+
+Every chart, list and action has one home; other screens link to it. The estimated-level chart lives on the medicine's page. A preview inside an editor may repeat a chart only to show a value that is not saved yet, and stays folded until asked for.

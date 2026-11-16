@@ -35,9 +35,6 @@ import androidFirefoxShot from '@/assets/install/android-firefox.webp'
 import iosChromeShot from '@/assets/install/ios-chrome.webp'
 import iosSafariShot from '@/assets/install/ios-safari.webp'
 import { remindersSupported } from '@/composables/useReminderSync'
-import AddReminderDialog from '@/components/reminders/AddReminderDialog.vue'
-import { toTimeValue } from '@/domain/reminders'
-import { describeInterval } from '@/domain/calendar'
 import {
   checkNotificationAccess,
   openNotificationSettings,
@@ -45,11 +42,9 @@ import {
   type NotificationAccess,
 } from '@/services/reminders/notificationAccess'
 import { healthStoreName, nativeApps, notificationSettingsSteps } from '@/services/platform'
-import type { MedicationRow } from '@/db/database'
 import { saveFile } from '@/services/fileTransfer'
 import { daysBetween, formatDateTime, systemClock } from '@/services/time'
 import {
-  mdiBellOutline,
   mdiCellphoneArrowDown,
   mdiCheckCircleOutline,
   mdiCloudOffOutline,
@@ -293,21 +288,6 @@ async function fixNotifications() {
   access.value = await requestNotificationAccess()
 }
 
-const reminderOpen = ref(false)
-const reminderFor = ref<MedicationRow | null>(null)
-
-function openReminder(med: MedicationRow) {
-  reminderFor.value = med
-  reminderOpen.value = true
-}
-
-/** What a medication's row says about its reminder. */
-function reminderStatus(med: MedicationRow): string {
-  const r = settings.reminderFor(med.id)
-  if (remindersSupported && r.enabled) return `Notify me at ${toTimeValue(r)}`
-  return remindersSupported ? 'No reminder' : `Dose ${describeInterval(med.intervalDays)}`
-}
-
 interface InstallScreenshot {
   src: string
   width: number
@@ -494,17 +474,7 @@ const formatMb = (bytes: number | null) =>
           <p class="gl-eyebrow">Reminders</p>
           <v-card-title>Dose reminders</v-card-title>
         </v-card-item>
-        <v-card-text v-if="!journal.activeMedications.length" class="gl-stack">
-          <p>Add a medication on Today to set a reminder for it.</p>
-        </v-card-text>
-        <v-card-text v-else class="gl-stack gl-stack--loose">
-          <p>
-            {{
-              remindersSupported
-                ? 'Get a notification on the day a dose is due, or add a calendar invite.'
-                : `Add a calendar invite. For notifications, use ${nativeApps}.`
-            }}
-          </p>
+        <v-card-text class="gl-stack">
           <v-alert v-if="notificationsBlocked" type="warning" variant="tonal" density="compact">
             <p>Notifications are off for Gliplog, so reminders won't appear.</p>
             <div class="gl-actions">
@@ -513,28 +483,11 @@ const formatMb = (bytes: number | null) =>
               </v-btn>
             </div>
           </v-alert>
-          <ul class="reminder-rows">
-            <li v-for="med in journal.activeMedications" :key="med.id" class="reminder-row">
-              <div class="reminder-row__text">
-                <span class="reminder-row__name">{{ med.name }}</span>
-                <span class="text-body-small gl-muted">{{ reminderStatus(med) }}</span>
-              </div>
-              <v-btn
-                variant="tonal"
-                :prepend-icon="mdiBellOutline"
-                :aria-label="`Add reminder for ${med.name}`"
-                @click="openReminder(med)"
-              >
-                Add reminder
-              </v-btn>
-            </li>
-          </ul>
           <template v-if="remindersSupported">
-            <v-divider />
             <div class="gl-stack gl-stack--tight">
               <v-switch
                 :model-value="settings.reminders.showNames"
-                label="Show medication names in reminders"
+                label="Show medicine names"
                 color="primary"
                 hide-details
                 @update:model-value="settings.setReminderNames(!!$event)"
@@ -542,10 +495,14 @@ const formatMb = (bytes: number | null) =>
               <p class="text-body-small gl-muted">When off, reminders just say a dose is due.</p>
             </div>
           </template>
+          <p v-else>Add a calendar invite. For notifications, use {{ nativeApps }}.</p>
+          <p class="text-body-small gl-muted">
+            <router-link :to="{ name: 'medications' }">
+              Set a reminder on each medication.
+            </router-link>
+          </p>
         </v-card-text>
       </v-card>
-
-      <AddReminderDialog v-model="reminderOpen" :medication="reminderFor" />
 
       <v-card v-if="healthSupported">
         <v-card-item>
@@ -808,31 +765,5 @@ const formatMb = (bytes: number | null) =>
 
 .about p + p {
   margin-top: 12px;
-}
-.reminder-rows {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.reminder-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px 16px;
-}
-
-.reminder-row__text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.reminder-row__name {
-  font-weight: 600;
 }
 </style>

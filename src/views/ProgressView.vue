@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { findPkProfile } from '@/data'
 import { formatPercentChange, formatWeight, formatWeightChange } from '@/domain/bodyUnits'
 import { roundTo } from '@/domain/units'
 import { useJournalStore } from '@/stores/journal'
@@ -10,7 +9,6 @@ import { formatDate } from '@/services/time'
 import { mdiFilePdfBox } from '@/plugins/icons'
 import TrendCard from '@/components/charts/TrendCard.vue'
 import CohortSection from '@/components/charts/CohortSection.vue'
-import PkPanel from '@/components/charts/PkPanel.vue'
 import SymptomSummaryCard from '@/components/journal/SymptomSummaryCard.vue'
 import ExportReportDialog from '@/components/report/ExportReportDialog.vue'
 import PhotosCard from '@/components/photos/PhotosCard.vue'
@@ -110,22 +108,6 @@ const basisNote = computed(() => {
       <h2 class="gl-display text-title-large mb-4">Side effects</h2>
       <div class="progress-grid">
         <SymptomSummaryCard :now="now" @export="reportOpen = true" />
-      </div>
-    </section>
-
-    <section v-if="journal.levelGroups.length" class="mt-6">
-      <h2 class="gl-display text-title-large mb-4">Estimated levels</h2>
-      <div class="progress-grid">
-        <PkPanel
-          v-for="g in journal.levelGroups"
-          :key="g.key"
-          :profile="findPkProfile(g.pkProfile)"
-          :override="g.pk?.userSupplied ? g.pk.params : null"
-          :doses="g.doses"
-          :preview="null"
-          :now="now"
-          :title="g.label"
-        />
       </div>
     </section>
 

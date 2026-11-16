@@ -19,7 +19,14 @@ export type LevelsChartOption = ComposeOption<
   | DataZoomComponentOption
 >
 
+const LOGGED_SERIES = 'Logged doses'
+const PREVIEW_SERIES = 'With this dose'
+
 export interface LevelsOptionSettings {
+  /** Static rendering for an image: no tooltip or zoom, larger type. */
+  forImage?: boolean
+  /** Leave amounts off the value axis, for sharing the shape of the curve only. */
+  hideAmounts?: boolean
   /** Legend name of the dashed series. */
   previewName?: string
   /** Marks the moment levels reach steady state. */
@@ -28,13 +35,10 @@ export interface LevelsOptionSettings {
   hideDoses?: boolean
 }
 
-const LOGGED_SERIES = 'Logged doses'
-const PREVIEW_SERIES = 'With this dose'
-
 /**
  * The ECharts option for a levels chart: logged doses solid with a light fill, the previewed
  * draw dashed (identity never rests on colour alone), dose markers on the baseline and a "Now"
- * line. Colours come from the theme tokens via `c`.
+ * line. Colours come from the theme tokens via `colors`.
  */
 export function levelsOption(
   input: LevelsInput,
@@ -47,12 +51,13 @@ export function levelsOption(
   const hasHistory = input.doses.length > 0
   const hasPreview = projected.length > 0
   const previewName = settings.previewName ?? PREVIEW_SERIES
-  const fontSize = 12
+  const scale = settings.forImage ? 1.6 : 1
+  const fontSize = 12 * scale
   const nowLine = {
     silent: true,
     symbol: 'none',
     label: { formatter: 'Now', color: c.axis, fontFamily: c.font, fontSize },
-    lineStyle: { color: c.now, type: 'solid' as const, width: 1 },
+    lineStyle: { color: c.now, type: 'solid' as const, width: 1 * scale },
     data: [{ xAxis: now }],
   }
   const steadyMark = settings.steadyAt
@@ -71,7 +76,7 @@ export function levelsOption(
       type: 'line',
       showSymbol: false,
       smooth: false,
-      lineStyle: { width: 2, color: c.logged, cap: 'round', join: 'round' },
+      lineStyle: { width: 2 * scale, color: c.logged, cap: 'round', join: 'round' },
       itemStyle: { color: c.logged },
       areaStyle: { color: c.logged, opacity: 0.1 },
       data: logged.map((p) => [p.at, p.amount]),
@@ -83,7 +88,7 @@ export function levelsOption(
       name: previewName,
       type: 'line',
       showSymbol: false,
-      lineStyle: { width: 2, color: c.preview, type: 'dashed' },
+      lineStyle: { width: 2 * scale, color: c.preview, type: 'dashed' },
       itemStyle: { color: c.preview },
       areaStyle: hasHistory ? undefined : { color: c.preview, opacity: 0.1 },
       data: projected.map((p) => [p.at, p.amount]),
@@ -95,7 +100,7 @@ export function levelsOption(
       name: 'Doses',
       type: 'scatter',
       symbol: 'triangle',
-      symbolSize: 10,
+      symbolSize: 10 * scale,
       itemStyle: { color: c.axis, borderColor: c.surface, borderWidth: 2 },
       tooltip: { show: false },
       data: allDoses
@@ -111,9 +116,9 @@ export function levelsOption(
     textStyle: { fontFamily: c.font, color: c.text, fontSize },
     grid: {
       left: 8,
-      right: 16,
+      right: 16 * scale,
       // Room for the legend to wrap onto a second row on a phone, clear of the "Now" label.
-      top: legend ? 68 : 16,
+      top: legend ? (settings.forImage ? 64 : 68) : 16,
       bottom: 8,
       containLabel: true,
     },
@@ -123,20 +128,22 @@ export function levelsOption(
           top: 0,
           left: 0,
           padding: 0,
-          itemGap: 20,
+          itemGap: 20 * scale,
           textStyle: { color: c.text, fontFamily: c.font, fontSize },
-          itemWidth: 18,
-          itemHeight: 8,
+          itemWidth: 18 * scale,
+          itemHeight: 8 * scale,
         }
       : undefined,
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: { type: 'line', lineStyle: { color: c.axis } },
-      backgroundColor: c.surface,
-      borderColor: c.grid,
-      textStyle: { color: c.text, fontFamily: c.font },
-      valueFormatter: (v) => formatAmount(Number(v), unitLabel),
-    },
+    tooltip: settings.forImage
+      ? undefined
+      : {
+          trigger: 'axis',
+          axisPointer: { type: 'line', lineStyle: { color: c.axis } },
+          backgroundColor: c.surface,
+          borderColor: c.grid,
+          textStyle: { color: c.text, fontFamily: c.font },
+          valueFormatter: (v) => formatAmount(Number(v), unitLabel),
+        },
     xAxis: {
       type: 'time',
       min: window.start,
@@ -160,13 +167,14 @@ export function levelsOption(
       type: 'value',
       min: 0,
       axisLabel: {
+        show: !settings.hideAmounts,
         color: c.axis,
         fontSize,
         formatter: (v: number): string => `${roundTo(v, 3)} ${unitLabel}`,
       },
       splitLine: { lineStyle: { color: c.grid, type: 'solid', width: 1 } },
     },
-    dataZoom: [{ type: 'inside', filterMode: 'none' }],
+    dataZoom: settings.forImage ? undefined : [{ type: 'inside', filterMode: 'none' }],
     series,
   }
 }

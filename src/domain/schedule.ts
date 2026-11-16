@@ -59,6 +59,22 @@ export function intervalText(days: number): string {
   return days === 1 ? 'daily' : days === 7 ? 'weekly' : `every ${days} days`
 }
 
+/** Plain-language summary of a due state: "Due in 3 days", "Due now", "2 days late". */
+export function dueText(state: DueState): string {
+  switch (state.kind) {
+    case 'later':
+      return `Due in ${state.days} day${state.days === 1 ? '' : 's'}`
+    case 'soon':
+      return `Due in ${state.hours} hour${state.hours === 1 ? '' : 's'}`
+    case 'minutes':
+      return `Due in ${state.minutes} minutes`
+    case 'due':
+      return 'Due now'
+    case 'late':
+      return `${state.days} day${state.days === 1 ? '' : 's'} late`
+  }
+}
+
 export interface SyringeReading {
   ml: number
   /** Units on a U-100 insulin syringe, the kind compounded vials are drawn with. */

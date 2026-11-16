@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   dueState,
+  dueText,
   intervalText,
   nextDueAt,
   remainingFraction,
@@ -78,5 +79,18 @@ describe('intervalText', () => {
     expect(intervalText(1)).toBe('daily')
     expect(intervalText(7)).toBe('weekly')
     expect(intervalText(10)).toBe('every 10 days')
+  })
+})
+
+describe('dueText', () => {
+  it('formats every DueState kind including singular and plural forms', () => {
+    expect(dueText({ kind: 'later', days: 3 })).toBe('Due in 3 days')
+    expect(dueText({ kind: 'later', days: 1 })).toBe('Due in 1 day')
+    expect(dueText({ kind: 'soon', hours: 5 })).toBe('Due in 5 hours')
+    expect(dueText({ kind: 'soon', hours: 1 })).toBe('Due in 1 hour')
+    expect(dueText({ kind: 'minutes', minutes: 30 })).toBe('Due in 30 minutes')
+    expect(dueText({ kind: 'due' })).toBe('Due now')
+    expect(dueText({ kind: 'late', days: 2 })).toBe('2 days late')
+    expect(dueText({ kind: 'late', days: 1 })).toBe('1 day late')
   })
 })

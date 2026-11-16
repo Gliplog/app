@@ -21,6 +21,7 @@ import {
   mdiChartLine,
   mdiCogOutline,
   mdiHistory,
+  mdiPill,
   mdiWaves,
 } from '@/plugins/icons'
 
@@ -38,6 +39,7 @@ useHealthAutoSync()
 
 const NAV = [
   { name: 'today', title: 'Today', icon: mdiWaves },
+  { name: 'medications', title: 'Medications', icon: mdiPill },
   { name: 'progress', title: 'Progress', icon: mdiChartLine },
   { name: 'history', title: 'History', icon: mdiHistory },
   { name: 'settings', title: 'Settings', icon: mdiCogOutline },
@@ -131,7 +133,7 @@ onMounted(async () => {
       </v-app-bar-title>
     </v-app-bar>
 
-    <v-navigation-drawer v-if="wide" permanent rail rail-width="96" class="rail">
+    <v-navigation-drawer v-if="wide" permanent rail rail-width="104" class="rail">
       <v-list nav density="comfortable" class="rail-list">
         <v-list-item
           v-for="item in NAV"
@@ -244,9 +246,16 @@ onMounted(async () => {
   height: calc(64px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))) !important;
 }
 
+/* Vuetify gives each item an 80px minimum; five tabs need 400px and overflow narrower phones. */
+.bottom-nav .v-btn {
+  min-width: 0;
+  padding-inline: 0;
+}
+
 .rail-item {
   justify-content: center;
   min-height: 64px;
+  padding-inline: 4px;
 }
 
 .install-banner {

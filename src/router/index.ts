@@ -1,4 +1,9 @@
-import { createRouter, createWebHashHistory, type RouteRecordRaw } from 'vue-router'
+import {
+  createRouter,
+  createWebHashHistory,
+  type RouterHistory,
+  type RouteRecordRaw,
+} from 'vue-router'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -6,6 +11,19 @@ const routes: RouteRecordRaw[] = [
     name: 'today',
     component: () => import('@/views/TodayView.vue'),
     meta: { title: 'Today' },
+  },
+  {
+    path: '/medications',
+    name: 'medications',
+    component: () => import('@/views/MedicationsView.vue'),
+    meta: { title: 'Medications' },
+  },
+  {
+    path: '/medications/:id',
+    name: 'medication',
+    component: () => import('@/views/MedicationView.vue'),
+    props: true,
+    meta: { title: 'Medication', nav: 'medications' },
   },
   {
     path: '/progress',
@@ -45,9 +63,9 @@ function appBarHeight(): number {
  * Hash history: GitHub Pages has no SPA rewrite, so a path URL reloaded offline or opened from
  * a bookmark would 404. With a hash every URL resolves to index.html.
  */
-export function createAppRouter() {
+export function createAppRouter(history: RouterHistory = createWebHashHistory()) {
   return createRouter({
-    history: createWebHashHistory(),
+    history,
     routes,
     // A section link ("See summary") lands below the app bar and any status bar inset above it.
     scrollBehavior: (to) =>

@@ -7,15 +7,13 @@ import { intervalText } from '@/domain/schedule'
 import ProjectionPanel from '@/components/charts/ProjectionPanel.vue'
 import { useJournalStore } from '@/stores/journal'
 import { useNotifyStore } from '@/stores/notify'
-import { useConfirmStore } from '@/stores/confirm'
 
-/** Add a medication, or edit one; archive and delete close the dialog. */
+/** Add a medication, or edit its details. */
 const props = defineProps<{ medication: MedicationRow | null }>()
 const open = defineModel<boolean>({ required: true })
 
 const journal = useJournalStore()
 const notify = useNotifyStore()
-const confirm = useConfirmStore()
 const titleId = useId()
 const saving = ref(false)
 
@@ -142,33 +140,6 @@ async function save() {
     saving.value = false
   }
 }
-
-async function toggleArchive() {
-  const m = props.medication
-  if (!m) return
-  const archiving = m.status === 'active'
-  await journal.updateMedication(m.id, { status: archiving ? 'archived' : 'active' })
-  notify.show(archiving ? 'Moved to past medications' : 'Back in use', 'success')
-  open.value = false
-}
-
-async function remove() {
-  const m = props.medication
-  if (!m) return
-  const count = journal.dosesFor(m.id).length
-  const ok = await confirm.ask({
-    title: `Delete ${m.name}?`,
-    text: count
-      ? `This also deletes the ${count} dose${count === 1 ? '' : 's'} logged for it. To keep them, stop using it instead.`
-      : 'It has no logged doses.',
-    confirmText: 'Delete',
-    destructive: true,
-  })
-  if (!ok) return
-  await journal.deleteMedication(m.id)
-  notify.show('Medication deleted', 'success')
-  open.value = false
-}
 </script>
 
 <template>
@@ -267,25 +238,17 @@ async function remove() {
         <v-expand-transition>
           <ProjectionPanel
             v-if="intervalDays !== null"
-            :profile="pkProfile"
+            :source="pkProfile"
             :override="ownPk"
             :interval-hours="intervalDays * 24"
             :interval-label="intervalText(intervalDays)"
+            :amount="history[history.length - 1]?.amount ?? null"
             :history="history"
+            unit-label="mg"
           />
         </v-expand-transition>
 
         <v-textarea v-model="form.notes" label="Notes (optional)" />
-
-        <template v-if="medication">
-          <v-divider />
-          <div class="d-flex flex-wrap ga-2">
-            <v-btn variant="text" @click="toggleArchive">
-              {{ medication.status === 'active' ? 'I’ve stopped using it' : 'Use it again' }}
-            </v-btn>
-            <v-btn variant="text" color="error" @click="remove">Delete</v-btn>
-          </div>
-        </template>
       </v-card-text>
       <v-card-actions>
         <v-spacer />

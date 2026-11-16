@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { PkProfile } from '@/domain/catalog'
+import type { SourceRef } from '@/domain/catalog'
 import type { DoseEvent, PkParameters } from '@/domain/pk'
 import { formatAmount } from '@/domain/units'
 import { useNow } from '@/composables/useNow'
@@ -9,26 +9,34 @@ import MoreInfo from '@/components/common/MoreInfo.vue'
 import SourceList from '@/components/common/SourceList.vue'
 import ProjectionChart from './ProjectionChart.vue'
 
+interface PkSource {
+  name: string
+  pk: (PkParameters & { notes: string; sources: SourceRef[] }) | null
+  pkUnavailableReason?: string
+}
+
 /**
- * Projected levels inside the medication form, updating as the schedule changes. The form holds
- * no dose, so the chart repeats the last logged one, or reads in percent before any is logged.
+ * Projected levels inside a schedule form, updating as the schedule changes. The form holds no
+ * dose, so the chart repeats the given one, or reads in percent without it.
  */
 const props = defineProps<{
-  /** The catalog profile, or undefined for a medication outside the catalog. */
-  profile: PkProfile | undefined
-  /** The user's own values for a medication outside the catalog. */
+  /** Catalog entry reduced to `{ name, pk, pkUnavailableReason }`, or undefined outside it. */
+  source: PkSource | undefined
+  /** User-supplied parameters; take precedence over the catalog. */
   override: PkParameters | null
   intervalHours: number
   intervalLabel: string
-  /** Logged doses of this medicine in mg, oldest first. */
+  /** Repeated dose in `unitLabel`, or null before any is known. */
+  amount: number | null
+  /** Logged doses in `unitLabel`, oldest first. */
   history: DoseEvent[]
+  unitLabel: string
 }>()
 
 const now = useNow()
 
-const params = computed<PkParameters | null>(() => props.profile?.pk ?? props.override ?? null)
-const userSupplied = computed(() => !props.profile && props.override !== null)
-const lastDose = computed(() => props.history[props.history.length - 1]?.amount ?? null)
+const params = computed<PkParameters | null>(() => props.override ?? props.source?.pk ?? null)
+const userSupplied = computed(() => props.override !== null)
 </script>
 
 <template>
@@ -36,10 +44,10 @@ const lastDose = computed(() => props.history[props.history.length - 1]?.amount 
     <div>
       <p class="gl-eyebrow">Projected levels</p>
       <p class="text-body-small gl-muted">
-        <template v-if="lastDose !== null">
-          At {{ formatAmount(lastDose, 'mg') }} {{ intervalLabel }}.
+        <template v-if="amount !== null">
+          At {{ formatAmount(amount, unitLabel) }} {{ intervalLabel }}.
         </template>
-        <template v-else>Percent of steady peak. Log a dose to see mg.</template>
+        <template v-else>Percent of steady peak. Log a dose to see amounts.</template>
       </p>
     </div>
     <div class="d-flex flex-wrap ga-2 align-center">
@@ -54,18 +62,23 @@ const lastDose = computed(() => props.history[props.history.length - 1]?.amount 
     <ProjectionChart
       :params="params"
       :interval-hours="intervalHours"
-      :amount="lastDose"
+      :amount="amount"
       :history="history"
-      unit-label="mg"
+      :unit-label="unitLabel"
       :now="now"
     />
     <MoreInfo>
-      <p class="text-body-small gl-muted">Estimate from a simple model of published data.</p>
-      <SourceList v-if="profile?.pk" flat :sources="profile.pk.sources" :note="profile.pk.notes" />
+      <p class="text-body-small gl-muted">Estimate from the half-life and time to peak.</p>
+      <SourceList
+        v-if="!userSupplied && source?.pk"
+        flat
+        :sources="source.pk.sources"
+        :note="source.pk.notes"
+      />
     </MoreInfo>
   </section>
-  <p v-else-if="profile?.pkUnavailableReason" class="text-body-small gl-muted">
-    {{ profile.pkUnavailableReason }}
+  <p v-else-if="source?.pkUnavailableReason" class="text-body-small gl-muted">
+    {{ source.pkUnavailableReason }}
   </p>
 </template>
 

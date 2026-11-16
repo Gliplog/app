@@ -39,7 +39,7 @@ src/
                  loaded only in the apps; runSync, the sync loop)
   components/    journal/ (log dialogs, medication cards), charts/, common/, photos/,
                  reminders/, report/, share/
-  views/         one per route: Today, Progress, History, Settings, Health (apps only)
+  views/         one per route: Today, Medications, Medication, Progress, History, Settings, Health (apps only)
   plugins/       vuetify.ts (themes, defaults), icons.ts (inline SVG icons), fonts.ts
   styles/        tokens.css (design tokens), theme.css (global and Vuetify overrides)
 public/          icons, favicon, layers.css (cascade layer order, linked before bundles)

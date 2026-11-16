@@ -1,8 +1,13 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { acceptDisclaimer, choose, chooseUnits, waitForServiceWorker } from './helpers'
 
-/** Adds a medication from the catalog through the empty-state button or the list. */
+/** Adds a medication from the catalog through the empty-state button or the Medications tab. */
 async function addMedication(page: Page, name: string, concentration?: string) {
+  const emptyButton = page.getByRole('button', { name: 'Add medication' })
+  const wentToMeds = (await emptyButton.count()) === 0
+  if (wentToMeds) {
+    await page.getByRole('link', { name: 'Medications', exact: true }).first().click()
+  }
   await page.getByRole('button', { name: 'Add medication' }).first().click()
   const dialog = page.getByRole('dialog', { name: 'Medication' })
   const field = dialog.getByRole('combobox', { name: 'Medication' })
@@ -14,6 +19,9 @@ async function addMedication(page: Page, name: string, concentration?: string) {
   await expect(page.getByText('Medication added')).toBeVisible()
   // The notice can be the previous medication's; the dialog closes only once this one is saved.
   await expect(dialog).toBeHidden()
+  if (wentToMeds) {
+    await page.getByRole('link', { name: 'Today', exact: true }).first().click()
+  }
 }
 
 async function logWeight(page: Page, value: string, when?: string) {
@@ -125,7 +133,9 @@ test('projects levels while adding a medication, then draws them on its card', a
   await expectStillDotWithReducedMotion(page)
 
   // Now a dose is logged, the form reads in mg.
-  await page.getByRole('listitem').filter({ hasText: 'Wegovy' }).first().click()
+  await page.getByRole('link', { name: 'Medications', exact: true }).first().click()
+  await page.getByRole('link', { name: /^Wegovy/ }).click()
+  await page.getByRole('button', { name: 'Edit' }).click()
   const edit = page.getByRole('dialog', { name: 'Wegovy' })
   await expect(edit.getByText('At 0.25 mg weekly.')).toBeVisible()
 })
@@ -135,25 +145,26 @@ test('notes different medicines in use, until dismissed for that combination', a
   await acceptDisclaimer(page)
   await addMedication(page, 'Wegovy')
   await addMedication(page, 'Ozempic')
+  await page.getByRole('link', { name: 'Medications', exact: true }).first().click()
   // Two brands of one medicine are not flagged.
   await expect(page.getByText(/marked as in use/)).toHaveCount(0)
 
   await addMedication(page, 'Mounjaro')
+  await page.getByRole('link', { name: 'Medications', exact: true }).first().click()
   const notice = page.getByRole('status').filter({ hasText: 'marked as in use' })
   await expect(notice).toContainText('Mounjaro, Ozempic and Wegovy are all marked as in use')
   await expect(notice).toContainText('different medicines: tirzepatide and semaglutide')
   await expect(notice).toContainText('mark the old one as stopped')
 
   await notice.getByRole('button', { name: 'Review Mounjaro' }).click()
-  const review = page.getByRole('dialog')
-  await expect(review.getByText('I’ve stopped using it')).toBeVisible()
-  await review.getByRole('button', { name: 'Cancel' }).click()
-  await expect(review).toBeHidden()
+  await expect(page.getByRole('heading', { name: 'Mounjaro' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Stop' })).toBeVisible()
 
+  await page.getByRole('link', { name: 'Medications', exact: true }).first().click()
   await notice.getByRole('button', { name: 'Dismiss' }).click()
   await expect(page.getByText(/marked as in use/)).toHaveCount(0)
   await page.reload()
-  await expect(page.getByRole('button', { name: 'Log dose' }).first()).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Medications' })).toBeVisible()
   await expect(page.getByText(/marked as in use/)).toHaveCount(0)
 })
 
@@ -434,7 +445,9 @@ test('editing a medication keeps a custom interval instead of resetting it to th
   await dialog.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('Medication added')).toBeVisible()
 
-  await page.getByRole('listitem').filter({ hasText: 'Compounded semaglutide' }).click()
+  await page.getByRole('link', { name: 'Medications', exact: true }).first().click()
+  await page.getByRole('link', { name: /^Compounded semaglutide/ }).click()
+  await page.getByRole('button', { name: 'Edit' }).click()
   const edit = page.getByRole('dialog', { name: 'Compounded semaglutide' })
   await expect(
     edit.getByRole('group', { name: 'How often' }).getByRole('button', { name: 'Other' }),
@@ -499,8 +512,11 @@ test('works offline after the first visit, including stored data', async ({
   await expect(page.getByRole('heading', { name: 'History' })).toBeVisible()
   await expect(page.getByText('Zepbound').first()).toBeVisible()
 
-  // Progress holds the chart library; it must also come from the precache.
+  // Progress and the medication page hold the chart library; both must come from the precache.
   await page.goto('./#/progress')
+  await expect(page.getByRole('img', { name: /Trial readouts/ })).toBeVisible()
+  await page.goto('./#/medications')
+  await page.getByRole('link', { name: /^Zepbound/ }).click()
   await expect(page.getByRole('img', { name: /Estimated amount in the body now/ })).toBeVisible()
   await context.setOffline(false)
 })
@@ -796,8 +812,9 @@ test('adds the dose schedule to a calendar as a file or a link', async ({ page }
   await dose.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('0.25 mg logged')).toBeVisible()
 
-  await page.getByRole('link', { name: 'Settings', exact: true }).first().click()
-  await page.getByRole('button', { name: 'Add reminder for Wegovy' }).click()
+  await page.getByRole('link', { name: 'Medications', exact: true }).first().click()
+  await page.getByRole('link', { name: /^Wegovy/ }).click()
+  await page.getByRole('button', { name: 'Add reminder' }).click()
   const dialog = page.getByRole('dialog')
   await expect(page.getByRole('dialog', { name: 'Add reminder' })).toBeVisible()
   await dialog.getByRole('button', { name: /^Add calendar invite/ }).click()

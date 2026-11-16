@@ -4,11 +4,10 @@ import type { MedicationRow } from '@/db/database'
 import { dueState, intervalText, remainingFraction, type DueState } from '@/domain/schedule'
 import DoseCountdown from './DoseCountdown.vue'
 import LevelBackdrop from '@/components/charts/LevelBackdrop.vue'
-import { outlookShort } from '@/components/charts/projectionText'
-import { levelTrace } from '@/domain/projection'
+import { levelTrace, type SteadyOutlook } from '@/domain/projection'
 import { formatAmount, formatDose } from '@/domain/units'
 import { useJournalStore } from '@/stores/journal'
-import { formatDateTime, formatRelativeDays, formatWeekday } from '@/services/time'
+import { formatDateTime, formatMonthDay, formatRelativeDays, formatWeekday } from '@/services/time'
 import {
   mdiBellOutline,
   mdiBellRingOutline,
@@ -272,6 +271,19 @@ function sharesWith(med: MedicationRow): string[] {
     .map((m) => m.name)
 }
 
+/** The outlook in a few words, for the line on a stack card. */
+function outlookShort(outlook: SteadyOutlook): string {
+  switch (outlook.kind) {
+    case 'now':
+    case 'immediate':
+      return 'Steady'
+    case 'by':
+      return `Steady by ${formatMonthDay(outlook.at)}`
+    case 'cut-off':
+      return outlook.rising ? 'Still rising' : 'Still falling'
+  }
+}
+
 /** Each card's curve and the line that says the same in words; none before a first dose. */
 const levels = computed(
   () =>
@@ -349,7 +361,14 @@ const announcement = computed(() =>
         />
         <v-card-item>
           <p class="gl-eyebrow">Medication</p>
-          <v-card-title class="text-wrap">{{ med.name }}</v-card-title>
+          <v-card-title class="text-wrap">
+            <router-link
+              :to="{ name: 'medication', params: { id: med.id } }"
+              class="med-stack__link"
+            >
+              {{ med.name }}
+            </router-link>
+          </v-card-title>
           <template #append>
             <v-btn
               :icon="reminderOn(med) ? mdiBellRingOutline : mdiBellOutline"
@@ -531,6 +550,16 @@ const announcement = computed(() =>
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+.med-stack__link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.med-stack__link:hover,
+.med-stack__link:focus-visible {
+  text-decoration: underline;
 }
 
 .med-stack__controls {

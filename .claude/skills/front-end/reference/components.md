@@ -14,7 +14,7 @@ Part of the `front-end` skill.
 | `common/AppSnackbar.vue`, `AppConfirm.vue`            | Render the notify and confirm stores; mounted once in `App.vue`                                                                                                                  |
 | `common/UpdatePrompt.vue`                             | Service-worker update and offline-ready notices                                                                                                                                  |
 | `common/DisclaimerDialog.vue`                         | First-run acknowledgement: a journal, not medical advice                                                                                                                         |
-| `journal/MedicationDialog.vue`                        | Add or edit a medication: product, interval, compounded vial strength, own half-life                                                                                             |
+| `journal/MedicationDialog.vue`                        | Add or edit a medication: product, interval, compounded vial strength, own half-life (Save only; Stop/Delete live on `MedicationView`)                                           |
 | `journal/LogHost.vue`                                 | Mounted once in `App.vue`: the Log button, the sheet, and every log dialog                                                                                                       |
 | `journal/LogButton.vue`, `journal/LogSheet.vue`       | Floating Log button and bottom sheet listing every loggable kind                                                                                                                 |
 | `journal/EntriesTimeline.vue`                         | Every logged thing by day, with kind filters; a row opens its dialog through the log store                                                                                       |
@@ -49,6 +49,10 @@ Part of the `front-end` skill.
 | `charts/PkChart.vue`                                  | ECharts curve of logged doses, "Now" marker                                                                                                                                      |
 | `charts/levelsChart.ts`                               | The curve's model and ECharts option                                                                                                                                             |
 
+## Views
+
+- `views/TodayView.vue`, `views/MedicationsView.vue`, `views/MedicationView.vue`, `views/ProgressView.vue`, `views/HistoryView.vue`, `views/SettingsView.vue`, `views/HealthView.vue` (apps only).
+
 ## Patterns
 
 - To log or edit anything, call `useLogStore().start(kind, context)` or `.edit(entry)`. Never mount a log dialog in a view.
@@ -56,10 +60,7 @@ Part of the `front-end` skill.
 - Dialogs reset their form from props each time they open, so abandoned edits never leak.
 - A view that edits data calls a store action, then `notify.show()`.
 - Every number with a source shows a `SourceBadge` or a `SourceList`.
-- Level curves pool every dose of a medicine and route across medications
-  (`journal.levelGroups`), so Today and Progress agree. Progress shows one `PkPanel` per group,
-  never several medicines on one axis. Today's levels panel follows the front card of the
-  medication stack (`journal.focusedMedication`), and Progress starts its cohort switcher there.
+- One-home rule: the full estimated-level chart (`PkPanel`) lives on the medicine's page (`MedicationView`), pooling every dose of that medicine and route across medications (`journal.levelGroupOf`). Today's `PkPanel` stays until M07; Progress no longer renders `PkPanel`. Today's medication stack controls `journal.focusedMedication`, and Progress starts its cohort switcher there.
 - A trend chart is one grid with one value axis. Do not add a second panel under it.
 - Share dialogs put their privacy switches in `ShareImageDialog`'s slot, which renders them
   at 48px rows with a plain track and a 14px label so they sit at the buttons' size.

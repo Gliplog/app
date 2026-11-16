@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import type { PkProfile } from '@/domain/catalog'
+import type { SourceRef } from '@/domain/catalog'
 import { lookbackHoursFor, type DoseEvent, type PkParameters } from '@/domain/pk'
 import { formatHours } from '@/services/time'
 import MoreInfo from '@/components/common/MoreInfo.vue'
@@ -9,21 +9,28 @@ import PkChart from './PkChart.vue'
 import ShareLevelsDialog from '@/components/share/ShareLevelsDialog.vue'
 import { mdiShareVariantOutline } from '@/plugins/icons'
 
+interface PkSource {
+  name: string
+  pk: (PkParameters & { notes: string; sources: SourceRef[] }) | null
+  pkUnavailableReason?: string
+}
+
 const props = defineProps<{
-  /** The catalog profile for the doses, or undefined for a medication outside the catalog. */
-  profile: PkProfile | undefined
-  /** The user's own values for a medication outside the catalog. */
+  /** Catalog entry reduced to `{ name, pk, pkUnavailableReason }`, or undefined outside it. */
+  source: PkSource | undefined
+  /** User-supplied values; take precedence over the catalog. */
   override: PkParameters | null
   doses: DoseEvent[]
   preview: DoseEvent | null
+  unitLabel: string
   now: number
   title?: string
-  /** One line under the badges, such as which medications the doses came from. */
+  /** One line under the badges, such as which medications or vials the doses came from. */
   caption?: string
 }>()
 
-const params = computed<PkParameters | null>(() => props.profile?.pk ?? props.override ?? null)
-const userSupplied = computed(() => !props.profile && props.override !== null)
+const params = computed<PkParameters | null>(() => props.override ?? props.source?.pk ?? null)
+const userSupplied = computed(() => props.override !== null)
 const lookbackHours = computed(() => (params.value ? lookbackHoursFor(params.value) : undefined))
 
 const shareOpen = ref(false)
@@ -33,7 +40,7 @@ const shareInput = computed(() =>
         params: params.value,
         doses: props.doses,
         preview: null,
-        unitLabel: 'mg',
+        unitLabel: props.unitLabel,
         now: props.now,
         lookbackHours: lookbackHours.value,
       }
@@ -73,7 +80,7 @@ const shareInput = computed(() =>
           :params="params"
           :doses="doses"
           :preview="preview"
-          unit-label="mg"
+          :unit-label="unitLabel"
           :now="now"
           :lookback-hours="lookbackHours"
         />
@@ -82,16 +89,16 @@ const shareInput = computed(() =>
             Estimated amount in your body, from a simple model of published data.
           </p>
           <SourceList
-            v-if="profile?.pk"
+            v-if="!userSupplied && source?.pk"
             flat
-            :sources="profile.pk.sources"
-            :note="profile.pk.notes"
+            :sources="source.pk.sources"
+            :note="source.pk.notes"
           />
         </MoreInfo>
       </template>
       <v-alert v-else type="info" variant="tonal" density="comfortable">
         {{
-          profile?.pkUnavailableReason ??
+          source?.pkUnavailableReason ??
           'No published data for this medicine. Add a half-life to see an estimate.'
         }}
       </v-alert>
@@ -100,7 +107,7 @@ const shareInput = computed(() =>
       v-if="shareInput"
       v-model="shareOpen"
       :input="shareInput"
-      :name="profile?.name ?? title ?? 'Estimated levels'"
+      :name="source?.name ?? title ?? 'Estimated levels'"
       :source-text="userSupplied ? 'your own values' : 'the prescribing label'"
     />
   </v-card>
