@@ -20,7 +20,6 @@ import {
   mdiCellphoneArrowDown,
   mdiChartLine,
   mdiCogOutline,
-  mdiHistory,
   mdiPill,
   mdiWaves,
 } from '@/plugins/icons'
@@ -41,7 +40,6 @@ const NAV = [
   { name: 'today', title: 'Today', icon: mdiWaves },
   { name: 'medications', title: 'Medications', icon: mdiPill },
   { name: 'progress', title: 'Progress', icon: mdiChartLine },
-  { name: 'history', title: 'History', icon: mdiHistory },
   { name: 'settings', title: 'Settings', icon: mdiCogOutline },
 ] as const
 

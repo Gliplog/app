@@ -13,7 +13,7 @@ build with sample data, never real records.
 
 1. Check out `Gliplog/gliplog.github.io` next to this repository (`../gliplog.github.io`).
 2. Run `make screenshots`. It builds the app, serves it on port 4175, restores a sample backup
-   through Settings, waits for Today's `In your system` section and Progress's `Since you started`,
+   through Settings, waits for Today's `In your system` section and Progress's `Total change`,
    and writes `today-` and `progress-` `light.webp` and `dark.webp` into the site. The
    `trials-` images are taken by hand.
    Pass another folder with `node scripts/site-screenshots.mjs <dir>` to review first.

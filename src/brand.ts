@@ -6,4 +6,8 @@ export const brand = {
   staysInApp: 'Doses, side effects, HbA1c and photos stay in Gliplog.',
   /** Primary action on a Today due card. */
   logDoseLabel: 'Log dose',
+  /** Singular noun for a dose or draw in shared copy. */
+  doseNoun: 'dose',
+  /** Source note under the side-effects summary card. */
+  symptomSourceNote: 'From the labels’ clinical trials.',
 } as const

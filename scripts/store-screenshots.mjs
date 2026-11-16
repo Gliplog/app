@@ -79,7 +79,7 @@ const SHOTS = [
     scheme: 'light',
     show: async (page) => {
       await openTab(page, 'Progress')
-      await page.getByText('Since you started').waitFor()
+      await page.getByText('Total change').waitFor()
     },
   },
   {
@@ -100,7 +100,9 @@ const SHOTS = [
   {
     scheme: 'light',
     show: async (page) => {
-      await openTab(page, 'History')
+      await openTab(page, 'Progress')
+      await page.getByRole('link', { name: /^All entries/ }).click()
+      await page.getByRole('heading', { level: 1, name: 'All entries' }).waitFor()
     },
   },
   {

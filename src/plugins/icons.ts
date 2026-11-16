@@ -26,7 +26,6 @@ export {
   mdiFilePdfBox,
   mdiGestureTap,
   mdiHeartPulse,
-  mdiHistory,
   mdiImageOutline,
   mdiLockOutline,
   mdiNeedle,

@@ -16,7 +16,8 @@ src/
                  wording), photos (sizing, nearest weigh-in, comparison pair), calendar
                  (calendar invites), cohort (merged trial readouts), collage and crop (photo
                  collage), doseBands (dose bands and callout pills on a trend), overlap
-                 (different medicines in use together), projection (levels ahead), report
+                 (different medicines in use together), progressStats (headline weight change and
+                 weekly rate), projection (levels ahead), range (chart window ranges), report
                  (periods and axis ticks), due (due-card sorting), listing, entries, entryText, catalog types
   brand.ts       per-app strings read by shared components (wordmark, health sync summary)
   logKinds.ts    loggable entry kind definitions (labels, icons, routes, order)
@@ -38,7 +39,7 @@ src/
                  loaded only in the apps; runSync, the sync loop)
   components/    journal/ (log dialogs, medication dialog), charts/, common/, photos/,
                  reminders/, report/, share/, today/ (DueCard, SystemList)
-  views/         one per route: Today, Medications, Medication, Progress, History, Settings, Health (apps only)
+  views/         one per route: Today, Medications, Medication, Progress, Entries, Settings, Health (apps only)
   plugins/       vuetify.ts (themes, defaults), icons.ts (inline SVG icons), fonts.ts
   styles/        tokens.css (design tokens), theme.css (global and Vuetify overrides)
 public/          icons, favicon, layers.css (cascade layer order, linked before bundles)
@@ -185,7 +186,8 @@ that reads the device's region and measurement system. iOS is built and uploaded
 - `vite-plugin-pwa` (generateSW) precaches every built asset, including the ECharts chunk and
   fonts. `registerType: 'prompt'`: an update waits until the user reloads (`UpdatePrompt.vue`).
 - Base path comes from `GLIPLOG_BASE` (default `/gliplog/`). The router uses hash history so
-  every URL resolves to `index.html` on GitHub Pages and offline.
+  every URL resolves to `index.html` on GitHub Pages and offline. `/progress/entries` holds the
+  entries timeline under Progress, and legacy `/history` redirects to it.
 - A production-only meta CSP (`default-src 'self'`) is injected by `vite.config.ts`, because
   GitHub Pages cannot set headers. Styles need `'unsafe-inline'` for Vuetify's theme tag.
 

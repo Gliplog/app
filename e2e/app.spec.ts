@@ -362,12 +362,13 @@ test('logs side effects and blood sugar, in the units chosen in Settings', async
   await page.getByRole('link', { name: 'Today', exact: true }).first().click()
   await expect(a1cTile).toContainText('55 mmol/mol')
 
-  await page.getByRole('link', { name: 'History', exact: true }).first().click()
+  await page.getByRole('link', { name: 'Progress', exact: true }).first().click()
+  await page.getByRole('link', { name: /^All entries/ }).click()
   await page.getByRole('button', { name: /^Side effects / }).click()
   await expect(page.getByText('Stomach pain')).toBeVisible()
 })
 
-test('logs blood pressure and heart rate, charts them and lists them in History', async ({
+test('logs blood pressure and heart rate, charts them and lists them in All entries', async ({
   page,
 }) => {
   await page.goto('./')
@@ -408,7 +409,8 @@ test('logs blood pressure and heart rate, charts them and lists them in History'
   await expect(page.getByRole('dialog', { name: 'Share as an image' })).toBeVisible()
   await page.keyboard.press('Escape')
 
-  await page.getByRole('link', { name: 'History', exact: true }).first().click()
+  await page.getByRole('link', { name: 'Progress', exact: true }).first().click()
+  await page.getByRole('link', { name: /^All entries/ }).click()
   await page.getByRole('button', { name: /^Vitals / }).click()
   await expect(page.getByText('128/82 mmHg', { exact: true })).toBeVisible()
   await expect(page.getByText('64 bpm', { exact: true })).toBeVisible()
@@ -459,12 +461,14 @@ test('weights switch between kilograms and pounds without rounding drift', async
   await logWeight(page, '81.3')
   await page.getByRole('link', { name: 'Settings', exact: true }).first().click()
   await choose(page, 'Weight unit', 'Pounds')
-  await page.getByRole('link', { name: 'History', exact: true }).first().click()
+  await page.getByRole('link', { name: 'Progress', exact: true }).first().click()
+  await page.getByRole('link', { name: /^All entries/ }).click()
   await page.getByRole('button', { name: /^Weight / }).click()
   await expect(page.getByText('179.2 lb')).toBeVisible()
   await page.getByRole('link', { name: 'Settings', exact: true }).first().click()
   await choose(page, 'Weight unit', 'Kilograms')
-  await page.getByRole('link', { name: 'History', exact: true }).first().click()
+  await page.getByRole('link', { name: 'Progress', exact: true }).first().click()
+  await page.getByRole('link', { name: /^All entries/ }).click()
   await page.getByRole('button', { name: /^Weight / }).click()
   await expect(page.getByText('81.3 kg')).toBeVisible()
 })
@@ -506,7 +510,7 @@ test('works offline after the first visit, including stored data', async ({
   await context.setOffline(true)
   await page.goto('./#/history')
   await page.reload()
-  await expect(page.getByRole('heading', { name: 'History' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'All entries' })).toBeVisible()
   await expect(page.getByText('Zepbound').first()).toBeVisible()
 
   // Progress and the medication page hold the chart library; both must come from the precache.
@@ -548,7 +552,7 @@ test('makes no third-party requests', async ({ page }) => {
   })
   await page.goto('./')
   await acceptDisclaimer(page)
-  for (const route of ['progress', 'history', 'settings']) await page.goto(`./#/${route}`)
+  for (const route of ['progress', 'progress/entries', 'settings']) await page.goto(`./#/${route}`)
   expect(foreign).toEqual([])
 })
 
@@ -690,12 +694,12 @@ test('a tab tapped while the page is still coasting from a fling opens', async (
   await page.goto('./#/settings')
   await acceptDisclaimer(page)
   const tab = (title: string) => page.locator('.v-bottom-navigation .v-btn', { hasText: title })
-  test.skip((await tab('History').count()) === 0, 'phones only: wide layouts have a rail')
+  test.skip((await tab('Progress').count()) === 0, 'phones only: wide layouts have a rail')
 
-  await flingThenTapTab(page, 'History')
-  await expect(page.getByRole('heading', { level: 1, name: 'History' })).toBeVisible()
+  await flingThenTapTab(page, 'Progress')
+  await expect(page.getByRole('heading', { level: 1, name: 'Progress' })).toBeVisible()
 
-  // Back on the first tab, the History tab no longer looks pressed (no ripple left behind).
+  // Back on the first tab, the Progress tab no longer looks pressed (no ripple left behind).
   await tab('Today').tap()
   await expect(page.locator('.gl-eyebrow', { hasText: 'Today' })).toBeVisible()
   await expect(page.locator('.v-bottom-navigation .v-ripple__container')).toHaveCount(0)

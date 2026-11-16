@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, useId } from 'vue'
+import { brand } from '@/brand'
 import {
   SEVERITIES,
   SEVERITY_LABELS,
@@ -11,15 +12,12 @@ import { roundTo } from '@/domain/units'
 import { useJournalStore } from '@/stores/journal'
 import { formatDate, toEpochMs } from '@/services/time'
 import SourceList from '@/components/common/SourceList.vue'
-import { mdiFilePdfBox } from '@/plugins/icons'
 
 /**
  * Side effects over a chosen period: how often each came, how strong, when last, and how many
- * days after a dose it usually arrived. "Export PDF" asks the page for the prescriber report,
- * which carries the labels' own terms beside the plain ones.
+ * days after a dose or draw it usually arrived.
  */
-const props = defineProps<{ now: number }>()
-const emit = defineEmits<{ export: [] }>()
+const props = defineProps<{ now: number; doseTimes: readonly number[] }>()
 
 const journal = useJournalStore()
 const periodLabelId = useId()
@@ -35,7 +33,7 @@ const since = computed(() => (period.value ? props.now - period.value * 86_400_0
 const summary = computed(() =>
   summarizeSymptoms(
     journal.symptoms.map((s) => ({ ...s, at: toEpochMs(s.occurredAt) })),
-    journal.doses.map((d) => toEpochMs(d.takenAt)),
+    props.doseTimes,
     since.value,
   ),
 )
@@ -47,9 +45,11 @@ function severityText(s: SymptomSummary): string {
 }
 
 function timingText(s: SymptomSummary): string {
-  if (s.medianDaysAfterDose === null) return 'Before any dose'
+  if (s.medianDaysAfterDose === null) return `Before any ${brand.doseNoun}`
   const days = roundTo(s.medianDaysAfterDose, 1)
-  return days < 1 ? 'Same day as a dose' : `About ${days} day${days === 1 ? '' : 's'} after a dose`
+  return days < 1
+    ? `Same day as a ${brand.doseNoun}`
+    : `About ${days} day${days === 1 ? '' : 's'} after a ${brand.doseNoun}`
 }
 </script>
 
@@ -95,12 +95,7 @@ function timingText(s: SymptomSummary): string {
         </tbody>
       </v-table>
       <p v-else class="gl-muted">Nothing logged in this period.</p>
-      <SourceList :sources="SYMPTOM_SOURCES" note="From the labels’ clinical trials." />
-      <div v-if="summary.length" class="gl-actions">
-        <v-btn variant="tonal" :prepend-icon="mdiFilePdfBox" @click="emit('export')">
-          Export PDF
-        </v-btn>
-      </div>
+      <SourceList :sources="SYMPTOM_SOURCES" :note="brand.symptomSourceNote" />
     </v-card-text>
   </v-card>
 </template>

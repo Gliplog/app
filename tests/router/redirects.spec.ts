@@ -10,4 +10,12 @@ describe('router routes', () => {
     expect(router.currentRoute.value.name).toBe('medication')
     expect(router.currentRoute.value.params).toEqual({ id: 'unknown' })
   })
+
+  it('redirects /history to entries', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    await router.push('/history')
+    await router.isReady()
+    expect(router.currentRoute.value.name).toBe('entries')
+    expect(router.currentRoute.value.fullPath).toBe('/progress/entries')
+  })
 })

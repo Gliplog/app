@@ -259,7 +259,7 @@ const hasSections = computed(
           <v-card-text class="gl-stack gl-stack--tight">
             <EntriesTimeline :entries="entries" compact :limit="5" />
             <div>
-              <v-btn variant="text" :to="{ name: 'history' }" :append-icon="mdiChevronRight">
+              <v-btn variant="text" :to="{ name: 'entries' }" :append-icon="mdiChevronRight">
                 All entries
               </v-btn>
             </div>

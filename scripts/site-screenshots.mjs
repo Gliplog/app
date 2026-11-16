@@ -37,7 +37,7 @@ const SHOTS = [
     tab: 'Today',
     ready: (page) => page.getByRole('heading', { name: 'In your system' }),
   },
-  { name: 'progress', tab: 'Progress', ready: (page) => page.getByText('Since you started') },
+  { name: 'progress', tab: 'Progress', ready: (page) => page.getByText('Total change') },
 ]
 
 const server = await preview({ preview: { port: PORT, strictPort: true } })

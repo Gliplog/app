@@ -1,30 +1,43 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { formatPercentChange, formatWeight, formatWeightChange } from '@/domain/bodyUnits'
-import { roundTo } from '@/domain/units'
+import { formatPercentChange, formatWeeklyChange, formatWeightChange } from '@/domain/bodyUnits'
+import { changeStats } from '@/domain/progressStats'
+import { useEntries } from '@/composables/useEntries'
+import { useNow } from '@/composables/useNow'
+import { formatDate, toEpochMs } from '@/services/time'
 import { useJournalStore } from '@/stores/journal'
 import { useSettingsStore } from '@/stores/settings'
-import { useNow } from '@/composables/useNow'
-import { formatDate } from '@/services/time'
-import { mdiFilePdfBox } from '@/plugins/icons'
+import { mdiChevronRight, mdiFilePdfBox } from '@/plugins/icons'
+import StatTile from '@/components/common/StatTile.vue'
 import TrendCard from '@/components/charts/TrendCard.vue'
 import CohortSection from '@/components/charts/CohortSection.vue'
+import PhotosCard from '@/components/photos/PhotosCard.vue'
 import SymptomSummaryCard from '@/components/journal/SymptomSummaryCard.vue'
 import ExportReportDialog from '@/components/report/ExportReportDialog.vue'
-import PhotosCard from '@/components/photos/PhotosCard.vue'
 
 const journal = useJournalStore()
 const settings = useSettingsStore()
 const now = useNow()
+const { entries } = useEntries()
 
 const reportOpen = ref(false)
 
 const baseline = computed(() => journal.baseline)
 const last = computed(() => journal.progress[journal.progress.length - 1])
+const stats = computed(() =>
+  baseline.value && last.value ? changeStats(baseline.value, last.value) : null,
+)
 
 const hasAnything = computed(
-  () => journal.weights.length > 0 || journal.glucose.length > 0 || journal.doses.length > 0,
+  () =>
+    journal.weights.length > 0 ||
+    journal.glucose.length > 0 ||
+    journal.vitals.length > 0 ||
+    journal.symptoms.length > 0 ||
+    journal.doses.length > 0,
 )
+
+const doseTimes = computed(() => journal.doses.map((d) => toEpochMs(d.takenAt)))
 
 const basisNote = computed(() => {
   switch (baseline.value?.basis) {
@@ -58,42 +71,28 @@ const basisNote = computed(() => {
     </header>
 
     <v-alert v-if="!journal.weights.length" type="info" variant="tonal" class="mb-4">
-      Log a weight on Today to start your progress chart.
+      Log a weight to start your progress chart.
     </v-alert>
 
-    <div class="progress-grid">
-      <v-card v-if="baseline">
-        <v-card-item>
-          <p class="gl-eyebrow">Since you started</p>
-          <v-card-title class="gl-num">
-            {{ last ? formatWeightChange(last.changeKg, settings.weightUnit) : '0' }}
-            <span v-if="last" class="gl-muted text-title-medium">
-              {{ formatPercentChange(last.changePercent) }}
-            </span>
-          </v-card-title>
-        </v-card-item>
-        <v-card-text class="gl-stack">
-          <dl class="stats">
-            <div>
-              <dt class="gl-faint">Start</dt>
-              <dd class="gl-num">
-                {{ formatWeight(baseline.kg, settings.weightUnit) }}
-                <span class="gl-faint">· {{ formatDate(baseline.at) }}</span>
-              </dd>
-            </div>
-            <div v-if="last">
-              <dt class="gl-faint">Latest</dt>
-              <dd class="gl-num">{{ formatWeight(last.kg, settings.weightUnit) }}</dd>
-            </div>
-            <div v-if="last && baseline.basis !== 'no-doses'">
-              <dt class="gl-faint">Weeks since first dose</dt>
-              <dd class="gl-num">{{ roundTo(last.weeks, 1) }}</dd>
-            </div>
-          </dl>
-          <p class="text-body-small gl-muted">{{ basisNote }}</p>
-        </v-card-text>
-      </v-card>
+    <section v-if="stats" class="gl-stack gl-stack--tight mb-4" aria-label="Summary">
+      <div class="stat-grid">
+        <StatTile
+          label="Total change"
+          :value="formatWeightChange(stats.changeKg, settings.weightUnit)"
+        />
+        <StatTile label="Percent" :value="formatPercentChange(stats.changePercent)" />
+        <StatTile
+          label="Weekly average"
+          :value="
+            stats.weeklyKg !== null ? formatWeeklyChange(stats.weeklyKg, settings.weightUnit) : '–'
+          "
+          :note="stats.weeklyKg === null ? 'After two weeks' : undefined"
+        />
+      </div>
+      <p class="text-body-small gl-muted">Since {{ formatDate(stats.startAt) }}. {{ basisNote }}</p>
+    </section>
 
+    <div class="progress-grid">
       <TrendCard />
     </div>
 
@@ -104,14 +103,30 @@ const basisNote = computed(() => {
       </div>
     </section>
 
-    <section v-if="journal.medications.length" id="side-effects" class="mt-6">
+    <section
+      v-if="journal.medications.length || journal.symptoms.length"
+      id="side-effects"
+      class="mt-6"
+    >
       <h2 class="gl-display text-title-large mb-4">Side effects</h2>
       <div class="progress-grid">
-        <SymptomSummaryCard :now="now" @export="reportOpen = true" />
+        <SymptomSummaryCard :now="now" :dose-times="doseTimes" />
       </div>
     </section>
 
     <CohortSection class="mt-6" />
+
+    <v-card class="mt-6" :to="{ name: 'entries' }" link>
+      <v-card-item>
+        <template #title>All entries</template>
+        <template #subtitle>
+          {{ entries.length }} {{ entries.length === 1 ? 'entry' : 'entries' }}
+        </template>
+        <template #append>
+          <v-icon :icon="mdiChevronRight" />
+        </template>
+      </v-card-item>
+    </v-card>
 
     <ExportReportDialog v-model="reportOpen" />
   </div>
@@ -126,27 +141,16 @@ const basisNote = computed(() => {
   gap: 12px;
 }
 
+.stat-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+}
+
 .progress-grid {
   display: grid;
   gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
   align-items: start;
-}
-
-.stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px 24px;
-  margin: 0;
-}
-
-.stats dt {
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.stats dd {
-  margin: 0;
-  font-weight: 600;
 }
 </style>

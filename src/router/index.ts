@@ -32,11 +32,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: 'Progress' },
   },
   {
-    path: '/history',
-    name: 'history',
-    component: () => import('@/views/HistoryView.vue'),
-    meta: { title: 'History' },
+    path: '/progress/entries',
+    name: 'entries',
+    component: () => import('@/views/EntriesView.vue'),
+    meta: { title: 'All entries', nav: 'progress' },
   },
+  { path: '/history', redirect: { name: 'entries' } },
   {
     path: '/settings',
     name: 'settings',

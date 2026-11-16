@@ -3,7 +3,13 @@ import { choose } from './helpers'
 
 export const DISCLAIMER_TITLE = 'A private journal, not medical advice'
 export const UNITS_CARD_TITLE = 'Units and appearance'
-export const TIMELINE_HASH = 'history'
+export const TIMELINE_HASH = 'progress/entries'
+export const LEGACY_PROGRESS_ROUTE = { hash: 'history', heading: 'All entries' } as const
+export const EXPORT_DIALOG = {
+  title: 'Export PDF',
+  submit: 'Export',
+  filePrefix: 'gliplog-report-',
+} as const
 export const EMPTY_TODAY_TITLE = 'Start with what you take'
 export const TODAY_LOG_BUTTON = 'Log dose'
 export const SYSTEM_LABEL = 'Semaglutide injection'
