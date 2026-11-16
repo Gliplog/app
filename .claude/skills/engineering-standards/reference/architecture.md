@@ -15,7 +15,7 @@ src/
                  (side-effect list and summary), reminders (when to remind, notification
                  wording), photos (sizing, nearest weigh-in, comparison pair), calendar
                  (calendar invites), cohort (merged trial readouts), collage and crop (photo
-                 collage), doseMarks and levelStrip (doses and levels on a trend), overlap
+                 collage), doseBands (dose bands and callout pills on a trend), overlap
                  (different medicines in use together), projection (levels ahead), report
                  (periods and axis ticks), listing, catalog types
   brand.ts       per-app strings read by shared components (wordmark, health sync summary)
@@ -24,9 +24,10 @@ src/
   stores/        Pinia: journal (medications, doses, weights, side effects, blood sugar, vitals,
                  the focused medication), settings (units, theme, profile, reminders), photos
                  (details and thumbnail URLs), healthSync (Health apps choices), notify, confirm
-  composables/   useBodyMetrics, useCameraAccess, useChartColors, useInstallPrompt,
-                 useStoragePersistence, useNow, usePaging, useHideOnScroll, useLevelStrip,
-                 usePhotoPins, useReminderSync, useReportExport, useHealthAutoSync
+  composables/   useBodyMetrics, useCameraAccess, useChartColors, useDoseBands, useInstallPrompt,
+                 useStoragePersistence, useNow, usePaging, useHideOnScroll,
+                 usePhotoPins, useReminderSync, useReportExport, useHealthAutoSync,
+                 useWeightSummary
   services/      time.ts (the only clock and date formatter), locale.ts (device region and
                  measurement system), fileTransfer.ts (share/download),
                  nativeFileTransfer.ts (the same through the apps' share sheet), platform.ts

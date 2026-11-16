@@ -29,7 +29,7 @@ cards are translucent paper with a lit top edge. Glass falls back to `--gl-surfa
 | Status pairs | `--gl-{good,notice,alert,info}-{fg,bg}`                                                                                          |
 | Shadows      | `--gl-shadow-{sm,md,lg,inset}`                                                                                                   |
 | Glass        | `--gl-glass`, `--gl-glass-strong`, `--gl-glass-card`, `--gl-glass-{line,edge,sheen,shadow}`, `--gl-backdrop-{1,2}`               |
-| Chart        | `--gl-chart-{logged,preview,trial,placebo,grid,axis,now}`                                                                        |
+| Chart        | `--gl-chart-{logged,preview,trial,placebo,grid,axis,now,on-dose}`, `--gl-chart-dose-1` to `--gl-chart-dose-8`                    |
 | Syringe      | `--gl-syringe-{barrel,ink,fill,fill-deep,glint,plunger}`                                                                         |
 
 Theme-independent: `--gl-font`, `--gl-font-display`, `--gl-font-mono`, `--gl-radius-*`, `--gl-glass-blur`,
@@ -52,7 +52,9 @@ Theme-independent: `--gl-font`, `--gl-font-display`, `--gl-font-mono`, `--gl-rad
 
 1. Add the token to both `.v-theme--light` and `.v-theme--dark` in `tokens.css`.
 2. If it is text, add the pair to `scripts/check-contrast.mjs`. The checker reads only solid
-   hex tokens; glass fills stay at 72% opacity or more so text keeps its contrast on them. The
+   hex tokens, verifies each `--gl-chart-dose-1` to `--gl-chart-dose-8` passes 3:1 against
+   `--gl-surface`, and verifies `--gl-chart-on-dose` passes 4.5:1 against each dose slot; glass
+   fills stay at 72% opacity or more so text keeps its contrast on them. The
    backdrop tint lowers light-mode contrast at the top left: `--gl-text-3` drops to about
    4.1:1 there, so faint text belongs inside cards, never on the bare page.
 3. Write `-webkit-backdrop-filter` before `backdrop-filter`: the CSS minifier merges the pair

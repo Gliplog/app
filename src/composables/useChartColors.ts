@@ -9,8 +9,10 @@ export interface ChartColors {
   grid: string
   axis: string
   now: string
-  /** Medication level lines, in slot order. */
-  levels: string[]
+  /** Dose band and pill colours, in slot order. */
+  doses: string[]
+  /** Text colour on a dose pill. */
+  onDose: string
   text: string
   surface: string
   font: string
@@ -28,7 +30,8 @@ function readColors(): ChartColors {
     grid: read('--gl-chart-grid'),
     axis: read('--gl-chart-axis'),
     now: read('--gl-chart-now'),
-    levels: [1, 2, 3].map((n) => read(`--gl-chart-level-${n}`)),
+    doses: [1, 2, 3, 4, 5, 6, 7, 8].map((n) => read(`--gl-chart-dose-${n}`)),
+    onDose: read('--gl-chart-on-dose'),
     text: read('--gl-text-1'),
     surface: read('--gl-surface'),
     font: read('--gl-font'),

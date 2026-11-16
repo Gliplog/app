@@ -140,14 +140,20 @@
     --gl-chart-axis: #7a6c54;
     --gl-chart-now: #877960;
     /*
-     * Medication levels under a body measure, in slot order. Checked as a set against the light
-     * surface for every pair (colour-vision separation, lightness, 3:1 contrast), and kept off
-     * the teal of the measure line above them. Orange comes last because the
-     * glucose chart already uses it for readings at other times of day.
+     * Dose bands and callout pills on the weight line, in slot order. Slot 1 stays neutral
+     * stone as the starting baseline; neighbouring slots alternate warm/cool and lightness so
+     * adjacent strengths stay apart under deuteranopia and protanopia, pass 3:1 against
+     * --gl-surface, and keep 4.5:1 against --gl-chart-on-dose.
      */
-    --gl-chart-level-1: #a34d9c;
-    --gl-chart-level-2: #2a78d6;
-    --gl-chart-level-3: #c0643f;
+    --gl-chart-dose-1: #5f5544;
+    --gl-chart-dose-2: #246bc2;
+    --gl-chart-dose-3: #b55633;
+    --gl-chart-dose-4: #125659;
+    --gl-chart-dose-5: #8f6114;
+    --gl-chart-dose-6: #8c3d86;
+    --gl-chart-dose-7: #1e6940;
+    --gl-chart-dose-8: #473fa3;
+    --gl-chart-on-dose: #fffdf9;
 
     --gl-syringe-barrel: var(--stone-50);
     --gl-syringe-ink: var(--stone-700);
@@ -217,10 +223,16 @@
     --gl-chart-grid: #3a342a;
     --gl-chart-axis: #b3a286;
     --gl-chart-now: #b3a286;
-    /* The same three hues stepped for the dark surface, checked as a set for every pair. */
-    --gl-chart-level-1: #b866b4;
-    --gl-chart-level-2: #3987e5;
-    --gl-chart-level-3: #bd592f;
+    /* The same eight dose hues stepped for the dark surface. */
+    --gl-chart-dose-1: #b3a286;
+    --gl-chart-dose-2: #5ca0f2;
+    --gl-chart-dose-3: #e5845d;
+    --gl-chart-dose-4: #4bc0bc;
+    --gl-chart-dose-5: #e5b152;
+    --gl-chart-dose-6: #d884d3;
+    --gl-chart-dose-7: #5cc78a;
+    --gl-chart-dose-8: #8d83eb;
+    --gl-chart-on-dose: #15120e;
 
     --gl-syringe-barrel: var(--stone-800);
     --gl-syringe-ink: var(--stone-200);

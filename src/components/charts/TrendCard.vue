@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, useId, watch } from 'vue'
 import { BMI_BANDS, BMI_SOURCE } from '@/domain/body'
+import { doseBands } from '@/domain/doseBands'
 import {
   decimalsFor,
   fromA1cPercent,
@@ -13,42 +14,37 @@ import { spreadEvenly, valueAt } from '@/domain/photos'
 import { useJournalStore } from '@/stores/journal'
 import { usePhotosStore } from '@/stores/photos'
 import { useChartColors } from '@/composables/useChartColors'
+import { useDoseBands } from '@/composables/useDoseBands'
 import { usePhotoPins } from '@/composables/usePhotoPins'
+import { useWeightSummary } from '@/composables/useWeightSummary'
 import PhotoDialog from '@/components/photos/PhotoDialog.vue'
 import type { PhotoRow } from '@/db/database'
 import { useSettingsStore } from '@/stores/settings'
 import { useBodyMetrics } from '@/composables/useBodyMetrics'
 import { toEpochMs } from '@/services/time'
-import {
-  mdiChartBellCurve,
-  mdiImageOutline,
-  mdiNeedle,
-  mdiShareVariantOutline,
-} from '@/plugins/icons'
-import { LEVEL_STRIP_MAX, stripScale } from '@/domain/levelStrip'
-import { doseMarks } from '@/domain/doseMarks'
-import { useLevelStrip } from '@/composables/useLevelStrip'
-import { levelStripInput, type LevelStripInput } from './bodyChart'
+import { mdiImageOutline, mdiNeedle, mdiShareVariantOutline } from '@/plugins/icons'
 import MoreInfo from '@/components/common/MoreInfo.vue'
 import SourceList from '@/components/common/SourceList.vue'
 import BodyChart from './BodyChart.vue'
+import DoseLegend from './DoseLegend.vue'
 import ShareTrendDialog from '@/components/share/ShareTrendDialog.vue'
 
 /**
  * Every body measure over time in one card: weight, BMI, HbA1c, glucose, blood pressure and
  * resting heart rate. Glucose draws fasting readings as the line and readings from other times
  * of day as separate points, since they are not comparable with each other. Blood pressure
- * draws systolic as the line and diastolic as a dashed line below it. Whatever is shown can be shared as an image.
- * Progress photos and doses can be marked on the weight line, at the date of each.
+ * draws systolic as the line and diastolic as a dashed line below it. Whatever is shown can be
+ * shared as an image. Progress photos pin to the weight line, and doses colour the weight and
+ * BMI lines by strength with callout pills at each change.
  */
 type TrendMeasure = 'weight' | 'bmi' | 'a1c' | 'glucose' | 'cgm' | 'bp' | 'hr'
-
-const props = defineProps<{ now: number }>()
 
 const journal = useJournalStore()
 const settings = useSettingsStore()
 const body = useBodyMetrics()
+const { goalKg } = useWeightSummary()
 const labelId = useId()
+const pickId = useId()
 const shareOpen = ref(false)
 
 const a1c = computed(() => journal.glucose.filter((g) => g.kind === 'a1c'))
@@ -192,7 +188,7 @@ const chart = computed(() => {
         guides: [],
       }
     default: {
-      const goal = settings.profile.goalKg
+      const goal = goalKg.value
       return {
         points: oldestFirst(
           journal.weights.map((w) => ({
@@ -252,39 +248,17 @@ function openPhoto(id: string) {
   photoOpen.value = true
 }
 
-/*
- * Estimated levels in a strip under the measure, on the same time axis; off until asked for.
- * Every measure here is in real units, so one medicine reads in mg; several read as percent of
- * each one's own peak (see `domain/levelStrip.ts`).
- */
-const {
-  levelGroups,
-  inputs: stripInputs,
-  slots: stripSlots,
-  sources: levelSources,
-  doses: doseInputs,
-  truncated,
-} = useLevelStrip()
-const showLevels = ref(false)
-
-const levels = computed<LevelStripInput | undefined>(() => {
-  if (!showLevels.value || !stripInputs.value.length) return undefined
-  const times = [...chart.value.points, ...(chart.value.secondary?.points ?? [])].map((p) => p.at)
-  return levelStripInput(
-    stripInputs.value,
-    stripSlots.value,
-    times,
-    props.now,
-    stripScale(false, stripInputs.value.length),
-  )
-})
-
-/** Doses on the weight line: off until asked for, like the level strip. */
-const showDoses = ref(false)
-const marks = computed(() =>
-  mode.value === 'weight' ? doseMarks(doseInputs.value, chart.value.points) : [],
+const { candidates, marked, pick, doses: doseInputs } = useDoseBands()
+const showDoses = ref(true)
+const isDoseMeasure = computed(() => mode.value === 'weight' || mode.value === 'bmi')
+const bands = computed(() =>
+  isDoseMeasure.value ? doseBands(doseInputs.value, chart.value.points) : null,
 )
-const chartDoses = computed(() => (showDoses.value ? marks.value : []))
+const hasShots = computed(() => (bands.value?.shots.length ?? 0) > 0)
+const canDoses = computed(() => isDoseMeasure.value && (hasShots.value || pick.value))
+const chartDoses = computed(() =>
+  showDoses.value && hasShots.value ? (bands.value ?? undefined) : undefined,
+)
 
 const convertedUnits = computed(
   () =>
@@ -293,12 +267,7 @@ const convertedUnits = computed(
 )
 
 const hasMore = computed(
-  () =>
-    !!levels.value ||
-    chartDoses.value.length > 0 ||
-    mode.value === 'bmi' ||
-    mode.value === 'cgm' ||
-    convertedUnits.value,
+  () => !!chartDoses.value || mode.value === 'bmi' || mode.value === 'cgm' || convertedUnits.value,
 )
 </script>
 
@@ -317,10 +286,7 @@ const hasMore = computed(
       </template>
     </v-card-item>
     <v-card-text class="gl-stack">
-      <div
-        v-if="MEASURES.length > 1 || canPin || marks.length || levelGroups.length"
-        class="trend-controls"
-      >
+      <div v-if="MEASURES.length > 1 || canPin || canDoses" class="trend-controls">
         <p :id="labelId" class="d-sr-only">Measure</p>
         <v-btn-toggle
           v-if="MEASURES.length > 1"
@@ -343,7 +309,7 @@ const hasMore = computed(
           Photos
         </v-btn>
         <v-btn
-          v-if="marks.length"
+          v-if="canDoses"
           :prepend-icon="mdiNeedle"
           :variant="showDoses ? 'tonal' : 'outlined'"
           :aria-pressed="showDoses"
@@ -351,15 +317,22 @@ const hasMore = computed(
         >
           Doses
         </v-btn>
-        <v-btn
-          v-if="levelGroups.length"
-          :prepend-icon="mdiChartBellCurve"
-          :variant="showLevels ? 'tonal' : 'outlined'"
-          :aria-pressed="showLevels"
-          @click="showLevels = !showLevels"
-        >
-          Levels
-        </v-btn>
+      </div>
+      <div v-if="isDoseMeasure && showDoses && pick">
+        <p :id="pickId" class="gl-label">Doses of</p>
+        <v-chip-group v-model="marked" role="group" mandatory column :aria-labelledby="pickId">
+          <v-chip
+            v-for="c in candidates"
+            :key="c.key"
+            :value="c.key"
+            :aria-pressed="marked === c.key"
+            tag="button"
+            filter
+            variant="outlined"
+          >
+            {{ c.label }}
+          </v-chip>
+        </v-chip-group>
       </div>
       <BodyChart
         :points="chart.points"
@@ -370,8 +343,12 @@ const hasMore = computed(
         :guides="chart.guides"
         :photos="chartPhotos"
         :doses="chartDoses"
-        :levels="levels"
         @photo="openPhoto"
+      />
+      <DoseLegend
+        v-if="chartDoses?.legend.length"
+        :legend="chartDoses.legend"
+        :named="chartDoses.named"
       />
       <p v-if="chartPhotos.length" class="text-body-small gl-muted">Tap a photo to open it.</p>
       <p v-if="mode === 'glucose' && !chart.points.length" class="text-body-small gl-muted">
@@ -381,30 +358,11 @@ const hasMore = computed(
         Add your height in Settings to track BMI.
       </p>
       <MoreInfo v-if="hasMore">
-        <template v-if="levels">
-          <p class="text-body-small gl-muted">
-            {{
-              levels.scale === 'amount'
-                ? 'Estimated amount in your body, based on your doses.'
-                : "Estimated levels as a percent of each medicine's peak."
-            }}
-            <template v-if="truncated">Showing the {{ LEVEL_STRIP_MAX }} most recent.</template>
-          </p>
-          <div v-for="src in levelSources" :key="src.key" class="gl-stack gl-stack--tight">
-            <p class="text-body-small">
-              <strong>{{ src.label }}</strong>
-              <span v-if="src.userSupplied" class="gl-badge gl-badge--notice ms-2">
-                <span class="gl-badge__dot" />Your own values
-              </span>
-            </p>
-            <SourceList v-if="src.pk" flat :sources="src.pk.sources" :note="src.pk.notes" />
-          </div>
-        </template>
         <p v-if="mode === 'cgm'" class="text-body-small gl-muted">
           One point per day from your glucose monitor: the average, and the median dashed.
         </p>
-        <p v-if="chartDoses.length" class="text-body-small gl-muted">
-          Diamonds mark doses. Labels show new strengths.
+        <p v-if="chartDoses" class="text-body-small gl-muted">
+          Colour shows the dose in use. Labels mark each change.
         </p>
         <template v-if="mode === 'bmi'">
           <p class="text-body-small gl-muted">
@@ -416,16 +374,7 @@ const hasMore = computed(
         <SourceList v-if="convertedUnits" flat :sources="GLUCOSE_UNIT_SOURCES" />
       </MoreInfo>
     </v-card-text>
-    <ShareTrendDialog
-      v-model="shareOpen"
-      :measure="mode"
-      :now="now"
-      :photos="pinned"
-      :level-inputs="stripInputs"
-      :level-slots="stripSlots"
-      :level-sources="levelSources"
-      :doses="doseInputs"
-    />
+    <ShareTrendDialog v-model="shareOpen" :measure="mode" :photos="pinned" :doses="doseInputs" />
     <PhotoDialog v-model="photoOpen" :photo="viewing" :prepared="null" taken-at="" />
   </v-card>
 </template>

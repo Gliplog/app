@@ -10,7 +10,6 @@ export {
   mdiCameraOffOutline,
   mdiCameraOutline,
   mdiCellphoneArrowDown,
-  mdiChartBellCurve,
   mdiChartLine,
   mdiCheckCircle,
   mdiCheckCircleOutline,

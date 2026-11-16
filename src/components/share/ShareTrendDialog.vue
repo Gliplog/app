@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { brand } from '@/brand'
 import {
   decimalsFor,
   formatA1c,
@@ -10,6 +11,7 @@ import {
   fromMgDl,
 } from '@/domain/glucose'
 import { formatPercentChange, formatWeight, formatWeightChange, fromKg } from '@/domain/bodyUnits'
+import { doseBands, type BandDose } from '@/domain/doseBands'
 import { roundTo } from '@/domain/units'
 import {
   formatBloodPressure,
@@ -23,14 +25,9 @@ import { valueAt } from '@/domain/photos'
 import { useSettingsStore } from '@/stores/settings'
 import { useBodyMetrics } from '@/composables/useBodyMetrics'
 import { useChartColors } from '@/composables/useChartColors'
+import { useWeightSummary } from '@/composables/useWeightSummary'
 import { formatDate, formatDateTime, nowIso, toEpochMs } from '@/services/time'
-import {
-  bodyChartOption,
-  levelStripInput,
-  type BodyChartInput,
-} from '@/components/charts/bodyChart'
-import { stripScale, type StripInput } from '@/domain/levelStrip'
-import { doseMarks, type DoseMarkInput } from '@/domain/doseMarks'
+import { bodyChartOption, type BodyChartInput } from '@/components/charts/bodyChart'
 import ShareImageDialog from './ShareImageDialog.vue'
 import type { ShareCardContent } from './shareCard'
 
@@ -38,71 +35,45 @@ import type { ShareCardContent } from './shareCard'
  * Share a trend (weight, BMI, HbA1c, glucose, blood pressure or heart rate) as an image.
  * Numbers are off by default: weight then shows as percent change and the other measures as
  * change only, with no axis values, so a card can be shared without revealing a weight or a
- * lab result.
- *
- * Estimated levels can go in a strip under the line, and doses can be marked on the weight
- * line; both are off by default, since they name the medicine. The strip follows the numbers
- * choice: in mg beside a measure with its values, as percent of peak beside a change only.
+ * lab result. Doses are also off by default, since they reveal the strength and medicine.
  */
 const props = defineProps<{
   measure: 'weight' | 'bmi' | 'a1c' | 'glucose' | 'cgm' | 'bp' | 'hr'
-  now: number
   /** Photos that can be pinned to the weight line (see TrendCard). */
   photos?: { id: string; at: number }[]
-  /** The level strip's medicines and colour slots, as the app's chart has them. */
-  levelInputs?: StripInput[]
-  levelSlots?: ReadonlyMap<string, number>
-  /** Whether each strip line's half-life is the user's own; named in the caption. */
-  levelSources?: { key: string; userSupplied: boolean }[]
-  /** Every logged dose, for marks on the weight line. */
-  doses?: DoseMarkInput[]
+  /** Logged doses to mark on the Weight and BMI lines. */
+  doses?: BandDose[]
 }>()
 const open = defineModel<boolean>({ required: true })
 
 const journal = useJournalStore()
 const settings = useSettingsStore()
 const body = useBodyMetrics()
+const { weightTrend } = useWeightSummary()
 const { colors } = useChartColors()
 const showNumbers = ref(false)
 // Off by default: whoever receives the image sees the photos.
 const showPhotos = ref(false)
 const photosStore = usePhotosStore()
-const showLevels = ref(false)
 const showDoses = ref(false)
-const canLevels = computed(() => (props.levelInputs?.length ?? 0) > 0)
-const canDoses = computed(() => props.measure === 'weight' && (props.doses?.length ?? 0) > 0)
+const canDoses = computed(
+  () => (props.measure === 'weight' || props.measure === 'bmi') && (props.doses?.length ?? 0) > 0,
+)
+const appName = brand.wordmark.join('')
 
 const byTime = <T extends { at: number }>(list: T[]) => [...list].sort((a, b) => a.at - b.at)
 const madeAt = () => formatDateTime(nowIso())
 
-/**
- * The chosen extras on a card's chart: the level strip over the same dates as its entries, in
- * mg only while the card shows values, and dose marks on the weight line.
- */
-function withExtras(input: BodyChartInput, inPercent: boolean): BodyChartInput {
-  const inputs = props.levelInputs ?? []
-  const times = [...input.points, ...(input.secondary?.points ?? [])].map((p) => p.at)
-  const levels =
-    showLevels.value && inputs.length && times.length
-      ? levelStripInput(
-          inputs,
-          props.levelSlots ?? new Map(),
-          times,
-          props.now,
-          stripScale(inPercent, inputs.length),
-        )
-      : undefined
+function withExtras(input: BodyChartInput): BodyChartInput {
   const doses =
-    showDoses.value && canDoses.value ? doseMarks(props.doses ?? [], input.points) : undefined
-  return { ...input, levels, doses }
+    showDoses.value && canDoses.value ? doseBands(props.doses ?? [], input.points) : undefined
+  return { ...input, doses: doses?.shots.length || doses?.bands.length ? doses : undefined }
 }
 
-/** The caption's sentence on estimated levels, which carries where their half-lives came from. */
-function levelsCaption(input: BodyChartInput): string {
-  if (!input.levels) return ''
-  const own = props.levelSources?.some((s) => s.userSupplied)
-  const from = own ? 'label and your own half-lives' : 'label half-lives'
-  return ` Levels estimated from ${from}.`
+function doseLegendOf(input: BodyChartInput): ShareCardContent['doseLegend'] {
+  return input.doses?.legend.length
+    ? { items: input.doses.legend, named: input.doses.named }
+    : undefined
 }
 
 /** `hideValues` defaults to hiding the axis while numbers are off. */
@@ -114,38 +85,36 @@ function card(
   caption: string,
   hideValues = !showNumbers.value,
 ): ShareCardContent {
-  const input = withExtras(base, !showNumbers.value)
+  const input = withExtras(base)
   return {
     eyebrow,
     title,
     stats,
     chart: bodyChartOption(input, colors.value, { hideValues }),
-    caption: caption + levelsCaption(input),
+    caption,
     madeAt: madeAt(),
+    doseLegend: doseLegendOf(input),
   }
 }
 
 function weightCard(): ShareCardContent | null {
-  const base = journal.baseline
-  const series = journal.progress
-  const last = series[series.length - 1]
-  if (!base || !last) return null
-  const sinceText = formatDate(base.at)
-  const weeks = base.basis === 'no-doses' ? null : roundTo(last.weeks, 0)
+  const summary = weightTrend.value
+  if (!summary) return null
+  const sinceText = formatDate(summary.startAt)
   const stats: [string, string][] = [['Since', sinceText]]
-  if (weeks !== null) stats.push(['Weeks', String(weeks)])
-  if (showNumbers.value) stats.push(['Now', formatWeight(last.kg, settings.weightUnit)])
+  if (summary.weeks !== null) stats.push(['Weeks', String(summary.weeks)])
+  if (showNumbers.value) stats.push(['Now', formatWeight(summary.latestKg, settings.weightUnit)])
   const points = byTime(
     journal.weights.map((w) => ({
       at: toEpochMs(w.measuredAt),
       value: showNumbers.value
         ? fromKg(w.kg, settings.weightUnit)
-        : ((w.kg - base.kg) / base.kg) * 100,
+        : ((w.kg - summary.startKg) / summary.startKg) * 100,
     })),
-  ).filter((p) => p.at >= base.at)
+  ).filter((p) => p.at >= summary.startAt)
   const title = showNumbers.value
-    ? `${formatWeightChange(last.changeKg, settings.weightUnit)} (${formatPercentChange(last.changePercent)})`
-    : formatPercentChange(last.changePercent)
+    ? `${formatWeightChange(summary.changeKg, settings.weightUnit)} (${formatPercentChange(summary.changePercent)})`
+    : formatPercentChange(summary.changePercent)
   // Pins sit on the line the card draws, whichever measure it is in.
   const pinned = showPhotos.value
     ? (props.photos ?? []).flatMap((p) => {
@@ -154,16 +123,13 @@ function weightCard(): ShareCardContent | null {
         return value !== null && src ? [{ at: p.at, value, src }] : []
       })
     : []
-  const input = withExtras(
-    {
-      points,
-      unitLabel: showNumbers.value ? settings.weightUnit : '%',
-      measure: 'Weight',
-      decimals: 1,
-      guides: [],
-    },
-    !showNumbers.value,
-  )
+  const input = withExtras({
+    points,
+    unitLabel: showNumbers.value ? settings.weightUnit : '%',
+    measure: 'Weight',
+    decimals: 1,
+    guides: [],
+  })
   // Percent change keeps its axis: it reveals no weight.
   return {
     eyebrow: 'Weight',
@@ -172,11 +138,11 @@ function weightCard(): ShareCardContent | null {
     chart: bodyChartOption(input, colors.value, { pinRoom: pinned.length > 0 }),
     caption:
       `Weight change since ${sinceText}, from weigh-ins` +
-      (input.doses?.length ? ' and doses' : '') +
-      ` logged in Gliplog.` +
-      levelsCaption(input),
+      (input.doses?.shots.length ? ' and doses' : '') +
+      ` logged in ${appName}.`,
     madeAt: madeAt(),
     photos: pinned,
+    doseLegend: doseLegendOf(input),
   }
 }
 
@@ -196,7 +162,9 @@ function bmiCard(): ShareCardContent | null {
       ['Change', changeText],
     ],
     { points: series, unitLabel: '', measure: 'BMI', decimals: 1, guides: [] },
-    'Body mass index from weigh-ins and height logged in Gliplog.',
+    showDoses.value && canDoses.value
+      ? `Body mass index from weigh-ins, height and doses logged in ${appName}.`
+      : `Body mass index from weigh-ins and height logged in ${appName}.`,
   )
 }
 
@@ -229,7 +197,7 @@ function a1cCard(): ShareCardContent | null {
       decimals: decimalsFor(settings.a1cUnit),
       guides: [],
     },
-    'HbA1c results logged in Gliplog.',
+    `HbA1c results logged in ${appName}.`,
   )
 }
 
@@ -266,7 +234,7 @@ function glucoseCard(): ShareCardContent | null {
       decimals: decimalsFor(settings.glucoseUnit),
       guides: [],
     },
-    'Glucose readings logged in Gliplog: fasting as a line, other times of day as points.',
+    `Glucose readings logged in ${appName}: fasting as a line, other times of day as points.`,
   )
 }
 
@@ -301,7 +269,7 @@ function cgmCard(): ShareCardContent | null {
       decimals: decimalsFor(unit),
       guides: [],
     },
-    'Daily glucose monitor averages synced to Gliplog: average solid, median dashed.',
+    `Daily glucose monitor averages synced to ${appName}: average solid, median dashed.`,
   )
 }
 
@@ -344,7 +312,7 @@ function bpCard(): ShareCardContent | null {
       decimals: 0,
       guides: [],
     },
-    'Blood pressure logged in Gliplog: systolic as a solid line, diastolic dashed.',
+    `Blood pressure logged in ${appName}: systolic as a solid line, diastolic dashed.`,
   )
 }
 
@@ -375,7 +343,7 @@ function hrCard(): ShareCardContent | null {
       decimals: 0,
       guides: [],
     },
-    'Resting heart rate logged in Gliplog.',
+    `Resting heart rate logged in ${appName}.`,
   )
 }
 
@@ -439,17 +407,6 @@ const NAMES = {
     </template>
     <template v-if="canDoses">
       <v-switch v-model="showDoses" label="Include my doses" hide-details />
-    </template>
-    <template v-if="canLevels">
-      <v-switch v-model="showLevels" label="Include estimated levels" hide-details />
-      <p v-if="showLevels" class="text-body-small gl-muted">
-        {{
-          showNumbers && (levelInputs?.length ?? 0) === 1
-            ? 'Shown in mg.'
-            : 'Shown as a percent of peak.'
-        }}
-        Includes the medicine name.
-      </p>
     </template>
   </ShareImageDialog>
 </template>

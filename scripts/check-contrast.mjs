@@ -38,6 +38,8 @@ const PAIRS = [
   ['gl-info-fg', ['gl-info-bg']],
 ]
 
+const DOSE_SLOTS = Array.from({ length: 8 }, (_, i) => `gl-chart-dose-${i + 1}`)
+
 let failed = false
 for (const theme of ['.v-theme--light', '.v-theme--dark']) {
   const tokens = block(theme)
@@ -55,6 +57,25 @@ for (const theme of ['.v-theme--light', '.v-theme--dark']) {
       }
     }
   }
+  for (const slot of DOSE_SLOTS) {
+    if (!tokens[slot] || !tokens['gl-surface'] || !tokens['gl-chart-on-dose']) {
+      console.error(`${theme}: missing --${slot}, --gl-surface or --gl-chart-on-dose`)
+      failed = true
+      continue
+    }
+    const onSurface = ratio(tokens[slot], tokens['gl-surface'])
+    if (onSurface < 3) {
+      console.error(`${theme}: --${slot} on --gl-surface is ${onSurface.toFixed(2)}:1 (needs 3:1)`)
+      failed = true
+    }
+    const pillText = ratio(tokens['gl-chart-on-dose'], tokens[slot])
+    if (pillText < 4.5) {
+      console.error(
+        `${theme}: --gl-chart-on-dose on --${slot} is ${pillText.toFixed(2)}:1 (needs 4.5:1)`,
+      )
+      failed = true
+    }
+  }
 }
 if (failed) process.exit(1)
-console.log('contrast: all text tokens meet WCAG AA in light and dark')
+console.log('contrast: all text and dose tokens meet WCAG AA in light and dark')

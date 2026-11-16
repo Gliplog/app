@@ -96,7 +96,7 @@ const basisNote = computed(() => {
         </v-card-text>
       </v-card>
 
-      <TrendCard :now="now" />
+      <TrendCard />
     </div>
 
     <section id="photos" class="mt-6">

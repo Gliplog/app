@@ -269,6 +269,47 @@
     min-height: 40px;
   }
 
+  /* Colour swatch beside a strength or medicine in a chart legend. */
+  .gl-swatch {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-inline-end: 6px;
+    border-radius: 50%;
+  }
+
+  .gl-swatch--dose-1 {
+    background: var(--gl-chart-dose-1);
+  }
+
+  .gl-swatch--dose-2 {
+    background: var(--gl-chart-dose-2);
+  }
+
+  .gl-swatch--dose-3 {
+    background: var(--gl-chart-dose-3);
+  }
+
+  .gl-swatch--dose-4 {
+    background: var(--gl-chart-dose-4);
+  }
+
+  .gl-swatch--dose-5 {
+    background: var(--gl-chart-dose-5);
+  }
+
+  .gl-swatch--dose-6 {
+    background: var(--gl-chart-dose-6);
+  }
+
+  .gl-swatch--dose-7 {
+    background: var(--gl-chart-dose-7);
+  }
+
+  .gl-swatch--dose-8 {
+    background: var(--gl-chart-dose-8);
+  }
+
   /* A short list of options (share privacy switches): labels at the buttons' size. */
   .gl-options .v-selection-control .v-label {
     font-size: 0.875rem;

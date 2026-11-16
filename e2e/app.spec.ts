@@ -16,13 +16,14 @@ async function addMedication(page: Page, name: string, concentration?: string) {
   await expect(dialog).toBeHidden()
 }
 
-async function logWeight(page: Page, value: string) {
+async function logWeight(page: Page, value: string, when?: string) {
   await page
     .getByRole('button', { name: /^Log (a )?weight$/ })
     .first()
     .click()
   const dialog = page.getByRole('dialog', { name: 'Weigh-in' })
   await dialog.getByLabel('Weight').fill(value)
+  if (when) await dialog.getByLabel('When').fill(when)
   await dialog.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('Weight logged')).toBeVisible()
 }
@@ -156,53 +157,57 @@ test('notes different medicines in use, until dismissed for that combination', a
   await expect(page.getByText(/marked as in use/)).toHaveCount(0)
 })
 
-test('shows estimated levels under the weight chart on the same dates', async ({ page }) => {
+test('marks each change of dose on the weight line', async ({ page }) => {
   await page.goto('./')
   await acceptDisclaimer(page)
   await addMedication(page, 'Wegovy')
-  await page.getByRole('button', { name: 'Log dose' }).click()
-  const dose = page.getByRole('dialog', { name: 'Wegovy' })
-  await choose(dose, 'Dose', '0.25 mg')
-  await dose.getByRole('button', { name: 'Save' }).click()
-  await expect(page.getByText('0.25 mg logged')).toBeVisible()
-  await logWeight(page, '100')
+
+  for (const [when, strength] of [
+    ['2026-06-01T09:00', '0.25 mg'],
+    ['2026-06-15T09:00', '0.5 mg'],
+  ] as const) {
+    await page.getByRole('button', { name: 'Log dose' }).click()
+    const dose = page.getByRole('dialog', { name: 'Wegovy' })
+    await choose(dose, 'Dose', strength)
+    await dose.getByLabel('When').fill(when)
+    await dose.getByRole('button', { name: 'Save' }).click()
+    await expect(page.getByText(`${strength} logged`)).toBeVisible()
+  }
+
+  for (const [when, weight] of [
+    ['2026-06-01T08:00', '100'],
+    ['2026-06-08T08:00', '99'],
+    ['2026-06-15T08:00', '97.5'],
+    ['2026-06-22T08:00', '96'],
+  ] as const) {
+    await logWeight(page, weight, when)
+  }
 
   await page.getByRole('link', { name: 'Progress', exact: true }).first().click()
-  const levels = page.getByRole('button', { name: 'Levels', exact: true })
-  await expect(levels).toHaveAttribute('aria-pressed', 'false')
-  await levels.click()
-  await expect(levels).toHaveAttribute('aria-pressed', 'true')
-  // One medicine beside a weight in real units reads in mg.
-  await expect(
-    page.getByRole('img', {
-      name: /^Weight .+Estimated amount in the body below.+Semaglutide injection [\d.]+ mg/,
-    }),
-  ).toBeVisible()
-  const notes = page.getByText('Estimated amount in your body, based on your doses.', {
-    exact: false,
-  })
-  await expect(notes).toBeHidden()
-  await page.getByRole('button', { name: 'More information' }).first().click()
-  await expect(notes).toBeVisible()
+  const chart = page.getByRole('img', { name: /^Weight / })
+  await expect(chart).toHaveAttribute('aria-label', /Doses by date:/)
+  await expect(chart).toHaveAttribute('aria-label', /0\.25 mg/)
+  await expect(chart).toHaveAttribute('aria-label', /0\.5 mg/)
+
+  const legend = page.getByRole('list', { name: 'Doses' })
+  await expect(legend).toBeVisible()
+  await expect(legend.getByRole('listitem')).toHaveCount(2)
+  await expect(legend).toContainText('0.25 mg')
+  await expect(legend).toContainText('0.5 mg')
 
   const doses = page.getByRole('button', { name: 'Doses', exact: true })
-  await expect(doses).toHaveAttribute('aria-pressed', 'false')
+  await expect(doses).toHaveAttribute('aria-pressed', 'true')
   await doses.click()
-  await expect(
-    page.getByRole('img', { name: /1 dose marked on the line; strength by date: .+0\.25 mg/ }),
-  ).toBeVisible()
-  await expect(page.getByText('Diamonds mark doses')).toBeVisible()
+  await expect(doses).toHaveAttribute('aria-pressed', 'false')
+  await expect(legend).toHaveCount(0)
+  await expect(chart).not.toHaveAttribute('aria-label', /Doses by date:/)
 
-  // The share image can carry the levels too, off until asked for.
   await page.getByRole('button', { name: 'Share weight as an image' }).click()
   const share = page.getByRole('dialog', { name: 'Share as an image' })
-  const include = share.getByLabel('Include estimated levels')
-  await expect(include).not.toBeChecked()
-  await include.check()
-  await expect(share.getByText(/Shown as a percent of peak/)).toBeVisible()
-  await share.getByLabel('Show my weight').check()
-  await expect(share.getByText(/Shown in mg/)).toBeVisible()
-  await expect(share.getByLabel('Include my doses')).toBeVisible()
+  await expect(share.getByLabel('Include estimated levels')).toHaveCount(0)
+  const includeDoses = share.getByLabel('Include my doses')
+  await expect(includeDoses).not.toBeChecked()
+  await includeDoses.check()
   await expect(share.getByAltText('Preview of the image to share')).toBeVisible()
 })
 
