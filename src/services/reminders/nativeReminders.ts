@@ -40,7 +40,7 @@ export async function openSettings(): Promise<void> {
 
 /**
  * Replace every pending reminder with `reminders`. The whole set is rebuilt each time, so ids
- * only need to be unique within one call, and a deleted medication's reminders simply vanish.
+ * only need to be unique within one call, and a deleted subject's reminders simply vanish.
  * On Android alarms are inexact (it may shift them by minutes to save battery): a dose reminder
  * does not need to-the-minute timing, and exact alarms need a permission Gliplog does not ask
  * for. iOS delivers at the time given.
@@ -78,13 +78,14 @@ export async function scheduleReminders(reminders: ScheduledReminder[]): Promise
 }
 
 /**
- * Call `handler` with the subject a tapped reminder is for. The plugin holds a tap that
- * launched the app until a listener attaches, so registering after startup still sees it.
+ * Call `handler` with the subject a tapped reminder is for (or null for a grouped reminder).
+ * The plugin holds a tap that launched the app until a listener attaches, so registering after
+ * startup still sees it.
  */
-export async function onReminderTap(handler: (subjectId: string) => void): Promise<void> {
+export async function onReminderTap(handler: (subjectId: string | null) => void): Promise<void> {
   await LocalNotifications.addListener('localNotificationActionPerformed', (action) => {
     const id: unknown = (action.notification.extra as { medicationId?: unknown } | undefined)
       ?.medicationId
-    if (typeof id === 'string') handler(id)
+    handler(typeof id === 'string' ? id : null)
   })
 }

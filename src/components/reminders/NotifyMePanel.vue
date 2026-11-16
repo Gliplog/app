@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import type { MedicationRow } from '@/db/database'
 import { suggestReminderTime } from '@/domain/reminders'
 import {
   checkNotificationAccess,
@@ -10,7 +9,6 @@ import {
 } from '@/services/reminders/notificationAccess'
 import { localParts, toEpochMs } from '@/services/time'
 import { nativeApps, notificationSettingsSteps, systemName } from '@/services/platform'
-import { useJournalStore } from '@/stores/journal'
 import { useNotifyStore } from '@/stores/notify'
 import { useSettingsStore } from '@/stores/settings'
 import {
@@ -19,18 +17,26 @@ import {
   mdiGestureTap,
   mdiLockOutline,
 } from '@/plugins/icons'
-import MedicationReminderControls from './MedicationReminderControls.vue'
+import ReminderControls from './ReminderControls.vue'
 
 /**
- * "Notify me" for one medication, following the permission the way the platforms recommend:
+ * "Notify me" for one subject, following the permission the way the platforms recommend:
  * explain first and ask only when the user chooses to; once allowed, turn the reminder on at
  * the time they usually dose; if notifications are blocked, say so and open the exact settings
  * screen, then check again when the user comes back.
  */
-const props = defineProps<{ medication: MedicationRow }>()
+const props = withDefaults(
+  defineProps<{
+    subjectId: string
+    repeating?: boolean
+    hasDue?: boolean
+    lastTakenAt?: string | null
+    nextReminderAt?: number | null
+  }>(),
+  { repeating: false, hasDue: false, lastTakenAt: null, nextReminderAt: null },
+)
 const emit = defineEmits<{ calendar: [] }>()
 
-const journal = useJournalStore()
 const settings = useSettingsStore()
 const notify = useNotifyStore()
 
@@ -39,10 +45,10 @@ const asking = ref(false)
 
 /** Tapping Notify me means "turn it on", so it is on as soon as the system allows it. */
 async function turnOn() {
-  const id = props.medication.id
-  const known = settings.reminders.medications[id]
-  const last = journal.lastDoseOf(id)
-  const time = known ?? (last ? suggestReminderTime(...hourMinute(last.takenAt)) : {})
+  const id = props.subjectId
+  const known = settings.reminders.subjects[id]
+  const time =
+    known ?? (props.lastTakenAt ? suggestReminderTime(...hourMinute(props.lastTakenAt)) : {})
   await settings.setReminder(id, { ...time, enabled: true })
 }
 
@@ -57,7 +63,7 @@ async function check() {
   // Once per visit: if the user then turns it off here, coming back must not undo that.
   if (access.value === 'granted' && !turnedOnHere) {
     turnedOnHere = true
-    if (!settings.reminderFor(props.medication.id).enabled) await turnOn()
+    if (!settings.reminderFor(props.subjectId).enabled) await turnOn()
   }
 }
 
@@ -79,7 +85,7 @@ async function openSettings() {
 }
 
 async function setOff() {
-  await settings.setReminder(props.medication.id, { enabled: false })
+  await settings.setReminder(props.subjectId, { enabled: false })
 }
 
 async function setOn() {
@@ -153,12 +159,17 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', onVisible
     </div>
 
     <div v-else-if="access === 'granted'" class="gl-stack gl-stack--loose">
-      <template v-if="settings.reminderFor(medication.id).enabled">
+      <template v-if="settings.reminderFor(subjectId).enabled">
         <div class="notify__hero">
           <span class="notify__badge"><v-icon :icon="mdiBellRingOutline" size="32" /></span>
           <h3 class="text-title-large gl-display">Reminder on</h3>
         </div>
-        <MedicationReminderControls :medication="medication" />
+        <ReminderControls
+          :subject-id="subjectId"
+          :repeating="repeating"
+          :has-due="hasDue"
+          :next-reminder-at="nextReminderAt"
+        />
         <div>
           <v-btn variant="text" @click="setOff">Turn off reminder</v-btn>
         </div>

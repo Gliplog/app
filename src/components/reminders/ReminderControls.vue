@@ -1,0 +1,51 @@
+<script setup lang="ts">
+import { fromTimeValue, toTimeValue } from '@/domain/reminders'
+import { formatDateTime } from '@/services/time'
+import { useSettingsStore } from '@/stores/settings'
+
+/** Reminder controls for one subject: its schedule-specific timing and when the next one comes. */
+const props = withDefaults(
+  defineProps<{
+    subjectId: string
+    repeating?: boolean
+    hasDue?: boolean
+    nextReminderAt?: number | null
+  }>(),
+  { repeating: false, hasDue: false, nextReminderAt: null },
+)
+
+const settings = useSettingsStore()
+
+function setTime(value: string) {
+  const time = fromTimeValue(value)
+  if (time) void settings.setReminder(props.subjectId, time)
+}
+
+/** "Next reminder …", or why there is none yet. */
+function nextReminderText(): string {
+  if (!props.hasDue) return 'Reminders start after you log a first dose.'
+  return props.nextReminderAt !== null
+    ? `Next reminder ${formatDateTime(props.nextReminderAt)}`
+    : 'No reminder until your next dose is logged.'
+}
+</script>
+
+<template>
+  <div class="gl-stack">
+    <v-text-field
+      :model-value="toTimeValue(settings.reminderFor(subjectId))"
+      label="Time of day"
+      type="time"
+      @change="setTime(($event.target as HTMLInputElement).value)"
+    />
+    <v-switch
+      v-if="!repeating"
+      :model-value="settings.reminderFor(subjectId).dayBefore"
+      label="Also remind me the day before"
+      color="primary"
+      hide-details
+      @update:model-value="settings.setReminder(subjectId, { dayBefore: !!$event })"
+    />
+    <p class="text-body-small gl-muted">{{ nextReminderText() }}</p>
+  </div>
+</template>

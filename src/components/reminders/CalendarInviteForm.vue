@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import type { MedicationRow } from '@/db/database'
 import {
   calendarTitle,
   describeInterval,
@@ -21,19 +20,22 @@ import {
   toEpochMs,
   toIso,
 } from '@/services/time'
-import { useJournalStore } from '@/stores/journal'
 import { useNotifyStore } from '@/stores/notify'
 import { useSettingsStore } from '@/stores/settings'
 import { mdiDownload } from '@/plugins/icons'
 
 /**
- * A medication's dose schedule as a repeating calendar event: a calendar file for any app, or
+ * A subject's dose schedule as a repeating calendar event: a calendar file for any app, or
  * links that open Google Calendar or Outlook with it filled in. The calendar then reminds the
  * user, which the web app cannot do on its own.
  */
-const props = defineProps<{ medication: MedicationRow }>()
+const props = defineProps<{
+  subjectId: string
+  name: string
+  dueAt: number | null
+  intervalDays: number
+}>()
 
-const journal = useJournalStore()
 const settings = useSettingsStore()
 const notify = useNotifyStore()
 
@@ -42,9 +44,9 @@ const includeName = ref(false)
 
 const EVENT_MINUTES = 15
 
-// Start from the medication's reminder time, so a notification and an invite agree.
+// Start from the subject's reminder time, so a notification and an invite agree.
 watch(
-  () => props.medication.id,
+  () => props.subjectId,
   (id) => {
     time.value = toTimeValue(settings.reminderFor(id))
     includeName.value = settings.reminders.showNames
@@ -53,22 +55,21 @@ watch(
 )
 
 const event = computed<CalendarEvent | null>(() => {
-  const med = props.medication
-  const dueAt = journal.nextDueOf(med)
+  const dueAt = props.dueAt
   const at = fromTimeValue(time.value)
   if (dueAt === null || !at) return null
   const startMs = atLocalTime(dueAt, 0, at.hour, at.minute)
   const endMs = startMs + EVENT_MINUTES * 60_000
   return {
-    uid: `${med.id}-${fileDate(startMs)}@gliplog.com`,
-    title: calendarTitle(includeName.value ? med.name : null),
-    description: `Repeats ${describeInterval(med.intervalDays)}, from your last logged dose in Gliplog. If your dose day changes, add it again.`,
+    uid: `${props.subjectId}-${fileDate(startMs)}@gliplog.com`,
+    title: calendarTitle(includeName.value ? props.name : null),
+    description: `Repeats ${describeInterval(props.intervalDays)}, from your last logged dose in Gliplog. If your dose day changes, add it again.`,
     start: localParts(startMs),
     end: localParts(endMs),
     startUtc: toIso(startMs),
     endUtc: toIso(endMs),
     timeZone: deviceTimeZone(),
-    intervalDays: med.intervalDays,
+    intervalDays: props.intervalDays,
     createdUtc: nowIso(),
   }
 })
@@ -76,8 +77,7 @@ const event = computed<CalendarEvent | null>(() => {
 const startText = computed(() => {
   const e = event.value
   if (!e) return ''
-  const med = props.medication
-  return `Starts ${formatDateTime(e.startUtc)} and repeats ${describeInterval(med.intervalDays)}.`
+  return `Starts ${formatDateTime(e.startUtc)} and repeats ${describeInterval(props.intervalDays)}.`
 })
 
 const links = computed(() => {
@@ -105,17 +105,12 @@ async function download() {
 
 <template>
   <div v-if="!event" class="gl-stack">
-    <p>Log a first dose of this medication, then add its schedule to your calendar.</p>
+    <p>Log a first dose, then add its schedule to your calendar.</p>
   </div>
   <div v-else class="gl-stack gl-stack--loose">
     <div class="gl-stack">
       <v-text-field v-model="time" label="Time of day" type="time" />
-      <v-switch
-        v-model="includeName"
-        label="Show the medication name"
-        color="primary"
-        hide-details
-      />
+      <v-switch v-model="includeName" label="Show the name" color="primary" hide-details />
       <p class="text-body-small gl-muted">{{ startText }}</p>
     </div>
 
@@ -151,7 +146,7 @@ async function download() {
       </div>
       <p class="text-body-small gl-muted">
         Sends the event to Google or Microsoft. In Outlook, set Repeat to
-        {{ describeInterval(medication.intervalDays) }} before saving.
+        {{ describeInterval(intervalDays) }} before saving.
       </p>
     </div>
   </div>

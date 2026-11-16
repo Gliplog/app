@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, useId, watch } from 'vue'
-import type { MedicationRow } from '@/db/database'
 import { toTimeValue } from '@/domain/reminders'
 import { remindersSupported } from '@/composables/useReminderSync'
 import { formatDate, formatWeekday } from '@/services/time'
 import { nativeApps } from '@/services/platform'
-import { useJournalStore } from '@/stores/journal'
 import { useSettingsStore } from '@/stores/settings'
 import {
   mdiBellRingOutline,
@@ -18,15 +16,25 @@ import CalendarInviteForm from './CalendarInviteForm.vue'
 import NotifyMePanel from './NotifyMePanel.vue'
 
 /**
- * Add a reminder for one medication: a choice of "Notify me" (the native app's own
- * notification) or "Add calendar invite" (any calendar, which works everywhere), each opening
- * in place with a back arrow, as a settings screen pushes a page. The web build shows Notify me
- * as unavailable and says why, rather than hiding it.
+ * Add a reminder for one subject: a choice of "Notify me" (the native app's own notification)
+ * or "Add calendar invite" (any calendar, which works everywhere), each opening in place with a
+ * back arrow, as a settings screen pushes a page. The web build shows Notify me as unavailable
+ * and says why, rather than hiding it.
  */
-const props = defineProps<{ medication: MedicationRow | null }>()
+const props = withDefaults(
+  defineProps<{
+    subjectId: string
+    name: string
+    dueAt: number | null
+    intervalDays: number
+    repeating?: boolean
+    lastTakenAt?: string | null
+    nextReminderAt?: number | null
+  }>(),
+  { repeating: false, lastTakenAt: null, nextReminderAt: null },
+)
 const open = defineModel<boolean>({ required: true })
 
-const journal = useJournalStore()
 const settings = useSettingsStore()
 const titleId = useId()
 
@@ -44,28 +52,26 @@ const TITLES: Record<Step, string> = {
 }
 
 const notifyOn = computed(
-  () =>
-    remindersSupported && !!props.medication && settings.reminderFor(props.medication.id).enabled,
+  () => remindersSupported && !!props.subjectId && settings.reminderFor(props.subjectId).enabled,
 )
 
-const nextDose = computed(() => {
-  const med = props.medication
-  const at = med ? journal.nextDueOf(med) : null
-  return at === null ? 'No dose logged yet' : `Next dose ${formatWeekday(at)}, ${formatDate(at)}`
-})
+const nextDose = computed(() =>
+  props.dueAt === null
+    ? 'No dose logged yet'
+    : `Next dose ${formatWeekday(props.dueAt)}, ${formatDate(props.dueAt)}`,
+)
 
 const notifySubtitle = computed(() => {
-  const med = props.medication
   if (!remindersSupported) return `Needs ${nativeApps}`
-  if (!med || !notifyOn.value) return 'A notification on the day your dose is due'
-  const r = settings.reminderFor(med.id)
-  return `On at ${toTimeValue(r)}${r.dayBefore && med.intervalDays > 1 ? ', and the day before' : ''}`
+  if (!props.subjectId || !notifyOn.value) return 'A notification on the day your dose is due'
+  const r = settings.reminderFor(props.subjectId)
+  return `On at ${toTimeValue(r)}${r.dayBefore && !props.repeating ? ', and the day before' : ''}`
 })
 </script>
 
 <template>
   <v-dialog v-model="open" max-width="480" scrollable :aria-labelledby="titleId">
-    <v-card v-if="medication" class="reminder">
+    <v-card v-if="subjectId" class="reminder">
       <v-card-item>
         <template v-if="step !== 'choose'" #prepend>
           <v-btn
@@ -75,7 +81,7 @@ const notifySubtitle = computed(() => {
             @click="step = 'choose'"
           />
         </template>
-        <p class="gl-eyebrow">{{ medication.name }}</p>
+        <p class="gl-eyebrow">{{ name }}</p>
         <v-card-title :id="titleId">{{ TITLES[step] }}</v-card-title>
       </v-card-item>
 
@@ -140,13 +146,23 @@ const notifySubtitle = computed(() => {
           <v-window-item value="notify">
             <NotifyMePanel
               v-if="step === 'notify'"
-              :medication="medication"
+              :subject-id="subjectId"
+              :repeating="repeating"
+              :has-due="dueAt !== null"
+              :last-taken-at="lastTakenAt"
+              :next-reminder-at="nextReminderAt"
               @calendar="step = 'calendar'"
             />
           </v-window-item>
 
           <v-window-item value="calendar">
-            <CalendarInviteForm v-if="step === 'calendar'" :medication="medication" />
+            <CalendarInviteForm
+              v-if="step === 'calendar'"
+              :subject-id="subjectId"
+              :name="name"
+              :due-at="dueAt"
+              :interval-days="intervalDays"
+            />
           </v-window-item>
         </v-window>
       </v-card-text>

@@ -846,7 +846,7 @@ test('adds the dose schedule to a calendar as a file or a link', async ({ page }
   const outlook = await dialog.getByRole('link', { name: 'Outlook.com' }).getAttribute('href')
   expect(outlook).toMatch(/^https:\/\/outlook\.live\.com\/calendar\/0\/deeplink\/compose\?/)
 
-  await dialog.getByLabel('Show the medication name').check()
+  await dialog.getByLabel('Show the name').check()
   const download = page.waitForEvent('download')
   await dialog.getByRole('button', { name: 'Download calendar invite' }).click()
   const file = await download
@@ -903,7 +903,7 @@ test('Add reminder on a medication page shows Notify me disabled on the web', as
   await expect(dialog.getByRole('button', { name: /^Notify me/ })).toBeDisabled()
   await expect(dialog.getByText('Needs the Gliplog app for Android')).toBeVisible()
   await dialog.getByRole('button', { name: /^Add calendar invite/ }).click()
-  await expect(dialog.getByText('Log a first dose of this medication')).toBeVisible()
+  await expect(dialog.getByText('Log a first dose, then add its schedule')).toBeVisible()
   await dialog.getByRole('button', { name: 'Back to reminder options' }).click()
   await expect(page.getByRole('dialog', { name: 'Add reminder' })).toBeVisible()
 })

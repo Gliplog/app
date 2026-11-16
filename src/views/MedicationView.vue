@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import { findPkProfile } from '@/data'
 import { anyDoseInEffect } from '@/domain/pk'
+import { dueDaysFor } from '@/domain/reminderDays'
+import { planReminders } from '@/domain/reminders'
 import {
   dueState,
   dueText,
@@ -12,7 +14,7 @@ import {
   syringeReading,
 } from '@/domain/schedule'
 import { formatDose, roundTo } from '@/domain/units'
-import { formatDateTime } from '@/services/time'
+import { atLocalTime, formatDateTime } from '@/services/time'
 import { useEntries } from '@/composables/useEntries'
 import { useNow } from '@/composables/useNow'
 import { remindersSupported } from '@/composables/useReminderSync'
@@ -27,7 +29,7 @@ import EntriesTimeline from '@/components/journal/EntriesTimeline.vue'
 import MedicationDialog from '@/components/journal/MedicationDialog.vue'
 import SyringeGraphic from '@/components/journal/SyringeGraphic.vue'
 import AddReminderDialog from '@/components/reminders/AddReminderDialog.vue'
-import MedicationReminderControls from '@/components/reminders/MedicationReminderControls.vue'
+import ReminderControls from '@/components/reminders/ReminderControls.vue'
 import {
   mdiArchiveArrowDownOutline,
   mdiArchiveArrowUpOutline,
@@ -111,9 +113,29 @@ const reading = computed(() => {
   return c && lastDose.value ? syringeReading(lastDose.value.doseMg, c) : null
 })
 
+const nextDueAt = computed(() => (med.value ? journal.nextDueOf(med.value) : null))
+
 const reminderOn = computed(
   () => remindersSupported && !!med.value && settings.reminderFor(med.value.id).enabled,
 )
+
+const reminderPlan = computed(() => {
+  const m = med.value
+  if (!m) return { repeating: false, nextReminderAt: null as number | null }
+  const duePlan = dueDaysFor({
+    dueAt: nextDueAt.value,
+    intervalDays: m.intervalDays,
+    now: now.value,
+  })
+  const [next] = planReminders({
+    subjectId: m.id,
+    ...duePlan,
+    rule: settings.reminderFor(m.id),
+    now: now.value,
+    atLocalTime,
+  })
+  return { repeating: duePlan.repeating, nextReminderAt: next?.at ?? null }
+})
 
 const group = computed(() => (med.value ? journal.levelGroupOf(med.value) : undefined))
 const pkParams = computed(() => profile.value?.pk ?? med.value?.pkOverride ?? null)
@@ -265,7 +287,12 @@ async function deleteMedication() {
             </v-card-item>
             <v-card-text class="gl-stack">
               <template v-if="reminderOn">
-                <MedicationReminderControls :medication="med" />
+                <ReminderControls
+                  :subject-id="med.id"
+                  :repeating="reminderPlan.repeating"
+                  :has-due="nextDueAt !== null"
+                  :next-reminder-at="reminderPlan.nextReminderAt"
+                />
                 <div class="gl-actions">
                   <v-btn variant="text" @click="reminderOpen = true">Reminder options</v-btn>
                 </div>
@@ -312,7 +339,16 @@ async function deleteMedication() {
       </div>
 
       <MedicationDialog v-model="editing" :medication="med" />
-      <AddReminderDialog v-model="reminderOpen" :medication="med" />
+      <AddReminderDialog
+        v-model="reminderOpen"
+        :subject-id="med.id"
+        :name="med.name"
+        :due-at="nextDueAt"
+        :interval-days="med.intervalDays"
+        :repeating="reminderPlan.repeating"
+        :last-taken-at="lastDose?.takenAt ?? null"
+        :next-reminder-at="reminderPlan.nextReminderAt"
+      />
     </template>
 
     <v-card v-else-if="journal.loaded" variant="tonal">

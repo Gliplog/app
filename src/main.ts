@@ -12,11 +12,14 @@ import { createAppRouter } from './router'
 const router = createAppRouter()
 createApp(App).use(createPinia()).use(router).use(vuetify).mount('#app')
 
-// A tapped dose reminder opens Today's Log dose for that medication (see TodayView).
+// A tapped dose reminder opens Today's log dialog for that subject (see TodayView).
 if (__NATIVE__) {
   void import('@/services/reminders/nativeReminders').then(({ onReminderTap }) =>
     onReminderTap(
-      (medicationId) => void router.push({ name: 'today', query: { log: medicationId } }),
+      (subjectId) =>
+        void router.push(
+          subjectId ? { name: 'today', query: { log: subjectId } } : { name: 'today' },
+        ),
     ),
   )
 }

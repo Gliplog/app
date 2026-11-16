@@ -16,7 +16,7 @@ import { regionalPreferences } from '@/services/locale'
 import {
   DEFAULT_REMINDER,
   sanitizeReminderSettings,
-  type MedicationReminder,
+  type Reminder,
   type ReminderSettings,
 } from '@/domain/reminders'
 
@@ -213,9 +213,9 @@ export const useSettingsStore = defineStore('settings', () => {
     dismissedOverlaps.value = next
   }
 
-  /** One medication's reminder choices, or the defaults (off, 9:00) if never set. */
-  function reminderFor(medicationId: string): MedicationReminder {
-    return reminders.value.medications[medicationId] ?? { ...DEFAULT_REMINDER }
+  /** One subject's reminder choices, or the defaults (off, 9:00) if never set. */
+  function reminderFor(subjectId: string): Reminder {
+    return reminders.value.subjects[subjectId] ?? { ...DEFAULT_REMINDER }
   }
 
   async function saveReminders(next: ReminderSettings) {
@@ -225,13 +225,13 @@ export const useSettingsStore = defineStore('settings', () => {
     await repository.setSetting(SETTING_KEYS.reminders, clean)
   }
 
-  async function setReminder(medicationId: string, changes: Partial<MedicationReminder>) {
+  async function setReminder(subjectId: string, changes: Partial<Reminder>) {
     const current = reminders.value
     await saveReminders({
       ...current,
-      medications: {
-        ...current.medications,
-        [medicationId]: { ...reminderFor(medicationId), ...changes },
+      subjects: {
+        ...current.subjects,
+        [subjectId]: { ...reminderFor(subjectId), ...changes },
       },
     })
   }

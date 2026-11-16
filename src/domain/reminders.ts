@@ -9,20 +9,20 @@ import type { TimeOfDay } from './timeOfDay'
 
 export { fromTimeValue, toTimeValue } from './timeOfDay'
 
-/** One medication's reminder choices. */
-export interface MedicationReminder extends TimeOfDay {
+/** One subject's reminder choices. */
+export interface Reminder extends TimeOfDay {
   enabled: boolean
   /** Also remind the day before a dose that is due less often than daily. */
   dayBefore: boolean
 }
 
 export interface ReminderSettings {
-  /** Show the medication's name on the lock screen; off so a glance reveals nothing. */
+  /** Show the subject's name on the lock screen; off so a glance reveals nothing. */
   showNames: boolean
-  medications: Record<string, MedicationReminder>
+  subjects: Record<string, Reminder>
 }
 
-export const DEFAULT_REMINDER: MedicationReminder = {
+export const DEFAULT_REMINDER: Reminder = {
   enabled: false,
   hour: 9,
   minute: 0,
@@ -34,15 +34,21 @@ const isInt = (v: unknown, min: number, max: number): v is number =>
 
 /** Stored or restored reminder settings are untrusted input; keep only valid entries. */
 export function sanitizeReminderSettings(value: unknown): ReminderSettings {
-  if (typeof value !== 'object' || value === null) return { showNames: false, medications: {} }
+  if (typeof value !== 'object' || value === null) return { showNames: false, subjects: {} }
   const v = value as Record<string, unknown>
-  const medications: Record<string, MedicationReminder> = {}
-  if (typeof v.medications === 'object' && v.medications !== null) {
-    for (const [id, raw] of Object.entries(v.medications as Record<string, unknown>)) {
+  const subjects: Record<string, Reminder> = {}
+  const rawMap =
+    typeof v.subjects === 'object' && v.subjects !== null
+      ? v.subjects
+      : typeof v.medications === 'object' && v.medications !== null
+        ? v.medications
+        : null
+  if (rawMap) {
+    for (const [id, raw] of Object.entries(rawMap as Record<string, unknown>)) {
       if (typeof raw !== 'object' || raw === null) continue
       const r = raw as Record<string, unknown>
       if (!isInt(r.hour, 0, 23) || !isInt(r.minute, 0, 59)) continue
-      medications[id] = {
+      subjects[id] = {
         enabled: r.enabled === true,
         hour: r.hour,
         minute: r.minute,
@@ -50,7 +56,7 @@ export function sanitizeReminderSettings(value: unknown): ReminderSettings {
       }
     }
   }
-  return { showNames: v.showNames === true, medications }
+  return { showNames: v.showNames === true, subjects }
 }
 
 export type ReminderKind = 'day-before' | 'due' | 'late'

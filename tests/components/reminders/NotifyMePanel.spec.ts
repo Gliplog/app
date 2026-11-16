@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import type { MedicationRow } from '@/db/database'
 import { db } from '@/db'
 import { useSettingsStore } from '@/stores/settings'
 import { mountWithVuetify } from '../../helpers'
@@ -19,18 +18,7 @@ vi.mock('@/services/reminders/notificationAccess', () => ({
 
 const { default: NotifyMePanel } = await import('@/components/reminders/NotifyMePanel.vue')
 
-const med: MedicationRow = {
-  id: 'med-1',
-  productId: 'wegovy',
-  name: 'Wegovy',
-  intervalDays: 7,
-  concentrationMgPerMl: null,
-  pkOverride: null,
-  status: 'active',
-  notes: '',
-  createdAt: '2026-10-01T00:00:00.000Z',
-  updatedAt: '2026-10-01T00:00:00.000Z',
-}
+const SUBJECT_ID = 'subject-1'
 
 let pinia: ReturnType<typeof createPinia>
 // Each panel listens for the app returning to view; one left mounted would hear the next test.
@@ -49,7 +37,7 @@ beforeEach(async () => {
 
 async function mountPanel() {
   const wrapper = mountWithVuetify(NotifyMePanel, {
-    props: { medication: med },
+    props: { subjectId: SUBJECT_ID, repeating: false, hasDue: true },
     global: { plugins: [pinia] },
   })
   mounted.push(wrapper)
@@ -71,14 +59,14 @@ describe('NotifyMePanel', () => {
     await button(wrapper, 'Allow notifications')!.trigger('click')
     await flushPromises()
     expect(access.request).toHaveBeenCalledOnce()
-    expect(useSettingsStore().reminderFor(med.id).enabled).toBe(true)
+    expect(useSettingsStore().reminderFor(SUBJECT_ID).enabled).toBe(true)
     expect(wrapper.text()).toContain('Reminder on')
   })
 
   it('turns the reminder on straight away when notifications are already allowed', async () => {
     access.check.mockResolvedValue('granted')
     const wrapper = await mountPanel()
-    expect(useSettingsStore().reminderFor(med.id).enabled).toBe(true)
+    expect(useSettingsStore().reminderFor(SUBJECT_ID).enabled).toBe(true)
     expect(wrapper.text()).toContain('Reminder on')
   })
 
@@ -93,7 +81,7 @@ describe('NotifyMePanel', () => {
     document.dispatchEvent(new Event('visibilitychange'))
     await flushPromises()
     expect(wrapper.text()).toContain('Reminder on')
-    expect(useSettingsStore().reminderFor(med.id).enabled).toBe(true)
+    expect(useSettingsStore().reminderFor(SUBJECT_ID).enabled).toBe(true)
   })
 
   it('shows the blocked state when the user declines the system dialog', async () => {
@@ -102,7 +90,7 @@ describe('NotifyMePanel', () => {
     const wrapper = await mountPanel()
     await button(wrapper, 'Allow notifications')!.trigger('click')
     await flushPromises()
-    expect(useSettingsStore().reminderFor(med.id).enabled).toBe(false)
+    expect(useSettingsStore().reminderFor(SUBJECT_ID).enabled).toBe(false)
     expect(wrapper.text()).toContain('Notifications are off for Gliplog')
     expect(button(wrapper, 'Add a calendar invite instead')).toBeDefined()
   })
@@ -114,7 +102,7 @@ describe('NotifyMePanel', () => {
     await flushPromises()
     document.dispatchEvent(new Event('visibilitychange'))
     await flushPromises()
-    expect(useSettingsStore().reminderFor(med.id).enabled).toBe(false)
+    expect(useSettingsStore().reminderFor(SUBJECT_ID).enabled).toBe(false)
     expect(wrapper.text()).toContain('Reminder off')
   })
 })

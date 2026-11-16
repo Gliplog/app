@@ -157,7 +157,7 @@ describe('reminder settings', () => {
     expect(
       sanitizeReminderSettings({
         showNames: true,
-        medications: {
+        subjects: {
           a: { enabled: true, hour: 8, minute: 30, dayBefore: true },
           b: { enabled: true, hour: 25, minute: 0 },
           c: 'nope',
@@ -165,9 +165,23 @@ describe('reminder settings', () => {
       }),
     ).toEqual({
       showNames: true,
-      medications: { a: { enabled: true, hour: 8, minute: 30, dayBefore: true } },
+      subjects: { a: { enabled: true, hour: 8, minute: 30, dayBefore: true } },
     })
-    expect(sanitizeReminderSettings(null)).toEqual({ showNames: false, medications: {} })
+    expect(sanitizeReminderSettings(null)).toEqual({ showNames: false, subjects: {} })
+  })
+
+  it('falls back to legacy medications key when subjects is absent', () => {
+    expect(
+      sanitizeReminderSettings({
+        showNames: true,
+        medications: {
+          a: { enabled: true, hour: 9, minute: 15, dayBefore: false },
+        },
+      }),
+    ).toEqual({
+      showNames: true,
+      subjects: { a: { enabled: true, hour: 9, minute: 15, dayBefore: false } },
+    })
   })
 })
 

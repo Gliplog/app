@@ -3,8 +3,8 @@ import { dueDaysFor } from '@/domain/reminderDays'
 import {
   planReminders,
   type AtLocalTime,
-  type MedicationReminder,
   type ReminderKind,
+  type ReminderRule,
 } from '@/domain/reminders'
 
 const MIN = 60_000
@@ -18,7 +18,7 @@ const utcAt: AtLocalTime = (ms, offset, hour, minute) =>
 function plan(input: {
   dueAt: number | null
   intervalDays: number
-  reminder: MedicationReminder
+  reminder: ReminderRule
   now: number
 }): { kind: ReminderKind; at: number }[] {
   return planReminders({
@@ -35,7 +35,7 @@ interface CharacterisationCase {
   intervalDays: number
   dueAt: number | null
   now: number
-  reminder: MedicationReminder
+  reminder: ReminderRule
   expected: { kind: ReminderKind; at: number }[]
 }
 
