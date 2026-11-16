@@ -1,12 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_REMINDER,
-  fromTimeValue,
   planReminders,
   reminderText,
   sanitizeReminderSettings,
   suggestReminderTime,
-  toTimeValue,
   type AtLocalTime,
 } from '@/domain/reminders'
 
@@ -99,12 +97,6 @@ describe('reminder settings', () => {
       medications: { a: { enabled: true, hour: 8, minute: 30, dayBefore: true } },
     })
     expect(sanitizeReminderSettings(null)).toEqual({ showNames: false, medications: {} })
-  })
-
-  it('round-trips time input values', () => {
-    expect(toTimeValue({ hour: 9, minute: 5 })).toBe('09:05')
-    expect(fromTimeValue('21:45')).toEqual({ hour: 21, minute: 45 })
-    expect(fromTimeValue('')).toBeNull()
   })
 })
 

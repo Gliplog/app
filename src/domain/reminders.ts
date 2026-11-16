@@ -5,12 +5,13 @@
  * free of the clock and the time zone.
  */
 
+import type { TimeOfDay } from './timeOfDay'
+
+export { fromTimeValue, toTimeValue } from './timeOfDay'
+
 /** One medication's reminder choices. */
-export interface MedicationReminder {
+export interface MedicationReminder extends TimeOfDay {
   enabled: boolean
-  /** Local time of day, 0 to 23 and 0 to 59. */
-  hour: number
-  minute: number
   /** Also remind the day before a dose that is due less often than daily. */
   dayBefore: boolean
 }
@@ -50,20 +51,6 @@ export function sanitizeReminderSettings(value: unknown): ReminderSettings {
     }
   }
   return { showNames: v.showNames === true, medications }
-}
-
-/** "09:05" for an <input type="time">. */
-export function toTimeValue(r: Pick<MedicationReminder, 'hour' | 'minute'>): string {
-  return `${String(r.hour).padStart(2, '0')}:${String(r.minute).padStart(2, '0')}`
-}
-
-/** Parses an <input type="time"> value; null when it is empty or malformed. */
-export function fromTimeValue(value: string): { hour: number; minute: number } | null {
-  const match = /^(\d{2}):(\d{2})/.exec(value)
-  if (!match) return null
-  const hour = Number(match[1])
-  const minute = Number(match[2])
-  return isInt(hour, 0, 23) && isInt(minute, 0, 59) ? { hour, minute } : null
 }
 
 export type ReminderKind = 'day-before' | 'due' | 'late'
