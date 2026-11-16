@@ -6,7 +6,7 @@ import { formatDose, roundTo } from '@/domain/units'
 import { useJournalStore } from '@/stores/journal'
 import { useNotifyStore } from '@/stores/notify'
 import { useConfirmStore } from '@/stores/confirm'
-import { fromLocalInputValue, nowIso, toLocalInputValue } from '@/services/time'
+import { fromLocalInputValue, nowIso, toIso, toLocalInputValue } from '@/services/time'
 import PresetPicker from '@/components/common/PresetPicker.vue'
 import SyringeGraphic from './SyringeGraphic.vue'
 import { SITE_LABELS } from './siteLabels'
@@ -16,6 +16,8 @@ const props = defineProps<{
   dose: DoseRow | null
   /** Medication to start with when logging a new dose. */
   medicationId?: string
+  /** Epoch ms for a new entry's initial time; defaults to now. */
+  startAt?: number
 }>()
 const open = defineModel<boolean>({ required: true })
 
@@ -58,7 +60,9 @@ watch(open, (isOpen) => {
   form.medicationId = d?.medicationId ?? props.medicationId ?? journal.currentMedication?.id ?? ''
   const last = journal.lastDoseOf(form.medicationId)
   form.doseMg = d?.doseMg ?? last?.doseMg ?? null
-  form.takenAt = toLocalInputValue(d?.takenAt ?? nowIso())
+  form.takenAt = toLocalInputValue(
+    d?.takenAt ?? (props.startAt !== undefined ? toIso(props.startAt) : nowIso()),
+  )
   form.site = d?.site ?? null
   form.notes = d?.notes ?? ''
 })

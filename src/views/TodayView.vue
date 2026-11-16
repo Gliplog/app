@@ -11,6 +11,7 @@ import {
 } from '@/domain/bodyUnits'
 import { roundTo } from '@/domain/units'
 import { useJournalStore } from '@/stores/journal'
+import { useLogStore } from '@/stores/log'
 import { useSettingsStore } from '@/stores/settings'
 import { useNow } from '@/composables/useNow'
 import { useBodyMetrics } from '@/composables/useBodyMetrics'
@@ -30,27 +31,17 @@ import { toEpochMs } from '@/services/time'
 import MedicationStack from '@/components/journal/MedicationStack.vue'
 import MedicationDialog from '@/components/journal/MedicationDialog.vue'
 import OverlapNotice from '@/components/journal/OverlapNotice.vue'
-import LogDoseDialog from '@/components/journal/LogDoseDialog.vue'
-import LogWeightDialog from '@/components/journal/LogWeightDialog.vue'
-import LogSymptomDialog from '@/components/journal/LogSymptomDialog.vue'
-import LogGlucoseDialog from '@/components/journal/LogGlucoseDialog.vue'
-import LogVitalsDialog from '@/components/journal/LogVitalsDialog.vue'
 import PkPanel from '@/components/charts/PkPanel.vue'
 import AddReminderDialog from '@/components/reminders/AddReminderDialog.vue'
 
 const journal = useJournalStore()
+const log = useLogStore()
 const settings = useSettingsStore()
 const now = useNow()
 const body = useBodyMetrics()
 
 const medDialog = ref(false)
 const editing = ref<MedicationRow | null>(null)
-const doseDialog = ref(false)
-const doseFor = ref<string | undefined>()
-const weightDialog = ref(false)
-const symptomDialog = ref(false)
-const glucoseDialog = ref(false)
-const vitalsDialog = ref(false)
 
 function addMedication() {
   editing.value = null
@@ -63,8 +54,7 @@ function editMedication(med: MedicationRow) {
 }
 
 function logDose(med?: MedicationRow) {
-  doseFor.value = med?.id
-  doseDialog.value = true
+  log.start('dose', { medicationId: med?.id })
 }
 
 /** Add reminder, from the bell on a medication's card. */
@@ -176,7 +166,7 @@ const daysSinceStart = computed(() =>
           <v-btn color="primary" variant="flat" :prepend-icon="mdiPlus" @click="addMedication">
             Add medication
           </v-btn>
-          <v-btn variant="outlined" :prepend-icon="mdiScaleBathroom" @click="weightDialog = true">
+          <v-btn variant="outlined" :prepend-icon="mdiScaleBathroom" @click="log.start('weight')">
             Log a weight
           </v-btn>
         </div>
@@ -259,7 +249,7 @@ const daysSinceStart = computed(() =>
           </p>
           <div class="gl-actions">
             <v-btn variant="text" :to="{ name: 'progress' }">See progress</v-btn>
-            <v-btn variant="tonal" :prepend-icon="mdiScaleBathroom" @click="weightDialog = true">
+            <v-btn variant="tonal" :prepend-icon="mdiScaleBathroom" @click="log.start('weight')">
               Log weight
             </v-btn>
           </div>
@@ -305,7 +295,7 @@ const daysSinceStart = computed(() =>
             Log an HbA1c result or a glucose reading to follow them over time.
           </p>
           <div class="gl-actions">
-            <v-btn variant="tonal" :prepend-icon="mdiWaterOutline" @click="glucoseDialog = true">
+            <v-btn variant="tonal" :prepend-icon="mdiWaterOutline" @click="log.start('glucose')">
               Log blood sugar
             </v-btn>
           </div>
@@ -339,7 +329,7 @@ const daysSinceStart = computed(() =>
             Log blood pressure and resting heart rate.
           </p>
           <div class="gl-actions">
-            <v-btn variant="tonal" :prepend-icon="mdiHeartPulse" @click="vitalsDialog = true">
+            <v-btn variant="tonal" :prepend-icon="mdiHeartPulse" @click="log.start('vital')">
               Log vitals
             </v-btn>
           </div>
@@ -362,7 +352,7 @@ const daysSinceStart = computed(() =>
             <v-btn variant="text" :to="{ name: 'progress', hash: '#side-effects' }"
               >See summary</v-btn
             >
-            <v-btn variant="tonal" :prepend-icon="mdiStethoscope" @click="symptomDialog = true">
+            <v-btn variant="tonal" :prepend-icon="mdiStethoscope" @click="log.start('symptom')">
               Log side effect
             </v-btn>
           </div>
@@ -404,12 +394,7 @@ const daysSinceStart = computed(() =>
     </div>
 
     <MedicationDialog v-model="medDialog" :medication="editing" />
-    <LogDoseDialog v-model="doseDialog" :dose="null" :medication-id="doseFor" />
     <AddReminderDialog v-model="reminderDialog" :medication="reminderMed" />
-    <LogWeightDialog v-model="weightDialog" :weight="null" />
-    <LogSymptomDialog v-model="symptomDialog" :symptom="null" />
-    <LogGlucoseDialog v-model="glucoseDialog" :reading="null" />
-    <LogVitalsDialog v-model="vitalsDialog" :reading="null" />
   </div>
 </template>
 
