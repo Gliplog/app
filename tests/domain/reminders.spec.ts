@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_REMINDER,
   planReminders,
+  REPEATING_AHEAD,
   reminderText,
   sanitizeReminderSettings,
   suggestReminderTime,
@@ -18,46 +19,47 @@ const utcAt: AtLocalTime = (ms, offset, hour, minute) =>
 const on = { ...DEFAULT_REMINDER, enabled: true }
 
 describe('planReminders', () => {
-  it('plans nothing when off or before the first dose', () => {
-    const base = { medicationId: 'm', intervalDays: 7, now: 0, atLocalTime: utcAt }
-    expect(planReminders({ ...base, dueAt: 7 * DAY, reminder: DEFAULT_REMINDER })).toEqual([])
-    expect(planReminders({ ...base, dueAt: null, reminder: on })).toEqual([])
+  it('plans nothing when off or given no days', () => {
+    const base = { subjectId: 'm', repeating: false, now: 0, atLocalTime: utcAt }
+    expect(planReminders({ ...base, days: [7 * DAY], rule: DEFAULT_REMINDER })).toEqual([])
+    expect(planReminders({ ...base, days: [], rule: on })).toEqual([])
   })
 
-  it('reminds a weekly dose on its day, the day before if asked, and the day after', () => {
+  it('reminds a non-repeating dose on its day, the day before if asked, and the day after', () => {
     const plan = planReminders({
-      medicationId: 'm',
-      dueAt: 7 * DAY + 20 * H,
-      intervalDays: 7,
-      reminder: { ...on, dayBefore: true },
+      subjectId: 'm',
+      days: [7 * DAY + 20 * H],
+      repeating: false,
+      rule: { ...on, dayBefore: true },
       now: 0,
       atLocalTime: utcAt,
     })
     expect(plan).toEqual([
-      { medicationId: 'm', kind: 'day-before', at: 6 * DAY + 9 * H },
-      { medicationId: 'm', kind: 'due', at: 7 * DAY + 9 * H },
-      { medicationId: 'm', kind: 'late', at: 8 * DAY + 9 * H },
+      { subjectId: 'm', kind: 'day-before', at: 6 * DAY + 9 * H },
+      { subjectId: 'm', kind: 'due', at: 7 * DAY + 9 * H },
+      { subjectId: 'm', kind: 'late', at: 8 * DAY + 9 * H },
     ])
   })
 
   it('drops reminders already past', () => {
     const plan = planReminders({
-      medicationId: 'm',
-      dueAt: 7 * DAY,
-      intervalDays: 7,
-      reminder: on,
+      subjectId: 'm',
+      days: [7 * DAY],
+      repeating: false,
+      rule: on,
       now: 7 * DAY + 12 * H,
       atLocalTime: utcAt,
     })
     expect(plan.map((r) => r.kind)).toEqual(['late'])
   })
 
-  it('plans a week ahead for a daily medicine', () => {
+  it('plans a week ahead for a repeating schedule', () => {
+    const days = Array.from({ length: 8 }, (_, k) => (1 + k) * DAY + 8 * H)
     const plan = planReminders({
-      medicationId: 'm',
-      dueAt: DAY + 8 * H,
-      intervalDays: 1,
-      reminder: { ...on, hour: 21, dayBefore: true },
+      subjectId: 'm',
+      days,
+      repeating: true,
+      rule: { ...on, hour: 21, dayBefore: true },
       now: 0,
       atLocalTime: utcAt,
     })
@@ -67,17 +69,86 @@ describe('planReminders', () => {
     expect(plan[6]!.at).toBe(7 * DAY + 21 * H)
   })
 
-  it('keeps reminding a daily medicine from today when doses have not been logged', () => {
+  it('drops past days on a repeating schedule and still plans a week ahead', () => {
+    const days = Array.from({ length: 8 }, (_, k) => (10 + k) * DAY)
     const plan = planReminders({
-      medicationId: 'm',
-      dueAt: DAY,
-      intervalDays: 1,
-      reminder: on,
+      subjectId: 'm',
+      days,
+      repeating: true,
+      rule: on,
       now: 10 * DAY + 12 * H,
       atLocalTime: utcAt,
     })
     expect(plan).toHaveLength(7)
     expect(plan[0]!.at).toBe(11 * DAY + 9 * H)
+  })
+
+  it('plans reminders for multiple non-repeating days, soonest first', () => {
+    const plan = planReminders({
+      subjectId: 'm',
+      days: [7 * DAY, 8 * DAY],
+      repeating: false,
+      rule: { ...on, dayBefore: true },
+      now: 0,
+      atLocalTime: utcAt,
+    })
+    expect(plan).toEqual([
+      { subjectId: 'm', kind: 'day-before', at: 6 * DAY + 9 * H },
+      { subjectId: 'm', kind: 'due', at: 7 * DAY + 9 * H },
+      { subjectId: 'm', kind: 'day-before', at: 7 * DAY + 9 * H },
+      { subjectId: 'm', kind: 'late', at: 8 * DAY + 9 * H },
+      { subjectId: 'm', kind: 'due', at: 8 * DAY + 9 * H },
+      { subjectId: 'm', kind: 'late', at: 9 * DAY + 9 * H },
+    ])
+  })
+
+  it('caps repeating schedules at REPEATING_AHEAD reminders even when 30 days are given', () => {
+    const days = Array.from({ length: 30 }, (_, k) => (1 + k) * DAY)
+    const plan = planReminders({
+      subjectId: 'm',
+      days,
+      repeating: true,
+      rule: on,
+      now: 0,
+      atLocalTime: utcAt,
+    })
+    expect(plan).toHaveLength(REPEATING_AHEAD)
+  })
+
+  it('plans nothing when the rule is off, regardless of days or repeating', () => {
+    const days = [7 * DAY, 14 * DAY]
+    expect(
+      planReminders({
+        subjectId: 'm',
+        days,
+        repeating: false,
+        rule: DEFAULT_REMINDER,
+        now: 0,
+        atLocalTime: utcAt,
+      }),
+    ).toEqual([])
+    expect(
+      planReminders({
+        subjectId: 'm',
+        days,
+        repeating: true,
+        rule: { ...DEFAULT_REMINDER, dayBefore: true },
+        now: 0,
+        atLocalTime: utcAt,
+      }),
+    ).toEqual([])
+  })
+
+  it('ignores dayBefore on a repeating schedule', () => {
+    const plan = planReminders({
+      subjectId: 'm',
+      days: [7 * DAY],
+      repeating: true,
+      rule: { ...on, dayBefore: true },
+      now: 0,
+      atLocalTime: utcAt,
+    })
+    expect(plan).toEqual([{ subjectId: 'm', kind: 'due', at: 7 * DAY + 9 * H }])
   })
 })
 

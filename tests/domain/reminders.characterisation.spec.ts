@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { dueDaysFor } from '@/domain/reminderDays'
 import {
   planReminders,
   type AtLocalTime,
@@ -21,8 +22,10 @@ function plan(input: {
   now: number
 }): { kind: ReminderKind; at: number }[] {
   return planReminders({
-    medicationId: 'm',
-    ...input,
+    subjectId: 'm',
+    ...dueDaysFor(input),
+    rule: input.reminder,
+    now: input.now,
     atLocalTime: utcAt,
   }).map(({ kind, at }) => ({ kind, at }))
 }

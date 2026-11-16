@@ -1,6 +1,6 @@
 /**
- * Dose reminders: when to remind, from the user's own schedule (last dose plus interval) and
- * the time of day they chose. Like `schedule.ts`, this restates the user's schedule; it never
+ * Dose reminders: when to remind on a list of due days at the user's chosen time of day, plus
+ * notification wording and settings sanitisation. It restates the user's schedule; it never
  * suggests a dose. Local wall-clock times come from an injected function, so this module stays
  * free of the clock and the time zone.
  */
@@ -55,8 +55,23 @@ export function sanitizeReminderSettings(value: unknown): ReminderSettings {
 
 export type ReminderKind = 'day-before' | 'due' | 'late'
 
+/**
+ * The local days a dose falls due, as epoch ms anywhere inside each day, soonest first. The
+ * planner places reminders on these days; it does not know how the schedule produced them.
+ */
+export type DueDays = readonly number[]
+
+export interface ReminderRule {
+  enabled: boolean
+  hour: number
+  minute: number
+  /** Also remind the day before. Ignored for a repeating schedule. */
+  dayBefore: boolean
+}
+
 export interface PlannedReminder {
-  medicationId: string
+  /** What the reminder is for: a medication's id in Gliplog, a protocol's in PepCalc. */
+  subjectId: string
   kind: ReminderKind
   /** Epoch ms. */
   at: number
@@ -71,46 +86,41 @@ export type AtLocalTime = (
 ) => number
 
 /**
- * Daily medicines get the next week of reminders, so they keep coming if the app is not
+ * Repeating schedules get the next week of reminders, so they keep coming if the app is not
  * opened; every launch and every logged dose plans again.
  */
-const DAILY_AHEAD = 7
-const DAY_MS = 86_400_000
+export const REPEATING_AHEAD = 7
 
 /**
- * The reminders still to come for one medication, soonest first. A weekly (or longer)
- * medicine is reminded on the day it falls due, optionally the day before, and once more the
- * next day if no dose has been logged. Nothing is planned before the first dose, because there
- * is no schedule to restate yet.
+ * The reminders still to come for one subject, soonest first. On each due day: a reminder at
+ * the rule's time. For a schedule that is not repeating, also the day before when asked, and
+ * once more the day after in case the dose was not logged. A repeating schedule is reminded on
+ * its days only, at most `REPEATING_AHEAD` of them, because the next day's reminder already
+ * follows.
  */
 export function planReminders(input: {
-  medicationId: string
-  dueAt: number | null
-  intervalDays: number
-  reminder: MedicationReminder
+  subjectId: string
+  days: DueDays
+  repeating: boolean
+  rule: ReminderRule
   now: number
   atLocalTime: AtLocalTime
 }): PlannedReminder[] {
-  const { medicationId, dueAt, intervalDays, reminder, now, atLocalTime } = input
-  if (!reminder.enabled || dueAt === null || !(intervalDays > 0)) return []
-  const at = (offset: number) => atLocalTime(dueAt, offset, reminder.hour, reminder.minute)
-  if (intervalDays === 1) {
-    // From today if the last logged dose is days old, so reminders do not stop after a week.
-    const start = Math.max(0, Math.floor((now - dueAt) / DAY_MS))
-    return Array.from({ length: DAILY_AHEAD + 1 }, (_, k) => ({
-      medicationId,
-      kind: 'due' as const,
-      at: at(start + k),
-    }))
+  const { subjectId, days, repeating, rule, now, atLocalTime } = input
+  if (!rule.enabled || !days.length) return []
+  const at = (day: number, offset = 0) => atLocalTime(day, offset, rule.hour, rule.minute)
+  if (repeating) {
+    return days
+      .map((day) => ({ subjectId, kind: 'due' as const, at: at(day) }))
       .filter((r) => r.at > now)
-      .slice(0, DAILY_AHEAD)
+      .slice(0, REPEATING_AHEAD)
   }
-  const planned: PlannedReminder[] = [
-    ...(reminder.dayBefore ? [{ medicationId, kind: 'day-before' as const, at: at(-1) }] : []),
-    { medicationId, kind: 'due', at: at(0) },
-    { medicationId, kind: 'late', at: at(1) },
-  ]
-  return planned.filter((r) => r.at > now)
+  const planned: PlannedReminder[] = days.flatMap((day) => [
+    ...(rule.dayBefore ? [{ subjectId, kind: 'day-before' as const, at: at(day, -1) }] : []),
+    { subjectId, kind: 'due' as const, at: at(day) },
+    { subjectId, kind: 'late' as const, at: at(day, 1) },
+  ])
+  return planned.filter((r) => r.at > now).sort((a, b) => a.at - b.at)
 }
 
 /**

@@ -12,8 +12,8 @@ src/
                  (pooling and the curve model), glucose (HbA1c and glucose units), glycemic
                  (trial comparison), vitals (blood pressure and heart rate ranges and
                  formatting), healthSync (what to import and export, matching), symptoms
-                 (side-effect list and summary), reminders (when to remind, notification
-                 wording), photos (sizing, nearest weigh-in, comparison pair), calendar
+                 (side-effect list and summary), reminderDays (due days from an interval),
+                 reminders (when to remind, notification wording), photos (sizing, nearest weigh-in, comparison pair), calendar
                  (calendar invites), cohort (merged trial readouts), collage and crop (photo
                  collage), doseBands (dose bands and callout pills on a trend), overlap
                  (different medicines in use together), progressStats (headline weight change and
@@ -102,10 +102,12 @@ that must survive a reload goes into the database.
 ## Reminders
 
 Dose reminders exist only in the native app: a web app can notify on time only through a push
-server, which Gliplog will not run. `domain/reminders.ts` plans them from the last dose and
-interval at the user's local time of day (a weekly medicine: the due day, optionally the day
-before, and the day after; a daily one: the next seven days). `useReminderSync` (mounted in
-App) replaces every pending notification whenever the journal or the settings change and when
+server, which Gliplog will not run. `domain/reminderDays.ts` turns a medication's next due time
+and interval into the days to remind about (a weekly medicine: the due day; a daily one: the
+next seven days). `domain/reminders.ts` places reminders on those days at the user's time of
+day: the day itself, optionally the day before, and the day after for a schedule that does not
+repeat. The planner knows nothing about medications, so another schedule can feed it.
+`useReminderSync` (mounted in App) replaces every pending notification whenever the journal or the settings change and when
 the app returns to the foreground. Alarms are inexact and `SCHEDULE_EXACT_ALARM` is removed
 from the manifest. Text is generic unless the user turns on names. A tap routes to
 `#/?log=<medication id>`, which Today turns into Log dose for that medication.

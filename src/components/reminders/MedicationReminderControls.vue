@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { MedicationRow } from '@/db/database'
+import { dueDaysFor } from '@/domain/reminderDays'
 import { fromTimeValue, planReminders, toTimeValue } from '@/domain/reminders'
 import { atLocalTime, formatDateTime, systemClock } from '@/services/time'
 import { useJournalStore } from '@/stores/journal'
@@ -21,12 +22,12 @@ function nextReminderText(): string {
   const med = props.medication
   const dueAt = journal.nextDueOf(med)
   if (dueAt === null) return 'Reminders start after you log a first dose.'
+  const now = systemClock().getTime()
   const [next] = planReminders({
-    medicationId: med.id,
-    dueAt,
-    intervalDays: med.intervalDays,
-    reminder: settings.reminderFor(med.id),
-    now: systemClock().getTime(),
+    subjectId: med.id,
+    ...dueDaysFor({ dueAt, intervalDays: med.intervalDays, now }),
+    rule: settings.reminderFor(med.id),
+    now,
     atLocalTime,
   })
   return next

@@ -1,4 +1,5 @@
 import { onBeforeUnmount, onMounted, watch } from 'vue'
+import { dueDaysFor } from '@/domain/reminderDays'
 import { planReminders, reminderText } from '@/domain/reminders'
 import { useJournalStore } from '@/stores/journal'
 import { useSettingsStore } from '@/stores/settings'
@@ -24,10 +25,9 @@ export function useReminderSync() {
     return journal.activeMedications
       .flatMap((med) =>
         planReminders({
-          medicationId: med.id,
-          dueAt: journal.nextDueOf(med),
-          intervalDays: med.intervalDays,
-          reminder: settings.reminderFor(med.id),
+          subjectId: med.id,
+          ...dueDaysFor({ dueAt: journal.nextDueOf(med), intervalDays: med.intervalDays, now }),
+          rule: settings.reminderFor(med.id),
           now,
           atLocalTime,
         }).map((r) => ({ ...r, ...reminderText(r.kind, showNames ? med.name : null) })),

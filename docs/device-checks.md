@@ -26,3 +26,9 @@ The e2e suite covers only the web build. Run these checks on a phone before a re
 1. Every tab opens: Today, Medications, Progress, Settings.
 2. On Android, pressing the system back button from a medication page returns to Medications, and from All entries returns to Progress.
 3. The floating Log button clears the Android gesture bar cleanly at the bottom of every tab.
+
+## Reminders
+
+1. A weekly medicine with a reminder at a time two minutes ahead and its dose due today: the notification arrives; tapping it opens Log dose for that medicine.
+2. A daily medicine: tomorrow's reminder is pending (check by waiting, or by `adb shell dumpsys alarm | grep gliplog`).
+3. A reminder scheduled by the previous version, tapped after the update, still opens the right dialog.

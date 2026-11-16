@@ -72,16 +72,16 @@ export async function scheduleReminders(reminders: ScheduledReminder[]): Promise
       channelId: CHANNEL_ID,
       schedule: { at: toDate(r.at), allowWhileIdle: true },
       isExactNotification: false,
-      extra: { medicationId: r.medicationId },
+      extra: { medicationId: r.subjectId },
     })),
   })
 }
 
 /**
- * Call `handler` with the medication a tapped reminder is for. The plugin holds a tap that
+ * Call `handler` with the subject a tapped reminder is for. The plugin holds a tap that
  * launched the app until a listener attaches, so registering after startup still sees it.
  */
-export async function onReminderTap(handler: (medicationId: string) => void): Promise<void> {
+export async function onReminderTap(handler: (subjectId: string) => void): Promise<void> {
   await LocalNotifications.addListener('localNotificationActionPerformed', (action) => {
     const id: unknown = (action.notification.extra as { medicationId?: unknown } | undefined)
       ?.medicationId
