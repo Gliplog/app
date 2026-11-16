@@ -35,7 +35,6 @@ function reviewMedication(med: MedicationRow) {
   <div class="gl-page meds">
     <header class="page-header mb-4">
       <div>
-        <p class="gl-eyebrow">Your treatments</p>
         <h1 class="gl-display text-headline-large">Medications</h1>
       </div>
       <v-btn

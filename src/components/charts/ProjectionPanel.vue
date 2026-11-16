@@ -67,14 +67,8 @@ const userSupplied = computed(() => props.override !== null)
       :unit-label="unitLabel"
       :now="now"
     />
-    <MoreInfo>
-      <p class="text-body-small gl-muted">Estimate from the half-life and time to peak.</p>
-      <SourceList
-        v-if="!userSupplied && source?.pk"
-        flat
-        :sources="source.pk.sources"
-        :note="source.pk.notes"
-      />
+    <MoreInfo v-if="!userSupplied && source?.pk">
+      <SourceList flat :sources="source.pk.sources" :note="source.pk.notes" />
     </MoreInfo>
   </section>
   <p v-else-if="source?.pkUnavailableReason" class="text-body-small gl-muted">

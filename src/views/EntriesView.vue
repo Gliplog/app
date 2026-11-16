@@ -17,7 +17,6 @@ const { entries } = useEntries()
       >
         Progress
       </v-btn>
-      <p class="gl-eyebrow">Everything you’ve logged</p>
       <h1 class="gl-display text-headline-large">All entries</h1>
     </header>
 

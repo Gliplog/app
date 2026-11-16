@@ -84,16 +84,8 @@ const shareInput = computed(() =>
           :now="now"
           :lookback-hours="lookbackHours"
         />
-        <MoreInfo>
-          <p class="text-body-small gl-muted">
-            Estimated amount in your body, from a simple model of published data.
-          </p>
-          <SourceList
-            v-if="!userSupplied && source?.pk"
-            flat
-            :sources="source.pk.sources"
-            :note="source.pk.notes"
-          />
+        <MoreInfo v-if="!userSupplied && source?.pk">
+          <SourceList flat :sources="source.pk.sources" :note="source.pk.notes" />
         </MoreInfo>
       </template>
       <v-alert v-else type="info" variant="tonal" density="comfortable">

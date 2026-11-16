@@ -12,7 +12,7 @@ export const SOURCE_KIND_LABELS: Record<SourceKind, string> = {
   label: 'Prescribing label',
   trial: 'Clinical trial',
   standard: 'Health standard',
-  model: 'Modelling choice',
+  model: 'Derived',
 }
 
 export interface SourceRef {

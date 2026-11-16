@@ -157,7 +157,6 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', onVisible
         <div class="notify__hero">
           <span class="notify__badge"><v-icon :icon="mdiBellRingOutline" size="32" /></span>
           <h3 class="text-title-large gl-display">Reminder on</h3>
-          <p class="gl-muted">You'll get a notification on the day each dose is due.</p>
         </div>
         <MedicationReminderControls :medication="medication" />
         <div>
