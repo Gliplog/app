@@ -25,10 +25,16 @@ async function addMedication(page: Page, name: string, concentration?: string) {
 }
 
 async function logWeight(page: Page, value: string, when?: string) {
-  await page
-    .getByRole('button', { name: /^Log (a )?weight$/ })
-    .first()
-    .click()
+  const emptyButton = page.getByRole('button', { name: 'Log a weight' })
+  if ((await emptyButton.count()) > 0 && (await emptyButton.first().isVisible())) {
+    await emptyButton.first().click()
+  } else {
+    await page.getByRole('button', { name: 'Log', exact: true }).click()
+    await page
+      .getByRole('dialog', { name: 'Log' })
+      .getByRole('button', { name: 'Weight', exact: true })
+      .click()
+  }
   const dialog = page.getByRole('dialog', { name: 'Weigh-in' })
   await dialog.getByLabel('Weight').fill(value)
   if (when) await dialog.getByLabel('When').fill(when)
@@ -50,11 +56,12 @@ test('logs a medication, a dose and a weight, then shows the next dose, BMI and 
   await choose(dose, 'Dose', '0.25 mg')
   await dose.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('0.25 mg logged')).toBeVisible()
-  await expect(page.getByText(/^Next dose .+, in 7 days$/)).toBeVisible()
-  await expect(page.getByRole('img', { name: /Estimated amount in the body now/ })).toBeVisible()
+  await expect(page.getByText('Due in 7 days')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'In your system' })).toBeVisible()
+  await expect(page.getByText(/% of peak/)).toBeVisible()
 
   await logWeight(page, '100')
-  await expect(page.getByText('Add your height in Settings to see your BMI.')).toBeVisible()
+  await expect(page.locator('.stat-tile', { hasText: 'Weight' })).toContainText('100 kg')
 
   await page.getByRole('link', { name: 'Settings', exact: true }).first().click()
   await page.getByRole('spinbutton', { name: 'Height' }).fill('175')
@@ -62,7 +69,9 @@ test('logs a medication, a dose and a weight, then shows the next dose, BMI and 
   await expect(page.getByText('Profile saved').first()).toBeVisible()
 
   await page.getByRole('link', { name: 'Today', exact: true }).first().click()
-  await expect(page.getByText(/32\.7 · Obesity class 1/)).toBeVisible()
+  const bmiTile = page.locator('.stat-tile', { hasText: 'BMI' })
+  await expect(bmiTile).toContainText('32.7')
+  await expect(bmiTile).toContainText('Obesity class 1')
 
   await page.getByRole('link', { name: 'Progress', exact: true }).first().click()
   // One chart merges every semaglutide injection trial; each trial's own card is folded below.
@@ -76,17 +85,9 @@ test('logs a medication, a dose and a weight, then shows the next dose, BMI and 
   )
 })
 
-/** The pulse is infinite, so merely shortening it, as the app's global rule does, would strobe. */
-async function expectStillDotWithReducedMotion(page: Page) {
-  await page.emulateMedia({ reducedMotion: 'reduce' })
-  const pulse = await page
-    .locator('.level-backdrop__dot--live')
-    .first()
-    .evaluate((dot) => getComputedStyle(dot, '::after').animationName)
-  expect(pulse).toBe('none')
-}
-
-test('projects levels while adding a medication, then draws them on its card', async ({ page }) => {
+test('projects levels while adding a medication, then draws a system row trace', async ({
+  page,
+}) => {
   await page.goto('./')
   await acceptDisclaimer(page)
   await page.getByRole('button', { name: 'Add medication' }).first().click()
@@ -121,16 +122,15 @@ test('projects levels while adding a medication, then draws them on its card', a
   await dialog.getByRole('button', { name: 'Cancel' }).click()
 
   await addMedication(page, 'Wegovy')
-  // Nothing has been taken, so the card has no level to show.
-  await expect(page.locator('.level-backdrop')).toHaveCount(0)
+  // Nothing has been taken, so In your system is not shown.
+  await expect(page.getByRole('heading', { name: 'In your system' })).toHaveCount(0)
   await page.getByRole('button', { name: 'Log dose' }).click()
   const dose = page.getByRole('dialog', { name: 'Wegovy' })
   await choose(dose, 'Dose', '0.25 mg')
   await dose.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('0.25 mg logged')).toBeVisible()
-  await expect(page.locator('.level-backdrop svg')).toBeVisible()
-  await expect(page.getByText(/^Est\. .+ mg now · Steady by /)).toBeVisible()
-  await expectStillDotWithReducedMotion(page)
+  await expect(page.locator('.system-row__trace')).toBeVisible()
+  await expect(page.getByText(/% of peak/)).toBeVisible()
 
   // Now a dose is logged, the form reads in mg.
   await page.getByRole('link', { name: 'Medications', exact: true }).first().click()
@@ -222,54 +222,32 @@ test('marks each change of dose on the weight line', async ({ page }) => {
   await expect(share.getByAltText('Preview of the image to share')).toBeVisible()
 })
 
-test('the medication stack switches medicines and the levels chart follows', async ({ page }) => {
+test('two medicines give two due cards and two system rows', async ({ page }) => {
   await page.goto('./')
   await acceptDisclaimer(page)
   await addMedication(page, 'Wegovy')
   await addMedication(page, 'Zepbound')
-  await page.getByRole('button', { name: 'Log dose' }).click()
+
+  await page
+    .locator('.due-card', { hasText: 'Wegovy' })
+    .getByRole('button', { name: 'Log dose' })
+    .click()
+  await choose(page.getByRole('dialog', { name: 'Wegovy' }), 'Dose', '0.25 mg')
+  await page.getByRole('dialog', { name: 'Wegovy' }).getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByText('0.25 mg logged')).toBeVisible()
+
+  await page
+    .locator('.due-card', { hasText: 'Zepbound' })
+    .getByRole('button', { name: 'Log dose' })
+    .click()
   await choose(page.getByRole('dialog', { name: 'Zepbound' }), 'Dose', '2.5 mg')
   await page.getByRole('dialog', { name: 'Zepbound' }).getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('2.5 mg logged')).toBeVisible()
-  await expect(page.getByText('Tirzepatide injection')).toBeVisible()
 
-  // Only the front card is reachable, so each control exists once.
-  await expect(page.getByRole('button', { name: 'Log dose' })).toHaveCount(1)
-  await page.getByRole('button', { name: 'Next medication' }).click()
-  await expect(page.getByText('Showing Wegovy, 2 of 2')).toBeAttached()
-  await expect(page.getByText('Log a dose of Wegovy to see an estimate here.')).toBeVisible()
-  await page
-    .getByRole('group', { name: 'Choose a medication' })
-    .getByRole('button', { name: 'Zepbound' })
-    .click()
+  await expect(page.locator('.due-card')).toHaveCount(2)
+  await expect(page.locator('.system-row')).toHaveCount(2)
+  await expect(page.getByText('Semaglutide injection')).toBeVisible()
   await expect(page.getByText('Tirzepatide injection')).toBeVisible()
-
-  // A swipe moves the card past the column's edge, but never widens the page into a scroll.
-  const widerThanScreen = () =>
-    page.evaluate(() => {
-      const root = document.documentElement
-      return root.scrollWidth > root.clientWidth
-    })
-  const card = page.getByRole('group', { name: 'Zepbound, 1 of 2' })
-  await expect(page.locator('.v-overlay__scrim')).toHaveCount(0)
-  await card.scrollIntoViewIfNeeded()
-  const box = (await card.boundingBox())!
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
-  await page.mouse.down()
-  await page.mouse.move(box.x + box.width * 1.2, box.y + box.height / 2, { steps: 8 })
-  expect(await widerThanScreen()).toBe(false)
-  await page.mouse.up()
-  await expect(page.getByText('Showing Wegovy, 2 of 2')).toBeAttached()
-  expect(await widerThanScreen()).toBe(false)
-  await page.getByRole('button', { name: 'Next medication' }).click()
-  await expect(page.getByText('Tirzepatide injection')).toBeVisible()
-
-  await page.getByRole('link', { name: 'Progress', exact: true }).first().click()
-  const cohorts = page.locator('.v-card', { hasText: 'Trial cohorts' })
-  await expect(cohorts).toContainText('Tirzepatide injection')
-  await choose(page, 'Medication', 'Wegovy')
-  await expect(cohorts).toContainText('Semaglutide injection')
-  await expect(page.getByText('Log a dose of Wegovy to add your own line.')).toBeVisible()
 })
 
 test('shares a trend as an image and exports the journal as a PDF', async ({ page }) => {
@@ -351,7 +329,11 @@ test('logs side effects and blood sugar, in the units chosen in Settings', async
   await acceptDisclaimer(page)
   await addMedication(page, 'Ozempic')
 
-  await page.getByRole('button', { name: 'Log side effect' }).click()
+  await page.getByRole('button', { name: 'Log', exact: true }).click()
+  await page
+    .getByRole('dialog', { name: 'Log' })
+    .getByRole('button', { name: 'Side effect', exact: true })
+    .click()
   const effects = page.getByRole('dialog', { name: 'Side effects' })
   await effects.getByRole('button', { name: 'Nausea' }).click()
   await effects.getByRole('button', { name: 'Stomach pain' }).click()
@@ -359,19 +341,26 @@ test('logs side effects and blood sugar, in the units chosen in Settings', async
   await expect(effects.getByText(/possible sign of pancreatitis/)).toBeVisible()
   await effects.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('Side effects logged')).toBeVisible()
-  await expect(page.getByRole('list', { name: 'Side effects this week' })).toContainText('Nausea')
+  const symptomsTile = page.locator('.stat-tile', { hasText: 'Side effects' })
+  await expect(symptomsTile).toContainText('2')
+  await expect(symptomsTile).toContainText(/Nausea|Stomach pain/)
 
-  await page.getByRole('button', { name: 'Log blood sugar' }).click()
+  await page.getByRole('button', { name: 'Log', exact: true }).click()
+  await page
+    .getByRole('dialog', { name: 'Log' })
+    .getByRole('button', { name: 'Blood sugar', exact: true })
+    .click()
   const sugar = page.getByRole('dialog', { name: 'Blood sugar' })
   await sugar.getByLabel('HbA1c').fill('7.2')
   await sugar.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('Reading logged')).toBeVisible()
-  await expect(page.getByText('HbA1c 7.2%')).toBeVisible()
+  const a1cTile = page.locator('.stat-tile', { hasText: 'HbA1c' })
+  await expect(a1cTile).toContainText('7.2%')
 
   await page.getByRole('link', { name: 'Settings', exact: true }).first().click()
   await choose(page, 'HbA1c unit', 'mmol/mol')
   await page.getByRole('link', { name: 'Today', exact: true }).first().click()
-  await expect(page.getByText('HbA1c 55 mmol/mol')).toBeVisible()
+  await expect(a1cTile).toContainText('55 mmol/mol')
 
   await page.getByRole('link', { name: 'History', exact: true }).first().click()
   await page.getByRole('button', { name: /^Side effects / }).click()
@@ -385,7 +374,11 @@ test('logs blood pressure and heart rate, charts them and lists them in History'
   await acceptDisclaimer(page)
   await addMedication(page, 'Ozempic')
 
-  await page.getByRole('button', { name: 'Log vitals' }).click()
+  await page.getByRole('button', { name: 'Log', exact: true }).click()
+  await page
+    .getByRole('dialog', { name: 'Log' })
+    .getByRole('button', { name: 'Vitals', exact: true })
+    .click()
   const vitals = page.getByRole('dialog', { name: 'Vitals' })
   await vitals.getByLabel('Systolic').fill('82')
   await vitals.getByLabel('Diastolic').fill('90')
@@ -395,14 +388,18 @@ test('logs blood pressure and heart rate, charts them and lists them in History'
   await vitals.getByLabel('Diastolic').fill('82')
   await vitals.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('Reading logged')).toBeVisible()
-  await expect(page.getByText('128/82 mmHg', { exact: true })).toBeVisible()
+  await expect(page.getByText('128/82 mmHg', { exact: true }).first()).toBeVisible()
 
-  await page.getByRole('button', { name: 'Log vitals' }).click()
+  await page.getByRole('button', { name: 'Log', exact: true }).click()
+  await page
+    .getByRole('dialog', { name: 'Log' })
+    .getByRole('button', { name: 'Vitals', exact: true })
+    .click()
   await choose(vitals, 'Reading', 'Heart rate')
   await vitals.getByLabel('Resting heart rate').fill('64')
   await vitals.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('Reading logged')).toBeVisible()
-  await expect(page.getByText('64 bpm', { exact: true })).toBeVisible()
+  await expect(page.getByText('64 bpm', { exact: true }).first()).toBeVisible()
 
   await page.getByRole('link', { name: 'Progress', exact: true }).first().click()
   await choose(page, 'Measure', 'Blood pressure')
@@ -700,7 +697,7 @@ test('a tab tapped while the page is still coasting from a fling opens', async (
 
   // Back on the first tab, the History tab no longer looks pressed (no ripple left behind).
   await tab('Today').tap()
-  await expect(page.getByRole('heading', { level: 1, name: 'Your journal' })).toBeVisible()
+  await expect(page.locator('.gl-eyebrow', { hasText: 'Today' })).toBeVisible()
   await expect(page.locator('.v-bottom-navigation .v-ripple__container')).toHaveCount(0)
   await expect(page.locator('.v-bottom-navigation .v-btn--active')).toHaveText('Today')
 })
@@ -877,11 +874,13 @@ async function expectDecoded(img: Locator) {
     .toBeGreaterThan(0)
 }
 
-test('the bell on a medication card opens Add reminder', async ({ page }) => {
+test('Add reminder on a medication page shows Notify me disabled on the web', async ({ page }) => {
   await page.goto('./')
   await acceptDisclaimer(page)
   await addMedication(page, 'Wegovy')
-  await page.getByRole('button', { name: 'Add reminder for Wegovy' }).click()
+  await page.getByRole('link', { name: 'Medications', exact: true }).first().click()
+  await page.getByRole('link', { name: /^Wegovy/ }).click()
+  await page.getByRole('button', { name: 'Add reminder' }).click()
   const dialog = page.getByRole('dialog')
   await expect(page.getByRole('dialog', { name: 'Add reminder' })).toBeVisible()
   // The web app cannot notify on its own, and says so instead of hiding the choice.

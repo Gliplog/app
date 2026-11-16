@@ -4,6 +4,10 @@ import { choose } from './helpers'
 export const DISCLAIMER_TITLE = 'A private journal, not medical advice'
 export const UNITS_CARD_TITLE = 'Units and appearance'
 export const TIMELINE_HASH = 'history'
+export const EMPTY_TODAY_TITLE = 'Start with what you take'
+export const TODAY_LOG_BUTTON = 'Log dose'
+export const SYSTEM_LABEL = 'Semaglutide injection'
+export const TILE_TARGET = { heading: 'Progress', url: /#\/progress/ } as const
 
 export const DOSE_KIND = {
   row: 'Dose',
@@ -48,4 +52,31 @@ export async function deleteDoseEntry(page: Page) {
   await dialog.getByRole('button', { name: 'Delete dose' }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Delete', exact: true }).click()
   await expect(page.getByText('Dose deleted')).toBeVisible()
+}
+
+/** Seeds a scheduled medicine on Today with no logged doses yet. */
+export async function prepareTodaySchedule(page: Page) {
+  await page.getByRole('button', { name: 'Add medication' }).first().click()
+  const dialog = page.getByRole('dialog', { name: 'Medication' })
+  const field = dialog.getByRole('combobox', { name: 'Medication' })
+  await field.click()
+  await field.fill('Wegovy')
+  await page.getByRole('option', { name: /^Wegovy [a-z]+ ·/ }).click()
+  await dialog.getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByText('Medication added')).toBeVisible()
+}
+
+/** Saves a first or repeated dose from the dialog opened by Today's due card. */
+export async function saveDueCardDose(page: Page) {
+  const dialog = page.getByRole('dialog', { name: 'Wegovy' })
+  await choose(dialog, 'Dose', '0.25 mg')
+  await dialog.getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByText('0.25 mg logged')).toBeVisible()
+}
+
+/** Saves the repeated dose without changing the pre-filled amount. */
+export async function saveRepeatedDueDose(page: Page) {
+  const dialog = page.getByRole('dialog', { name: 'Wegovy' })
+  await dialog.getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByText('0.25 mg logged')).toBeVisible()
 }

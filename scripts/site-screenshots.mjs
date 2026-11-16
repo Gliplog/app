@@ -35,7 +35,7 @@ const SHOTS = [
   {
     name: 'today',
     tab: 'Today',
-    ready: (page) => page.getByRole('img', { name: /Estimated amount in the body now/ }),
+    ready: (page) => page.getByRole('heading', { name: 'In your system' }),
   },
   { name: 'progress', tab: 'Progress', ready: (page) => page.getByText('Since you started') },
 ]

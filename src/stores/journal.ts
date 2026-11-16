@@ -113,23 +113,6 @@ export const useJournalStore = defineStore('journal', () => {
     return recent ? medicationById(recent.medicationId) : activeMedications.value[0]
   })
 
-  /**
-   * The medication the user chose to look at on Today, which Progress follows for its trial
-   * comparison. Held in memory only: a fresh launch opens on the medication in use now.
-   */
-  const focusedMedicationId = ref<string | null>(null)
-
-  /** The focused medication while it is still active, else the one in use now. */
-  const focusedMedication = computed<MedicationRow | undefined>(() => {
-    const id = focusedMedicationId.value
-    const chosen = id ? activeMedications.value.find((m) => m.id === id) : undefined
-    return chosen ?? currentMedication.value
-  })
-
-  function focusMedication(id: string) {
-    focusedMedicationId.value = id
-  }
-
   /** PK for a medication: the catalog's human data, else the user's own values. */
   function pkFor(med: MedicationRow): { params: PkParameters; userSupplied: boolean } | null {
     const product = productOf(med)
@@ -326,7 +309,6 @@ export const useJournalStore = defineStore('journal', () => {
     activeMedications,
     archivedMedications,
     currentMedication,
-    focusedMedication,
     levelGroups,
     latestWeight,
     baseline,
@@ -341,7 +323,6 @@ export const useJournalStore = defineStore('journal', () => {
     levelGroupOf,
     historyFor,
     projectionOf,
-    focusMedication,
     addMedication,
     updateMedication,
     deleteMedication,

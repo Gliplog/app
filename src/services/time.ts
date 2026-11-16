@@ -59,12 +59,6 @@ export function daysBetween(from: string | number, to: Date | number): number {
   return Math.floor((toMs - fromMs) / 86_400_000)
 }
 
-const relative = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' })
-
-export function formatRelativeDays(days: number): string {
-  return relative.format(-days, 'day')
-}
-
 /** Human duration for PK figures: "11 min", "5.0 h", "7.0 days". */
 export function formatHours(hours: number): string {
   if (hours < 1) return `${Math.round(hours * 60)} min`
@@ -98,6 +92,17 @@ export function formatDateRange(startMs: number, endMs: number): string {
 /** "Thursday" for a due date, in the device's language. */
 export function formatWeekday(epochMs: number): string {
   return weekdayFormat.format(new Date(epochMs))
+}
+
+const todayHeadingFormat = new Intl.DateTimeFormat(undefined, {
+  weekday: 'short',
+  month: 'short',
+  day: 'numeric',
+})
+
+/** "Mon, Nov 16" in the device's locale, for Today's heading. */
+export function formatTodayDate(epochMs: number): string {
+  return todayHeadingFormat.format(new Date(epochMs))
 }
 
 const weekdayFormat = new Intl.DateTimeFormat(undefined, { weekday: 'long' })

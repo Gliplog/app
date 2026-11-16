@@ -72,7 +72,7 @@ const SHOTS = [
     scheme: 'light',
     show: async (page) => {
       await openTab(page, 'Today')
-      await page.getByRole('img', { name: /Estimated amount in the body now/ }).waitFor()
+      await page.getByRole('heading', { name: 'In your system' }).waitFor()
     },
   },
   {
@@ -107,7 +107,7 @@ const SHOTS = [
     scheme: 'dark',
     show: async (page) => {
       await openTab(page, 'Today')
-      await scrollTo(page, page.getByText('Estimated levels', { exact: true }))
+      await page.getByRole('heading', { name: 'In your system' }).waitFor()
     },
   },
 ]

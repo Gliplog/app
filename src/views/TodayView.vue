@@ -1,60 +1,47 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { findPkProfile } from '@/data'
-import type { MedicationRow } from '@/db/database'
-import {
-  formatPercentChange,
-  formatWeight,
-  formatWeightChange,
-  unitsSummary,
-} from '@/domain/bodyUnits'
+import { useRoute, useRouter, type RouteLocationRaw } from 'vue-router'
+import { formatWeight, formatWeightChange, unitsSummary } from '@/domain/bodyUnits'
+import { formatA1c, formatGlucose, GLUCOSE_CONTEXT_LABELS } from '@/domain/glucose'
+import { dueState, dueText, remainingFraction } from '@/domain/schedule'
+import { summarizeSymptoms } from '@/domain/symptoms'
 import { roundTo } from '@/domain/units'
+import { formatBloodPressure, formatHeartRate } from '@/domain/vitals'
+import { useBodyMetrics } from '@/composables/useBodyMetrics'
+import { useDueItems } from '@/composables/useDueItems'
+import { useEntries } from '@/composables/useEntries'
+import { useNow } from '@/composables/useNow'
+import { useSystemRows } from '@/composables/useSystemRows'
+import { formatDate, formatTodayDate, toEpochMs } from '@/services/time'
 import { useJournalStore } from '@/stores/journal'
 import { useLogStore } from '@/stores/log'
 import { useSettingsStore } from '@/stores/settings'
-import { useNow } from '@/composables/useNow'
-import { useBodyMetrics } from '@/composables/useBodyMetrics'
-import { formatDate, formatDateTime, daysBetween } from '@/services/time'
-import {
-  mdiHeartPulse,
-  mdiPlus,
-  mdiScaleBathroom,
-  mdiStethoscope,
-  mdiWaterOutline,
-} from '@/plugins/icons'
-import { formatA1c, formatGlucose, GLUCOSE_CONTEXT_LABELS } from '@/domain/glucose'
-import { summarizeSymptoms } from '@/domain/symptoms'
-import { formatBloodPressure, formatHeartRate } from '@/domain/vitals'
-import { toEpochMs } from '@/services/time'
-import MedicationStack from '@/components/journal/MedicationStack.vue'
+import StatTile from '@/components/common/StatTile.vue'
+import DoseCountdown from '@/components/journal/DoseCountdown.vue'
+import EntriesTimeline from '@/components/journal/EntriesTimeline.vue'
 import MedicationDialog from '@/components/journal/MedicationDialog.vue'
-import PkPanel from '@/components/charts/PkPanel.vue'
-import AddReminderDialog from '@/components/reminders/AddReminderDialog.vue'
+import DueCard from '@/components/today/DueCard.vue'
+import SystemList from '@/components/today/SystemList.vue'
+import { mdiChevronRight, mdiPlus, mdiScaleBathroom } from '@/plugins/icons'
+
+interface TileItem {
+  key: string
+  label: string
+  value: string
+  note?: string
+  to: RouteLocationRaw
+}
 
 const journal = useJournalStore()
 const log = useLogStore()
 const settings = useSettingsStore()
 const now = useNow()
 const body = useBodyMetrics()
+const { items: dueItems } = useDueItems(now)
+const { rows: systemRows } = useSystemRows(now)
+const { entries } = useEntries()
 
 const medDialog = ref(false)
-
-function addMedication() {
-  medDialog.value = true
-}
-
-function logDose(med?: MedicationRow) {
-  log.start('dose', { medicationId: med?.id })
-}
-
-/** Add reminder, from the bell on a medication's card. */
-const reminderDialog = ref(false)
-const reminderMed = ref<MedicationRow | null>(null)
-function openReminder(med: MedicationRow) {
-  reminderMed.value = med
-  reminderDialog.value = true
-}
 
 /*
  * A tapped dose reminder arrives as `?log=<medication id>`. It waits for the journal to load,
@@ -69,92 +56,132 @@ watch(
     if (typeof id !== 'string' || !journal.loaded) return
     const med = journal.activeMedications.find((m) => m.id === id)
     if (med) {
-      journal.focusMedication(med.id)
-      logDose(med)
+      log.start('dose', { medicationId: med.id })
     }
     void router.replace({ query: {} })
   },
   { immediate: true },
 )
 
-/** The front card of the stack; the levels panel below follows it. */
-const current = computed(() => journal.focusedMedication)
-const focusedId = computed({
-  get: () => current.value?.id,
-  set: (id) => {
-    if (id) journal.focusMedication(id)
-  },
-})
-const currentProduct = computed(() => journal.productOf(current.value))
-
-const latest = computed(() => journal.latestWeight)
-const baseline = computed(() => journal.baseline)
-const lastPoint = computed(() => journal.progress[journal.progress.length - 1])
-
-const goalText = computed(() => {
-  const goal = settings.profile.goalKg
-  const w = latest.value
-  if (!goal || !w) return null
-  const left = w.kg - goal
-  return left <= 0
-    ? 'You’ve reached your goal'
-    : `${formatWeight(left, settings.weightUnit)} to your goal`
-})
-
-const group = computed(() => (current.value ? journal.levelGroupOf(current.value) : undefined))
-const profile = computed(() => findPkProfile(currentProduct.value?.pkProfile))
-
-/** Names the medications pooled into one curve, so a shared estimate never looks like a bug. */
-const groupCaption = computed(() => {
-  const g = group.value
-  if (!g || g.medicationCount < 2) return undefined
-  const names = g.medicationIds.map((id) => journal.medicationById(id)?.name).filter(Boolean)
-  return `Includes doses of ${names.join(' and ')}.`
-})
-
 const isEmpty = computed(
   () => journal.loaded && !journal.medications.length && !journal.weights.length,
 )
 
-/** The last week of side effects, most frequent first. */
 const RECENT_DAYS = 7
-const recentSymptoms = computed(() =>
-  summarizeSymptoms(
+const DAY_MS = 86_400_000
+
+const latestTiles = computed<TileItem[]>(() => {
+  const tiles: TileItem[] = []
+  const w = journal.latestWeight
+  const lastPoint = journal.progress[journal.progress.length - 1]
+  if (w) {
+    tiles.push({
+      key: 'weight',
+      label: 'Weight',
+      value: formatWeight(w.kg, settings.weightUnit),
+      note:
+        lastPoint && journal.progress.length > 1
+          ? formatWeightChange(lastPoint.changeKg, settings.weightUnit)
+          : formatDate(w.measuredAt),
+      to: { name: 'progress' },
+    })
+  }
+  if (body.currentBmi.value !== null) {
+    tiles.push({
+      key: 'bmi',
+      label: 'BMI',
+      value: String(roundTo(body.currentBmi.value, 1)),
+      note: body.band.value?.label,
+      to: { name: 'progress' },
+    })
+  }
+  const latestA1c = journal.glucose.find((g) => g.kind === 'a1c')
+  if (latestA1c) {
+    tiles.push({
+      key: 'a1c',
+      label: 'HbA1c',
+      value: formatA1c(latestA1c.value, settings.a1cUnit),
+      note: formatDate(latestA1c.measuredAt),
+      to: { name: 'progress' },
+    })
+  }
+  const latestGlucose = journal.glucose.find((g) => g.kind === 'glucose' || g.kind === 'daily')
+  if (latestGlucose) {
+    tiles.push({
+      key: 'glucose',
+      label: 'Glucose',
+      value: formatGlucose(latestGlucose.value, settings.glucoseUnit),
+      note:
+        latestGlucose.kind === 'glucose'
+          ? GLUCOSE_CONTEXT_LABELS[latestGlucose.context]
+          : formatDate(latestGlucose.measuredAt),
+      to: { name: 'progress' },
+    })
+  }
+  const latestBp = journal.vitals.find((v) => v.kind === 'bp')
+  if (latestBp?.kind === 'bp') {
+    tiles.push({
+      key: 'bp',
+      label: 'BP',
+      value: formatBloodPressure(latestBp.systolic, latestBp.diastolic),
+      note: formatDate(latestBp.measuredAt),
+      to: { name: 'progress' },
+    })
+  }
+  const latestHr = journal.vitals.find((v) => v.kind === 'hr')
+  if (latestHr?.kind === 'hr') {
+    tiles.push({
+      key: 'hr',
+      label: 'Heart rate',
+      value: formatHeartRate(latestHr.bpm),
+      note: formatDate(latestHr.measuredAt),
+      to: { name: 'progress' },
+    })
+  }
+  const recentSymptoms = summarizeSymptoms(
     journal.symptoms.map((s) => ({ ...s, at: toEpochMs(s.occurredAt) })),
     journal.doses.map((d) => toEpochMs(d.takenAt)),
-    now.value - RECENT_DAYS * 86_400_000,
-  ),
-)
+    now.value - RECENT_DAYS * DAY_MS,
+  )
+  const symptomTotal = recentSymptoms.reduce((sum, s) => sum + s.count, 0)
+  if (symptomTotal > 0 && recentSymptoms[0]) {
+    tiles.push({
+      key: 'symptoms',
+      label: 'Side effects',
+      value: String(symptomTotal),
+      note: `${recentSymptoms[0].name} · 7 d`,
+      to: { name: 'progress', hash: '#side-effects' },
+    })
+  }
+  return tiles
+})
 
-const latestA1c = computed(() => journal.glucose.find((g) => g.kind === 'a1c'))
-const latestGlucose = computed(() => journal.glucose.find((g) => g.kind === 'glucose'))
-const latestDay = computed(() => journal.glucose.find((g) => g.kind === 'daily'))
-
-const latestBp = computed(() => journal.vitals.find((v) => v.kind === 'bp'))
-const latestHr = computed(() => journal.vitals.find((v) => v.kind === 'hr'))
-
-const daysSinceStart = computed(() =>
-  baseline.value ? daysBetween(baseline.value.startAt, now.value) : null,
+const hasSections = computed(
+  () =>
+    dueItems.value.length > 0 ||
+    systemRows.value.length > 0 ||
+    latestTiles.value.length > 0 ||
+    entries.value.length > 0,
 )
 </script>
 
 <template>
-  <div class="gl-page today">
+  <div class="gl-page">
     <header class="mb-4">
       <p class="gl-eyebrow">Today</p>
-      <h1 class="gl-display text-headline-large">Your journal</h1>
+      <h1 class="gl-display text-headline-large">{{ formatTodayDate(now) }}</h1>
     </header>
 
     <v-card v-if="isEmpty" class="gl-card-soft mb-4">
       <v-card-text class="gl-stack">
         <p class="text-title-large gl-display">Start with what you take</p>
-        <p>Add your medicine and a weigh-in to get started. Everything stays on this device.</p>
+        <p>Add your medicine and a weigh-in. Everything stays on this device.</p>
         <p class="text-body-small gl-muted d-flex align-center flex-wrap ga-1">
           <span>Units: {{ unitsSummary(settings.weightUnit, settings.heightUnit) }}.</span>
           <v-btn variant="text" :to="{ name: 'settings', hash: '#units' }">Change</v-btn>
         </p>
         <div class="d-flex flex-wrap ga-2">
-          <v-btn color="primary" variant="flat" :prepend-icon="mdiPlus" @click="addMedication">
+          <v-btn color="primary" variant="flat" :prepend-icon="mdiPlus" @click="medDialog = true">
             Add medication
           </v-btn>
           <v-btn variant="outlined" :prepend-icon="mdiScaleBathroom" @click="log.start('weight')">
@@ -164,238 +191,104 @@ const daysSinceStart = computed(() =>
       </v-card-text>
     </v-card>
 
-    <div class="today-grid">
-      <MedicationStack
-        v-if="journal.activeMedications.length"
-        v-model="focusedId"
-        :medications="journal.activeMedications"
-        :now="now"
-        @log-dose="logDose"
-        @reminder="openReminder"
-      />
+    <v-card v-else-if="journal.loaded && !hasSections" variant="tonal" class="mb-4">
+      <v-card-text class="gl-stack gl-stack--tight">
+        <p>Nothing due yet.</p>
+        <div>
+          <v-btn variant="text" :to="{ name: 'medications' }" :append-icon="mdiChevronRight">
+            Medications
+          </v-btn>
+        </div>
+      </v-card-text>
+    </v-card>
 
-      <v-fade-transition v-if="current" mode="out-in">
-        <PkPanel
-          v-if="group"
-          :key="group.key"
-          :source="profile"
-          :override="current.pkOverride"
-          :doses="group.doses"
-          :preview="null"
-          unit-label="mg"
-          :now="now"
-          :title="profile?.name ?? current.name"
-          :caption="groupCaption"
-        />
-        <v-card v-else :key="`empty:${current.id}`">
-          <v-card-item>
-            <p class="gl-eyebrow">Estimated levels</p>
-            <v-card-title class="text-wrap">{{ profile?.name ?? current.name }}</v-card-title>
-          </v-card-item>
-          <v-card-text>
-            <p class="gl-muted">Log a dose of {{ current.name }} to see an estimate here.</p>
+    <div v-if="hasSections" class="today-sections">
+      <section
+        v-if="dueItems.length"
+        class="gl-stack gl-stack--tight"
+        aria-labelledby="due-heading"
+      >
+        <h2 id="due-heading" class="gl-display text-title-large">Due</h2>
+        <div class="gl-stack">
+          <DueCard
+            v-for="item in dueItems"
+            :key="item.id"
+            :title="item.title"
+            :due-label="item.dueAt !== null ? dueText(dueState(item.dueAt, now)) : undefined"
+            :detail="item.detail"
+            :to="item.to"
+            @log="item.log()"
+          >
+            <template v-if="item.dueAt !== null" #countdown>
+              <DoseCountdown
+                :state="dueState(item.dueAt, now)"
+                :remaining="remainingFraction(item.dueAt, item.intervalDays, now)"
+              />
+            </template>
+          </DueCard>
+        </div>
+      </section>
+
+      <SystemList :rows="systemRows" />
+
+      <section
+        v-if="latestTiles.length"
+        class="gl-stack gl-stack--tight"
+        aria-labelledby="latest-heading"
+      >
+        <h2 id="latest-heading" class="gl-display text-title-large">Latest</h2>
+        <div class="tile-grid">
+          <StatTile
+            v-for="tile in latestTiles"
+            :key="tile.key"
+            :label="tile.label"
+            :value="tile.value"
+            :note="tile.note"
+            :to="tile.to"
+          />
+        </div>
+      </section>
+
+      <section
+        v-if="entries.length"
+        class="gl-stack gl-stack--tight"
+        aria-labelledby="recent-heading"
+      >
+        <h2 id="recent-heading" class="gl-display text-title-large">Recent</h2>
+        <v-card>
+          <v-card-text class="gl-stack gl-stack--tight">
+            <EntriesTimeline :entries="entries" compact :limit="5" />
+            <div>
+              <v-btn variant="text" :to="{ name: 'history' }" :append-icon="mdiChevronRight">
+                All entries
+              </v-btn>
+            </div>
           </v-card-text>
         </v-card>
-      </v-fade-transition>
-
-      <v-card v-if="latest || journal.medications.length">
-        <v-card-item>
-          <p class="gl-eyebrow">Weight</p>
-          <v-card-title>
-            <span v-if="latest" class="gl-num">{{
-              formatWeight(latest.kg, settings.weightUnit)
-            }}</span>
-            <span v-else>No weigh-ins yet</span>
-          </v-card-title>
-          <v-card-subtitle v-if="latest">{{ formatDateTime(latest.measuredAt) }}</v-card-subtitle>
-        </v-card-item>
-        <v-card-text class="gl-stack">
-          <dl v-if="latest" class="stats">
-            <div v-if="lastPoint && journal.progress.length > 1">
-              <dt class="gl-faint">Since you started</dt>
-              <dd class="gl-num">
-                {{ formatWeightChange(lastPoint.changeKg, settings.weightUnit) }}
-                <span class="gl-muted">({{ formatPercentChange(lastPoint.changePercent) }})</span>
-              </dd>
-            </div>
-            <div v-if="body.currentBmi.value !== null">
-              <dt class="gl-faint">BMI</dt>
-              <dd class="gl-num">
-                {{ roundTo(body.currentBmi.value, 1) }}
-                <span v-if="body.band.value" class="gl-muted">· {{ body.band.value.label }}</span>
-              </dd>
-            </div>
-            <div v-if="goalText">
-              <dt class="gl-faint">Goal</dt>
-              <dd>{{ goalText }}</dd>
-            </div>
-            <div v-if="daysSinceStart !== null && baseline?.basis !== 'no-doses'">
-              <dt class="gl-faint">Day</dt>
-              <dd class="gl-num">{{ daysSinceStart + 1 }}</dd>
-            </div>
-          </dl>
-          <p v-if="latest && !body.heightCm.value" class="text-body-small gl-muted">
-            Add your height in Settings to see your BMI.
-          </p>
-          <div class="gl-actions">
-            <v-btn variant="text" :to="{ name: 'progress' }">See progress</v-btn>
-            <v-btn variant="tonal" :prepend-icon="mdiScaleBathroom" @click="log.start('weight')">
-              Log weight
-            </v-btn>
-          </div>
-        </v-card-text>
-      </v-card>
-
-      <v-card v-if="journal.medications.length">
-        <v-card-item>
-          <p class="gl-eyebrow">Blood sugar</p>
-          <v-card-title>
-            <span v-if="latestA1c" class="gl-num"
-              >HbA1c {{ formatA1c(latestA1c.value, settings.a1cUnit) }}</span
-            >
-            <span v-else-if="latestGlucose" class="gl-num">{{
-              formatGlucose(latestGlucose.value, settings.glucoseUnit)
-            }}</span>
-            <span v-else-if="latestDay" class="gl-num"
-              >Average {{ formatGlucose(latestDay.value, settings.glucoseUnit) }}</span
-            >
-            <span v-else>No readings yet</span>
-          </v-card-title>
-          <v-card-subtitle v-if="latestA1c">{{
-            formatDateTime(latestA1c.measuredAt)
-          }}</v-card-subtitle>
-        </v-card-item>
-        <v-card-text class="gl-stack">
-          <dl v-if="latestA1c && latestGlucose" class="stats">
-            <div>
-              <dt class="gl-faint">
-                Glucose · {{ GLUCOSE_CONTEXT_LABELS[latestGlucose.context].toLowerCase() }}
-              </dt>
-              <dd class="gl-num">{{ formatGlucose(latestGlucose.value, settings.glucoseUnit) }}</dd>
-            </div>
-          </dl>
-          <p v-else-if="latestGlucose" class="gl-muted">
-            {{ GLUCOSE_CONTEXT_LABELS[latestGlucose.context] }},
-            {{ formatDateTime(latestGlucose.measuredAt) }}
-          </p>
-          <p v-else-if="latestDay" class="gl-muted">
-            Glucose monitor, {{ formatDate(latestDay.measuredAt) }}
-          </p>
-          <p v-else-if="!latestA1c" class="gl-muted">
-            Log an HbA1c result or a glucose reading to follow them over time.
-          </p>
-          <div class="gl-actions">
-            <v-btn variant="tonal" :prepend-icon="mdiWaterOutline" @click="log.start('glucose')">
-              Log blood sugar
-            </v-btn>
-          </div>
-        </v-card-text>
-      </v-card>
-
-      <v-card v-if="journal.medications.length">
-        <v-card-item>
-          <p class="gl-eyebrow">Vitals</p>
-          <v-card-title>
-            <span v-if="latestBp?.kind === 'bp'" class="gl-num">{{
-              formatBloodPressure(latestBp.systolic, latestBp.diastolic)
-            }}</span>
-            <span v-else-if="latestHr?.kind === 'hr'" class="gl-num">{{
-              formatHeartRate(latestHr.bpm)
-            }}</span>
-            <span v-else>No readings yet</span>
-          </v-card-title>
-          <v-card-subtitle v-if="latestBp ?? latestHr">{{
-            formatDateTime((latestBp ?? latestHr)!.measuredAt)
-          }}</v-card-subtitle>
-        </v-card-item>
-        <v-card-text class="gl-stack">
-          <dl v-if="latestBp && latestHr?.kind === 'hr'" class="stats">
-            <div>
-              <dt class="gl-faint">Resting heart rate</dt>
-              <dd class="gl-num">{{ formatHeartRate(latestHr.bpm) }}</dd>
-            </div>
-          </dl>
-          <p v-else-if="!latestBp && !latestHr" class="gl-muted">
-            Log blood pressure and resting heart rate.
-          </p>
-          <div class="gl-actions">
-            <v-btn variant="tonal" :prepend-icon="mdiHeartPulse" @click="log.start('vital')">
-              Log vitals
-            </v-btn>
-          </div>
-        </v-card-text>
-      </v-card>
-
-      <v-card v-if="journal.medications.length">
-        <v-card-item>
-          <p class="gl-eyebrow">Side effects</p>
-          <v-card-title>Last {{ RECENT_DAYS }} days</v-card-title>
-        </v-card-item>
-        <v-card-text class="gl-stack">
-          <ul v-if="recentSymptoms.length" class="symptom-list" aria-label="Side effects this week">
-            <li v-for="s in recentSymptoms" :key="s.key" class="gl-badge gl-badge--info">
-              {{ s.name }} <span class="gl-num">× {{ s.count }}</span>
-            </li>
-          </ul>
-          <p v-else class="gl-muted">Nothing logged this week.</p>
-          <div class="gl-actions">
-            <v-btn variant="text" :to="{ name: 'progress', hash: '#side-effects' }"
-              >See summary</v-btn
-            >
-            <v-btn variant="tonal" :prepend-icon="mdiStethoscope" @click="log.start('symptom')">
-              Log side effect
-            </v-btn>
-          </div>
-        </v-card-text>
-      </v-card>
+      </section>
     </div>
 
     <MedicationDialog v-model="medDialog" :medication="null" />
-    <AddReminderDialog v-model="reminderDialog" :medication="reminderMed" />
   </div>
 </template>
 
 <style scoped>
-/*
- * A swiped medication card travels past the column's edge; clipping here (not on the stack)
- * keeps it visible up to the screen edge without widening the page into a horizontal scroll.
- */
-.today {
-  /* Older WebViews without `clip` fall back to `hidden`, which clips the same way here. */
-  overflow-x: hidden;
-  overflow-x: clip;
-}
-
-.today-grid {
+.today-sections {
   display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
+  grid-template-columns: 1fr;
+  gap: 24px;
   align-items: start;
 }
 
-.stats {
+@media (min-width: 840px) {
+  .today-sections {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.tile-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px 24px;
-  margin: 0;
-}
-
-.stats dt {
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.stats dd {
-  margin: 0;
-  font-weight: 600;
-}
-
-.symptom-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
 }
 </style>

@@ -43,12 +43,12 @@ const products = computed<CatalogProduct[]>(() => {
   return [...seen.values()]
 })
 
-/** Starts on the medication in front on Today. */
+/** Starts on the medication in use now. */
 const chosenProductId = ref<string | null>(null)
 const product = computed(
   () =>
     products.value.find((p) => p.id === chosenProductId.value) ??
-    journal.productOf(journal.focusedMedication) ??
+    journal.productOf(journal.currentMedication) ??
     products.value[0],
 )
 const productModel = computed({

@@ -9,6 +9,9 @@ Part of the `front-end` skill.
 | `common/PresetPicker.vue`                             | Number input as preset chips plus a Custom field; chips are buttons with `aria-pressed`                                                                                          |
 | `common/SourceBadge.vue`                              | Shows where a number came from (label, trial, standard, model)                                                                                                                   |
 | `common/SourceList.vue`                               | A list of sources, each with its badge and a link                                                                                                                                |
+| `common/StatTile.vue`                                 | Compact reading tile (label, value, optional note, optional link) used in Today's Latest grid                                                                                    |
+| `today/DueCard.vue`                                   | Scheduled medicine card on Today: countdown slot, due text, last-dose detail, link to medicine page, primary log button                                                          |
+| `today/SystemList.vue`                                | "In your system" list on Today with `Estimate` badge, amount now, percent of peak, inline trace SVG, and links to each medicine's page                                           |
 | `common/ListPager.vue`, `SortToggle.vue`              | Range caption and `v-pagination` (hidden on one page); newest or oldest first toggle                                                                                             |
 | `common/AppLogo.vue`                                  | The brand: mark (`src/assets/brand/gliplog-mark.svg`) plus the two-tone wordmark                                                                                                 |
 | `common/AppSnackbar.vue`, `AppConfirm.vue`            | Render the notify and confirm stores; mounted once in `App.vue`                                                                                                                  |
@@ -23,7 +26,7 @@ Part of the `front-end` skill.
 | `journal/LogSymptomDialog.vue`                        | Log one or more side effects at one strength, or edit one entry                                                                                                                  |
 | `journal/LogGlucoseDialog.vue`                        | Log or edit an HbA1c result or a glucose reading (with when in the day)                                                                                                          |
 | `journal/LogVitalsDialog.vue`                         | Log or edit blood pressure (systolic over diastolic) or resting heart rate                                                                                                       |
-| `journal/MedicationStack.vue`                         | Today's stacked medication cards: swipe, arrows, dots or arrow keys; back cards inert                                                                                            |
+| `journal/MedicationDialog.vue`                        | Add or edit a medication: product, interval, compounded vial strength, own half-life (Save only; Stop/Delete live on `MedicationView`)                                           |
 | `journal/SymptomSummaryCard.vue`                      | Side effects by period, strength and days after a dose; opens the PDF export                                                                                                     |
 | `charts/CohortChart.vue`                              | One medicine's trial readouts merged over weeks (band and points), your line                                                                                                     |
 | `charts/CohortSection.vue`                            | Progress cohort section: medication, measure and population switches, trial cards                                                                                                |
@@ -60,7 +63,8 @@ Part of the `front-end` skill.
 - Dialogs reset their form from props each time they open, so abandoned edits never leak.
 - A view that edits data calls a store action, then `notify.show()`.
 - Every number with a source shows a `SourceBadge` or a `SourceList`.
-- One-home rule: the full estimated-level chart (`PkPanel`) lives on the medicine's page (`MedicationView`), pooling every dose of that medicine and route across medications (`journal.levelGroupOf`). Today's `PkPanel` stays until M07; Progress no longer renders `PkPanel`. Today's medication stack controls `journal.focusedMedication`, and Progress starts its cohort switcher there.
+- Today lists what is due, what is in the system and the latest readings. It has no log buttons except one per due card; everything else goes through the Log button.
+- One-home rule: the full estimated-level chart (`PkPanel`) lives on the medicine's page (`MedicationView`), pooling every dose of that medicine and route across medications (`journal.levelGroupOf`). Progress no longer renders `PkPanel`; its cohort section starts on `journal.currentMedication`.
 - A trend chart is one grid with one value axis. Do not add a second panel under it.
 - Share dialogs put their privacy switches in `ShareImageDialog`'s slot, which renders them
   at 48px rows with a plain track and a 14px label so they sit at the buttons' size.
