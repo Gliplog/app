@@ -101,6 +101,20 @@ export function formatWeekday(epochMs: number): string {
 }
 
 const weekdayFormat = new Intl.DateTimeFormat(undefined, { weekday: 'long' })
+const timeFormat = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' })
+
+/** The local time of day: "8:30 PM". */
+export function formatTime(epochMs: number): string {
+  return timeFormat.format(new Date(epochMs))
+}
+
+/** Local day heading for a timeline: "Today", "Yesterday", or the formatted date. */
+export function formatDay(epochMs: number, now: number): string {
+  const day = atLocalTime(epochMs, 0, 0, 0)
+  if (day === atLocalTime(now, 0, 0, 0)) return 'Today'
+  if (day === atLocalTime(now, -1, 0, 0)) return 'Yesterday'
+  return formatDate(day)
+}
 
 /** Local calendar date as YYYY-MM-DD, for file names. */
 export function fileDate(epochMs: number): string {

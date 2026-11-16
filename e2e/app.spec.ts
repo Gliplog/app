@@ -363,7 +363,7 @@ test('logs side effects and blood sugar, in the units chosen in Settings', async
   await expect(page.getByText('HbA1c 55 mmol/mol')).toBeVisible()
 
   await page.getByRole('link', { name: 'History', exact: true }).first().click()
-  await page.getByRole('tab', { name: /Side effects/ }).click()
+  await page.getByRole('button', { name: /^Side effects / }).click()
   await expect(page.getByText('Stomach pain')).toBeVisible()
 })
 
@@ -401,7 +401,7 @@ test('logs blood pressure and heart rate, charts them and lists them in History'
   await page.keyboard.press('Escape')
 
   await page.getByRole('link', { name: 'History', exact: true }).first().click()
-  await page.getByRole('tab', { name: /Vitals/ }).click()
+  await page.getByRole('button', { name: /^Vitals / }).click()
   await expect(page.getByText('128/82 mmHg', { exact: true })).toBeVisible()
   await expect(page.getByText('64 bpm', { exact: true })).toBeVisible()
 })
@@ -450,12 +450,12 @@ test('weights switch between kilograms and pounds without rounding drift', async
   await page.getByRole('link', { name: 'Settings', exact: true }).first().click()
   await choose(page, 'Weight unit', 'Pounds')
   await page.getByRole('link', { name: 'History', exact: true }).first().click()
-  await page.getByRole('tab', { name: /Weights/ }).click()
+  await page.getByRole('button', { name: /^Weight / }).click()
   await expect(page.getByText('179.2 lb')).toBeVisible()
   await page.getByRole('link', { name: 'Settings', exact: true }).first().click()
   await choose(page, 'Weight unit', 'Kilograms')
   await page.getByRole('link', { name: 'History', exact: true }).first().click()
-  await page.getByRole('tab', { name: /Weights/ }).click()
+  await page.getByRole('button', { name: /^Weight / }).click()
   await expect(page.getByText('81.3 kg')).toBeVisible()
 })
 

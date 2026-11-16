@@ -624,10 +624,16 @@
   .gl-page {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 16px 16px 32px;
+    padding: 16px 16px 96px;
   }
 
   @media (min-width: 840px) {
+    .gl-page {
+      padding: 24px 24px 96px;
+    }
+  }
+
+  @media (min-width: 960px) {
     .gl-page {
       padding: 24px 24px 40px;
     }

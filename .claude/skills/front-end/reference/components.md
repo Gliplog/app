@@ -15,6 +15,9 @@ Part of the `front-end` skill.
 | `common/UpdatePrompt.vue`                             | Service-worker update and offline-ready notices                                                                                                                                  |
 | `common/DisclaimerDialog.vue`                         | First-run acknowledgement: a journal, not medical advice                                                                                                                         |
 | `journal/MedicationDialog.vue`                        | Add or edit a medication: product, interval, compounded vial strength, own half-life                                                                                             |
+| `journal/LogHost.vue`                                 | Mounted once in `App.vue`: the Log button, the sheet, and every log dialog                                                                                                       |
+| `journal/LogButton.vue`, `journal/LogSheet.vue`       | Floating Log button and bottom sheet listing every loggable kind                                                                                                                 |
+| `journal/EntriesTimeline.vue`                         | Every logged thing by day, with kind filters; a row opens its dialog through the log store                                                                                       |
 | `journal/LogDoseDialog.vue`                           | Log or edit a dose: label strengths, syringe units for a vial, site rotation                                                                                                     |
 | `journal/LogWeightDialog.vue`                         | Log or edit a weigh-in in kg or lb                                                                                                                                               |
 | `journal/LogSymptomDialog.vue`                        | Log one or more side effects at one strength, or edit one entry                                                                                                                  |
@@ -48,6 +51,8 @@ Part of the `front-end` skill.
 
 ## Patterns
 
+- To log or edit anything, call `useLogStore().start(kind, context)` or `.edit(entry)`. Never mount a log dialog in a view.
+- A new kind of entry is one adapter case in `useEntries.ts`, one row in `logKinds.ts`, and its dialog.
 - Dialogs reset their form from props each time they open, so abandoned edits never leak.
 - A view that edits data calls a store action, then `notify.show()`.
 - Every number with a source shows a `SourceBadge` or a `SourceList`.

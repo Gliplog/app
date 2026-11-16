@@ -17,15 +17,16 @@ src/
                  (calendar invites), cohort (merged trial readouts), collage and crop (photo
                  collage), doseBands (dose bands and callout pills on a trend), overlap
                  (different medicines in use together), projection (levels ahead), report
-                 (periods and axis ticks), listing, catalog types
+                 (periods and axis ticks), listing, entries, entryText, catalog types
   brand.ts       per-app strings read by shared components (wordmark, health sync summary)
+  logKinds.ts    loggable entry kind definitions (labels, icons, routes, order)
   data/          medications.json, its JSON Schema, typed loader (index.ts)
   db/            Dexie database (schema history), repository, backup export/restore
   stores/        Pinia: journal (medications, doses, weights, side effects, blood sugar, vitals,
                  the focused medication), settings (units, theme, profile, reminders), photos
-                 (details and thumbnail URLs), healthSync (Health apps choices), notify, confirm
+                 (details and thumbnail URLs), healthSync (Health apps choices), log, notify, confirm
   composables/   useBodyMetrics, useCameraAccess, useChartColors, useDoseBands, useInstallPrompt,
-                 useStoragePersistence, useNow, usePaging, useHideOnScroll,
+                 useStoragePersistence, useNow, useEntries, usePaging, useHideOnScroll,
                  usePhotoPins, useReminderSync, useReportExport, useHealthAutoSync,
                  useWeightSummary
   services/      time.ts (the only clock and date formatter), locale.ts (device region and
