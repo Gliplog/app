@@ -1,6 +1,8 @@
+import { reactive, ref } from 'vue'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createDatabase, type GliplogDb } from '@/db/database'
 import { createRepository, type NewMedication } from '@/db/repository'
+import { DEFAULT_HEALTH_SYNC, type HealthSyncSettings } from '@/domain/healthSync'
 import { strToU8, zipSync } from 'fflate'
 import {
   exportBackup,
@@ -179,6 +181,105 @@ describe('repository', () => {
       notes: 'watch',
       createdAt: bp.createdAt,
     })
+  })
+})
+
+describe('stores reactive input', () => {
+  it('stores healthSync settings from a ref after a spread update', async () => {
+    const repo = createRepository(db, fixedClock)
+    const settings = ref<HealthSyncSettings>({ ...DEFAULT_HEALTH_SYNC })
+    settings.value = { ...settings.value, enabled: true }
+    await repo.setSetting('healthSync', settings.value)
+    expect(await repo.getSetting('healthSync')).toEqual({
+      ...DEFAULT_HEALTH_SYNC,
+      enabled: true,
+    })
+  })
+
+  it('adds a medication with a reactive pkOverride', async () => {
+    const repo = createRepository(db, fixedClock)
+    const pkOverride = reactive({ halfLifeHours: 168, tmaxHours: 48 })
+    const med = await repo.addMedication({ ...wegovy, productId: null, pkOverride })
+    expect((await repo.listMedications())[0]).toEqual({
+      ...med,
+      pkOverride: { halfLifeHours: 168, tmaxHours: 48 },
+    })
+  })
+
+  it('updates a medication from a reactive changes object', async () => {
+    const repo = createRepository(db, fixedClock)
+    const med = await repo.addMedication({ ...wegovy, productId: null })
+    const changes = reactive({
+      notes: 'edited',
+      pkOverride: { halfLifeHours: 120, tmaxHours: 24 },
+    })
+    await repo.updateMedication(med.id, changes)
+    expect((await repo.listMedications())[0]).toMatchObject({
+      id: med.id,
+      notes: 'edited',
+      pkOverride: { halfLifeHours: 120, tmaxHours: 24 },
+    })
+  })
+
+  it('imports readings from reactive arrays', async () => {
+    const repo = createRepository(db, fixedClock)
+    const input = reactive({
+      weights: [
+        { measuredAt: '2026-10-01T07:00:00.000Z', kg: 80, enteredUnit: 'kg' as const, notes: '' },
+      ],
+      glucose: [
+        {
+          kind: 'glucose' as const,
+          measuredAt: '2026-10-01T07:05:00.000Z',
+          value: 96,
+          enteredUnit: 'mg/dL' as const,
+          context: 'other' as const,
+          notes: '',
+        },
+      ],
+      vitals: [{ kind: 'hr' as const, measuredAt: '2026-10-01T07:10:00.000Z', bpm: 61, notes: '' }],
+    })
+    const ids = await repo.importReadings(input)
+    expect(ids).toHaveLength(3)
+    expect((await repo.listWeights())[0]!.kg).toBe(80)
+    expect((await repo.listGlucose())[0]!.value).toBe(96)
+    expect((await repo.listVitals())[0]).toMatchObject({ kind: 'hr', bpm: 61 })
+  })
+
+  it('stores photo binary data intact alongside reactive metadata', async () => {
+    const repo = createRepository(db, fixedClock)
+    const image = new Uint8Array([10, 20, 30, 40]).buffer
+    const thumb = new Uint8Array([50, 60]).buffer
+    const meta = reactive({
+      takenAt: '2026-10-01T07:05:00.000Z',
+      pose: 'front' as const,
+      notes: 'first',
+      width: 1200,
+      height: 1600,
+    })
+    const photo = await repo.addPhoto(meta, image, thumb)
+    const storedImage = await repo.getPhotoImage(photo.id)
+    expect(storedImage?.byteLength).toBe(image.byteLength)
+    expect(new Uint8Array(storedImage!)).toEqual(new Uint8Array([10, 20, 30, 40]))
+    expect(new Uint8Array((await repo.listPhotoThumbs())[0]!.bytes)).toEqual(
+      new Uint8Array([50, 60]),
+    )
+  })
+
+  it('adds symptoms from a reactive array', async () => {
+    const repo = createRepository(db, fixedClock)
+    const inputs = reactive([
+      {
+        occurredAt: '2026-10-02T09:00:00.000Z',
+        symptom: 'nausea' as const,
+        otherText: '',
+        severity: 'mild' as const,
+        notes: 'morning',
+      },
+    ])
+    const rows = await repo.addSymptoms(inputs)
+    expect(rows).toHaveLength(1)
+    expect((await repo.listSymptoms())[0]).toMatchObject({ symptom: 'nausea', notes: 'morning' })
   })
 })
 

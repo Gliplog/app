@@ -59,6 +59,9 @@ that must survive a reload goes into the database.
   `symptoms` and `glucose` (both from version 2), `photos`, `photoImages` and `photoThumbs`
   (version 3), `vitals` (version 4: blood pressure and resting heart rate), `settings` (key/value; the profile is the `profile` key and reminder choices
   the `reminders` key, both sanitised on load).
+- Writes pass through `toPlain` (`src/db/plain.ts`) in a Dexie middleware. IndexedDB cannot
+  clone a Vue proxy; without the copy a store that saves its own reactive state fails with
+  `DataCloneError`.
 - Photo bytes are JPEG ArrayBuffers, not Blobs (older Safari and fake-indexeddb cannot store
   Blobs), with thumbnails in their own table so the grid never reads full images. Every photo
   is redrawn through a canvas before storage, which drops EXIF and GPS. On Android the
