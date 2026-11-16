@@ -25,6 +25,9 @@ so native-only paths (`src/services/nativeFileTransfer.ts`) need a check on a de
 - Catalog: `tests/data/catalog.spec.ts` validates the JSON against its schema, every reference,
   route and medicine matching for trials, and spot checks label endpoints.
 - Storage: `fake-indexeddb` gives each test its own database; tests delete it afterwards.
+- Stores: a store action that writes has a test that saves, builds a new Pinia, loads, and
+  reads the value back (`tests/stores/`). `fake-indexeddb` rejects what a browser rejects,
+  a reactive object included, so the round trip is the proof the write works.
 - Components: mount with a real Vuetify (`tests/helpers.ts`); assert what a user or screen
   reader perceives (pressed state, aria-label), not internals. The suite must be warning-free.
 - E2E: runs against the production build under the Pages base path (`/app/`), because the

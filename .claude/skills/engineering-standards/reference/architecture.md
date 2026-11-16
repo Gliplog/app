@@ -13,20 +13,27 @@ src/
                  heart rate ranges and formatting), healthSync (what to import and export,
                  matching), symptoms (side-effect list and summary), reminders (when to
                  remind, notification wording), photos (sizing, nearest weigh-in, comparison
-                 pair), listing, catalog types
+                 pair), calendar (calendar invites), cohort (merged trial readouts), collage
+                 and crop (photo collage), doseMarks and levelStrip (doses and levels on a
+                 trend), overlap (different medicines in use together), projection (levels
+                 ahead), report (periods and axis ticks), listing, catalog types
   data/          medications.json, its JSON Schema, typed loader (index.ts)
   db/            Dexie database (schema history), repository, backup export/restore
   stores/        Pinia: journal (medications, doses, weights, side effects, blood sugar, vitals,
                  the focused medication), settings (units, theme, profile, reminders), photos
                  (details and thumbnail URLs), healthSync (Health apps choices), notify, confirm
-  composables/   useBodyMetrics, useChartColors, useInstallPrompt, useStoragePersistence, useNow,
-                 usePaging, useHideOnScroll, useReminderSync, useHealthAutoSync
+  composables/   useBodyMetrics, useCameraAccess, useChartColors, useInstallPrompt,
+                 useStoragePersistence, useNow, usePaging, useHideOnScroll, useLevelStrip,
+                 usePhotoPins, useReminderSync, useReportExport, useHealthAutoSync
   services/      time.ts (the only clock and date formatter), fileTransfer.ts (share/download),
+                 nativeFileTransfer.ts (the same through the apps' share sheet), platform.ts
+                 (words that depend on the build),
                  pdf/ (dependency-free PDF writer), report/ (journal report data and layout),
                  photos/ (canvas re-encode), reminders/ (native local notifications),
                  health/ (Apple Health and Health Connect through @capgo/capacitor-health,
                  loaded only in the apps; runSync, the sync loop)
-  components/    journal/ (dialogs), charts/, common/, photos/
+  components/    journal/ (log dialogs, medication cards), charts/, common/, photos/,
+                 reminders/, report/, share/
   views/         one per route: Today, Progress, History, Settings, Health (apps only)
   plugins/       vuetify.ts (themes, defaults), icons.ts (inline SVG icons), fonts.ts
   styles/        tokens.css (design tokens), theme.css (global and Vuetify overrides)
