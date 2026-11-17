@@ -1,0 +1,1 @@
+Four tabs replace the old layout (Today, Medications, Progress, Settings). Today shows due doses with one-tap logging. Medications gives each medicine a page with its schedule, reminders, level chart and doses. Weight charts now colour the line by dose strength and add dose pills. Adds a month calendar view, one Log sheet and regional default units.
