@@ -52,7 +52,7 @@ describe('TodayView', () => {
     expect(wrapper.text()).toMatch(/Units: .+\./)
   })
 
-  it('renders Due, In your system, Latest and Recent in heading order when seeded', async () => {
+  it('renders Due with level trace, Latest and Recent in heading order when seeded', async () => {
     const pre = setActivePinia(createPinia())
     const journal = useJournalStore(pre)
     await journal.load()
@@ -81,12 +81,14 @@ describe('TodayView', () => {
 
     const { wrapper } = await mountToday()
     const h2s = wrapper.findAll('h2').map((h) => h.text())
-    expect(h2s).toEqual(['Due', 'In your system', 'Latest', 'Recent'])
-    expect(wrapper.text()).toContain('Tirzepatide injection')
+    expect(h2s).toEqual(['Due', 'Latest', 'Recent'])
+    expect(wrapper.find('.level-backdrop').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Est. level')
+    expect(wrapper.text()).toContain('Of peak')
     expect(wrapper.text()).toContain('7.5 mg Zepbound')
   })
 
-  it('hides In your system when there is no level data', async () => {
+  it('omits level telemetry when there is no level data', async () => {
     const pre = setActivePinia(createPinia())
     const journal = useJournalStore(pre)
     await journal.load()
@@ -103,7 +105,8 @@ describe('TodayView', () => {
     const { wrapper } = await mountToday()
     const h2s = wrapper.findAll('h2').map((h) => h.text())
     expect(h2s).toEqual(['Due'])
-    expect(wrapper.text()).not.toContain('In your system')
+    expect(wrapper.find('.level-backdrop').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('Est. level')
   })
 
   it('opens the dose dialog once for ?log=<id> and clears the query', async () => {

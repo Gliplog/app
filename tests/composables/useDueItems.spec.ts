@@ -14,7 +14,7 @@ describe('useDueItems', () => {
     await Promise.all(db.tables.map((t) => t.clear()))
   })
 
-  it('orders dosed medications before undosed ones, skips archived, and starts log on click', async () => {
+  it('orders dosed medications before undosed ones, attaches levels, and includes clearing archived meds', async () => {
     const nowMs = new Date(2026, 10, 16, 12, 0).getTime()
     const yesterday = new Date(nowMs - DAY_MS).toISOString()
 
@@ -66,15 +66,27 @@ describe('useDueItems', () => {
     const startSpy = vi.spyOn(log, 'start')
 
     const { items } = useDueItems(ref(nowMs))
-    expect(items.value).toHaveLength(2)
+    expect(items.value).toHaveLength(3)
 
     expect(items.value[0]!.id).toBe(dosed.id)
     expect(items.value[0]!.dueAt).toBe(nowMs + 6 * DAY_MS)
     expect(items.value[0]!.detail).toBe('Last: 7.5 mg, yesterday')
+    expect(items.value[0]!.dueLabel).toBe('Due in 6 days')
+    expect(items.value[0]!.trace).not.toBeNull()
+    expect(items.value[0]!.level?.amountText).toMatch(/mg$/)
+    expect(items.value[0]!.level?.percentOfPeak).toBeGreaterThan(0)
+    expect(items.value[0]!.canLog).toBe(true)
 
     expect(items.value[1]!.id).toBe(undosed.id)
     expect(items.value[1]!.dueAt).toBeNull()
     expect(items.value[1]!.detail).toBe('No doses yet')
+    expect(items.value[1]!.trace).toBeNull()
+    expect(items.value[1]!.level).toBeNull()
+
+    expect(items.value[2]!.title).toBe('Wegovy')
+    expect(items.value[2]!.dueLabel).toBe('In your system')
+    expect(items.value[2]!.trace).not.toBeNull()
+    expect(items.value[2]!.canLog).toBe(false)
 
     items.value[0]!.log()
     expect(startSpy).toHaveBeenCalledWith('dose', { medicationId: dosed.id })

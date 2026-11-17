@@ -27,7 +27,7 @@ src/
                  (details and thumbnail URLs), healthSync (Health apps choices), log, notify, confirm
   composables/   useBodyMetrics, useCameraAccess, useChartColors, useDoseBands, useDueItems, useInstallPrompt,
                  useStoragePersistence, useNow, useEntries, usePaging, useHideOnScroll,
-                 usePhotoPins, useReminderSync, useReportExport, useScheduledDays, useSystemRows, useHealthAutoSync,
+                 usePhotoPins, useReminderSync, useReportExport, useScheduledDays, useHealthAutoSync,
                  useWeightSummary
   services/      time.ts (the only clock and date formatter), locale.ts (device region and
                  measurement system), fileTransfer.ts (share/download),
@@ -38,7 +38,7 @@ src/
                  health/ (Apple Health and Health Connect through @capgo/capacitor-health,
                  loaded only in the apps; runSync, the sync loop)
   components/    journal/ (log dialogs, medication dialog), charts/, common/, photos/,
-                 reminders/, report/, share/, today/ (DueCard, SystemList)
+                 reminders/, report/, share/, today/ (DueCard)
   views/         one per route: Today, Medications, Medication, Progress, Entries, Settings, Health (apps only)
   plugins/       vuetify.ts (themes, defaults), icons.ts (inline SVG icons), fonts.ts
   styles/        tokens.css (design tokens), theme.css (global and Vuetify overrides)

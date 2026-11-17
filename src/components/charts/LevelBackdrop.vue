@@ -96,8 +96,8 @@ const nowOffset = computed(() => props.trace.now[0])
   width: 100%;
   height: 100%;
   overflow: visible;
-  -webkit-mask-image: linear-gradient(to bottom, var(--gl-surface) 45%, transparent);
-  mask-image: linear-gradient(to bottom, var(--gl-surface) 45%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, var(--gl-surface) 38%, transparent 78%);
+  mask-image: linear-gradient(to bottom, var(--gl-surface) 38%, transparent 78%);
   animation: level-reveal 900ms var(--gl-ease-standard) both;
 }
 

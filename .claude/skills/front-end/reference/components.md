@@ -10,8 +10,7 @@ Part of the `front-end` skill.
 | `common/SourceBadge.vue`                              | Shows where a number came from (label, trial, standard, model)                                                                                                                                                        |
 | `common/SourceList.vue`                               | A list of sources, each with its badge and a link                                                                                                                                                                     |
 | `common/StatTile.vue`                                 | Compact reading tile (label, value, optional note, optional link) used in Today's Latest grid and Progress's `progressStats` summary                                                                                  |
-| `today/DueCard.vue`                                   | Scheduled medicine card on Today: countdown slot, due text, last-dose detail, link to medicine page, primary log button                                                                                               |
-| `today/SystemList.vue`                                | "In your system" list on Today with amount now, percent of peak, inline trace SVG, and links to each medicine's page                                                                                                  |
+| `today/DueCard.vue`                                   | Scheduled or active medicine card on Today: countdown slot, due badge, last-dose detail, estimated-level telemetry, `LevelBackdrop`, `Medication` link button, primary log button                                     |
 | `common/ListPager.vue`, `SortToggle.vue`              | Range caption and `v-pagination` (hidden on one page); newest or oldest first toggle                                                                                                                                  |
 | `common/AppLogo.vue`                                  | The brand: mark (`src/assets/brand/gliplog-mark.svg`) plus the two-tone wordmark                                                                                                                                      |
 | `common/AppSnackbar.vue`, `AppConfirm.vue`            | Render the notify and confirm stores; mounted once in `App.vue`                                                                                                                                                       |
@@ -65,7 +64,7 @@ Part of the `front-end` skill.
 - Dialogs reset their form from props each time they open, so abandoned edits never leak.
 - A view that edits data calls a store action, then `notify.show()`.
 - Every number with a source shows a `SourceBadge` or a `SourceList`.
-- Today lists what is due, what is in the system and the latest readings. It has no log buttons except one per due card; everything else goes through the Log button.
+- Today lists what is due and active in your system on `DueCard`, alongside the latest readings and recent entries. It has no log buttons except one per due card; everything else goes through the Log button.
 - One-home rule: the full estimated-level chart (`PkPanel`) lives on the medicine's page (`MedicationView`), pooling every dose of that medicine and route across medications (`journal.levelGroupOf`). Progress no longer renders `PkPanel`; its cohort section starts on `journal.currentMedication`.
 - A trend chart is one grid with one value axis. Do not add a second panel under it.
 - Share dialogs put their privacy switches in `ShareImageDialog`'s slot, which renders them

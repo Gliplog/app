@@ -35,7 +35,7 @@ const SHOTS = [
   {
     name: 'today',
     tab: 'Today',
-    ready: (page) => page.getByRole('heading', { name: 'In your system' }),
+    ready: (page) => page.getByRole('heading', { name: 'Due' }),
   },
   { name: 'progress', tab: 'Progress', ready: (page) => page.getByText('Total change') },
 ]

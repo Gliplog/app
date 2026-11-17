@@ -57,8 +57,8 @@ test('logs a medication, a dose and a weight, then shows the next dose, BMI and 
   await dose.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('0.25 mg logged')).toBeVisible()
   await expect(page.getByText('Due in 7 days')).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'In your system' })).toBeVisible()
-  await expect(page.getByText(/% of peak/)).toBeVisible()
+  await expect(page.locator('.due-card .level-backdrop')).toBeVisible()
+  await expect(page.getByText('Of peak')).toBeVisible()
 
   await logWeight(page, '100')
   await expect(page.locator('.stat-tile', { hasText: 'Weight' })).toContainText('100 kg')
@@ -85,7 +85,7 @@ test('logs a medication, a dose and a weight, then shows the next dose, BMI and 
   )
 })
 
-test('projects levels while adding a medication, then draws a system row trace', async ({
+test('projects levels while adding a medication, then draws a level backdrop on Today', async ({
   page,
 }) => {
   await page.goto('./')
@@ -122,15 +122,15 @@ test('projects levels while adding a medication, then draws a system row trace',
   await dialog.getByRole('button', { name: 'Cancel' }).click()
 
   await addMedication(page, 'Wegovy')
-  // Nothing has been taken, so In your system is not shown.
-  await expect(page.getByRole('heading', { name: 'In your system' })).toHaveCount(0)
+  // Nothing has been taken, so no level backdrop is shown yet.
+  await expect(page.locator('.due-card .level-backdrop')).toHaveCount(0)
   await page.getByRole('button', { name: 'Log dose' }).click()
   const dose = page.getByRole('dialog', { name: 'Wegovy' })
   await choose(dose, 'Dose', '0.25 mg')
   await dose.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('0.25 mg logged')).toBeVisible()
-  await expect(page.locator('.system-row__trace')).toBeVisible()
-  await expect(page.getByText(/% of peak/)).toBeVisible()
+  await expect(page.locator('.due-card .level-backdrop')).toBeVisible()
+  await expect(page.getByText('Of peak')).toBeVisible()
 
   // Now a dose is logged, the form reads in mg.
   await page.getByRole('link', { name: 'Medications', exact: true }).first().click()
@@ -222,7 +222,7 @@ test('marks each change of dose on the weight line', async ({ page }) => {
   await expect(share.getByAltText('Preview of the image to share')).toBeVisible()
 })
 
-test('two medicines give two due cards and two system rows', async ({ page }) => {
+test('two medicines give two due cards with level backdrops', async ({ page }) => {
   await page.goto('./')
   await acceptDisclaimer(page)
   await addMedication(page, 'Wegovy')
@@ -245,9 +245,9 @@ test('two medicines give two due cards and two system rows', async ({ page }) =>
   await expect(page.getByText('2.5 mg logged')).toBeVisible()
 
   await expect(page.locator('.due-card')).toHaveCount(2)
-  await expect(page.locator('.system-row')).toHaveCount(2)
-  await expect(page.getByText('Semaglutide injection')).toBeVisible()
-  await expect(page.getByText('Tirzepatide injection')).toBeVisible()
+  await expect(page.locator('.due-card .level-backdrop')).toHaveCount(2)
+  await expect(page.locator('.due-card', { hasText: 'Wegovy' })).toContainText('Est. level')
+  await expect(page.locator('.due-card', { hasText: 'Zepbound' })).toContainText('Est. level')
 })
 
 test('shares a trend as an image and exports the journal as a PDF', async ({ page }) => {

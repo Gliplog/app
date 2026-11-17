@@ -3,7 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter, type RouteLocationRaw } from 'vue-router'
 import { formatWeight, formatWeightChange, unitsSummary } from '@/domain/bodyUnits'
 import { formatA1c, formatGlucose, GLUCOSE_CONTEXT_LABELS } from '@/domain/glucose'
-import { dueState, dueText, remainingFraction } from '@/domain/schedule'
+import { dueState, remainingFraction } from '@/domain/schedule'
 import { summarizeSymptoms } from '@/domain/symptoms'
 import { roundTo } from '@/domain/units'
 import { formatBloodPressure, formatHeartRate } from '@/domain/vitals'
@@ -11,7 +11,6 @@ import { useBodyMetrics } from '@/composables/useBodyMetrics'
 import { useDueItems } from '@/composables/useDueItems'
 import { useEntries } from '@/composables/useEntries'
 import { useNow } from '@/composables/useNow'
-import { useSystemRows } from '@/composables/useSystemRows'
 import { formatDate, formatTodayDate, toEpochMs } from '@/services/time'
 import { useJournalStore } from '@/stores/journal'
 import { useLogStore } from '@/stores/log'
@@ -21,7 +20,6 @@ import DoseCountdown from '@/components/journal/DoseCountdown.vue'
 import EntriesTimeline from '@/components/journal/EntriesTimeline.vue'
 import MedicationDialog from '@/components/journal/MedicationDialog.vue'
 import DueCard from '@/components/today/DueCard.vue'
-import SystemList from '@/components/today/SystemList.vue'
 import { mdiChevronRight, mdiPlus, mdiScaleBathroom } from '@/plugins/icons'
 
 interface TileItem {
@@ -38,7 +36,6 @@ const settings = useSettingsStore()
 const now = useNow()
 const body = useBodyMetrics()
 const { items: dueItems } = useDueItems(now)
-const { rows: systemRows } = useSystemRows(now)
 const { entries } = useEntries()
 
 const medDialog = ref(false)
@@ -156,12 +153,12 @@ const latestTiles = computed<TileItem[]>(() => {
   return tiles
 })
 
+const dueHeading = computed(() =>
+  dueItems.value.some((i) => i.scheduled) ? 'Due' : 'In your system',
+)
+
 const hasSections = computed(
-  () =>
-    dueItems.value.length > 0 ||
-    systemRows.value.length > 0 ||
-    latestTiles.value.length > 0 ||
-    entries.value.length > 0,
+  () => dueItems.value.length > 0 || latestTiles.value.length > 0 || entries.value.length > 0,
 )
 </script>
 
@@ -202,20 +199,27 @@ const hasSections = computed(
       </v-card-text>
     </v-card>
 
-    <div v-if="hasSections" class="today-sections">
+    <div
+      v-if="hasSections"
+      :class="['today-sections', { 'today-sections--with-due': dueItems.length > 0 }]"
+    >
       <section
         v-if="dueItems.length"
         class="gl-stack gl-stack--tight"
         aria-labelledby="due-heading"
       >
-        <h2 id="due-heading" class="gl-display text-title-large">Due</h2>
+        <h2 id="due-heading" class="gl-display text-title-large">{{ dueHeading }}</h2>
         <div class="gl-stack">
           <DueCard
             v-for="item in dueItems"
             :key="item.id"
             :title="item.title"
-            :due-label="item.dueAt !== null ? dueText(dueState(item.dueAt, now)) : undefined"
+            :due-label="item.dueLabel"
+            :due-tone="item.dueTone"
             :detail="item.detail"
+            :trace="item.trace"
+            :level="item.level"
+            :can-log="item.canLog"
             :to="item.to"
             @log="item.log()"
           >
@@ -229,43 +233,43 @@ const hasSections = computed(
         </div>
       </section>
 
-      <SystemList :rows="systemRows" />
+      <div v-if="latestTiles.length || entries.length" class="today-side">
+        <section
+          v-if="latestTiles.length"
+          class="gl-stack gl-stack--tight"
+          aria-labelledby="latest-heading"
+        >
+          <h2 id="latest-heading" class="gl-display text-title-large">Latest</h2>
+          <div class="tile-grid">
+            <StatTile
+              v-for="tile in latestTiles"
+              :key="tile.key"
+              :label="tile.label"
+              :value="tile.value"
+              :note="tile.note"
+              :to="tile.to"
+            />
+          </div>
+        </section>
 
-      <section
-        v-if="latestTiles.length"
-        class="gl-stack gl-stack--tight"
-        aria-labelledby="latest-heading"
-      >
-        <h2 id="latest-heading" class="gl-display text-title-large">Latest</h2>
-        <div class="tile-grid">
-          <StatTile
-            v-for="tile in latestTiles"
-            :key="tile.key"
-            :label="tile.label"
-            :value="tile.value"
-            :note="tile.note"
-            :to="tile.to"
-          />
-        </div>
-      </section>
-
-      <section
-        v-if="entries.length"
-        class="gl-stack gl-stack--tight"
-        aria-labelledby="recent-heading"
-      >
-        <h2 id="recent-heading" class="gl-display text-title-large">Recent</h2>
-        <v-card>
-          <v-card-text class="gl-stack gl-stack--tight">
-            <EntriesTimeline :entries="entries" compact :limit="5" />
-            <div>
-              <v-btn variant="text" :to="{ name: 'entries' }" :append-icon="mdiChevronRight">
-                All entries
-              </v-btn>
-            </div>
-          </v-card-text>
-        </v-card>
-      </section>
+        <section
+          v-if="entries.length"
+          class="gl-stack gl-stack--tight"
+          aria-labelledby="recent-heading"
+        >
+          <h2 id="recent-heading" class="gl-display text-title-large">Recent</h2>
+          <v-card>
+            <v-card-text class="gl-stack gl-stack--tight">
+              <EntriesTimeline :entries="entries" compact :limit="5" />
+              <div>
+                <v-btn variant="text" :to="{ name: 'entries' }" :append-icon="mdiChevronRight">
+                  All entries
+                </v-btn>
+              </div>
+            </v-card-text>
+          </v-card>
+        </section>
+      </div>
     </div>
 
     <MedicationDialog v-model="medDialog" :medication="null" />
@@ -280,9 +284,23 @@ const hasSections = computed(
   align-items: start;
 }
 
+.today-side {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
 @media (min-width: 840px) {
   .today-sections {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .today-sections--with-due {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  }
+
+  .today-sections:not(.today-sections--with-due) .today-side {
+    display: contents;
   }
 }
 
