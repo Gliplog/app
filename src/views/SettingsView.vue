@@ -593,7 +593,7 @@ const formatMb = (bytes: number | null) =>
         </v-card-text>
       </v-card>
 
-      <v-card>
+      <v-card id="install">
         <v-card-item>
           <p class="gl-eyebrow">Install</p>
           <v-card-title>Add to Home Screen</v-card-title>

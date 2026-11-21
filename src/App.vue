@@ -3,6 +3,7 @@ import { computed, onMounted, watch } from 'vue'
 import { useDisplay, useTheme } from 'vuetify'
 import { useRoute, useRouter } from 'vue-router'
 import { useSettingsStore } from '@/stores/settings'
+import { useNotifyStore } from '@/stores/notify'
 import { useJournalStore } from '@/stores/journal'
 import { usePhotosStore } from '@/stores/photos'
 import { useInstallPrompt } from '@/composables/useInstallPrompt'
@@ -33,6 +34,7 @@ const display = useDisplay()
 const route = useRoute()
 const router = useRouter()
 const install = useInstallPrompt()
+const notify = useNotifyStore()
 useReminderSync()
 useHealthAutoSync()
 
@@ -109,6 +111,11 @@ const showInstallBanner = computed(
   () => settings.loaded && !settings.installHintDismissed && !install.state.standalone,
 )
 
+/** Chromium browsers install in place; the rest get the steps on Settings. */
+async function installFromBanner() {
+  if (await install.actions.promptInstall()) notify.show('Gliplog installed', 'success')
+}
+
 onMounted(async () => {
   await Promise.all([settings.load(), journal.load(), photos.load(), healthSync.load()])
   theme.change(settings.theme)
@@ -162,7 +169,10 @@ onMounted(async () => {
       >
         <v-banner-text> Add Gliplog to your Home Screen to use it offline. </v-banner-text>
         <template #actions>
-          <v-btn :to="{ name: 'settings' }" variant="text">How</v-btn>
+          <v-btn v-if="install.canPrompt.value" variant="text" @click="installFromBanner">
+            Install
+          </v-btn>
+          <v-btn v-else :to="{ name: 'settings', hash: '#install' }" variant="text">How</v-btn>
           <v-btn variant="text" @click="settings.dismissInstallHint()">Dismiss</v-btn>
         </template>
       </v-banner>
@@ -258,5 +268,10 @@ onMounted(async () => {
 
 .install-banner {
   border-bottom: 1px solid var(--gl-divider);
+}
+
+/* Vuetify pins banner actions to the bottom edge; center them on the text line. */
+.install-banner :deep(.v-banner-actions) {
+  align-self: center;
 }
 </style>
