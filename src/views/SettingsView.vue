@@ -466,6 +466,13 @@ const formatMb = (bytes: number | null) =>
             </v-btn-toggle>
           </div>
           <p class="text-body-small gl-muted">Entries convert when you switch.</p>
+          <v-switch
+            :model-value="settings.realisticSyringe"
+            label="Realistic draw visualization"
+            color="primary"
+            hide-details
+            @update:model-value="settings.setRealisticSyringe(!!$event)"
+          />
         </v-card-text>
       </v-card>
 

@@ -3,12 +3,20 @@ import { computed, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 import { roundTo } from '@/domain/units'
 
 /**
- * A 1 mL U-100 insulin syringe drawn up to `units`. The plunger glides to each new reading;
- * the text reading is exact and never tweened.
+ * A 1 mL U-100 insulin syringe drawn up to `units`. The fill glides to each new reading; the
+ * text reading is exact and never tweened.
  */
-const props = defineProps<{
-  units: number
-}>()
+const props = withDefaults(
+  defineProps<{
+    units: number
+    /**
+     * Draw the needle and plunger. Off draws only the graduated barrel and its liquid, which
+     * store policies on medical syringe imagery allow (see `realisticSyringe` in settings).
+     */
+    realistic?: boolean
+  }>(),
+  { realistic: false },
+)
 
 // A 1 mL U-100 syringe, the largest common size: 100 units, a tick every 2, a number every 10.
 const CAPACITY_UNITS = 100
@@ -93,7 +101,7 @@ const flagX = computed(() =>
 </script>
 
 <template>
-  <figure class="syringe">
+  <figure class="syringe" :class="{ 'syringe--simple': !realistic }">
     <svg
       :viewBox="`0 0 ${VIEW_W} ${VIEW_H}`"
       role="img"
@@ -110,8 +118,17 @@ const flagX = computed(() =>
       </defs>
 
       <!-- Needle and hub -->
-      <line class="syringe__needle" x1="8" :y1="MID_Y" :x2="BARREL_X - 16" :y2="MID_Y" />
-      <rect class="syringe__hub" :x="BARREL_X - 18" :y="MID_Y - 9" width="18" height="18" rx="3" />
+      <template v-if="realistic">
+        <line class="syringe__needle" x1="8" :y1="MID_Y" :x2="BARREL_X - 16" :y2="MID_Y" />
+        <rect
+          class="syringe__hub"
+          :x="BARREL_X - 18"
+          :y="MID_Y - 9"
+          width="18"
+          height="18"
+          rx="3"
+        />
+      </template>
 
       <!-- Barrel, liquid, and plunger -->
       <rect
@@ -132,6 +149,7 @@ const flagX = computed(() =>
         :fill="`url(#${fluidId})`"
       />
       <rect
+        v-if="realistic"
         class="syringe__rod"
         :x="fillX + STOPPER_W"
         :y="MID_Y - 5"
@@ -139,7 +157,7 @@ const flagX = computed(() =>
         height="10"
       />
       <!-- Rubber stopper: two sealing ribs either side of a groove -->
-      <g class="syringe__stopper">
+      <g v-if="realistic" class="syringe__stopper">
         <rect :x="fillX" :y="BARREL_Y + 2" :width="STOPPER_W" :height="BARREL_H - 4" rx="2" />
         <rect
           class="syringe__groove"
@@ -160,6 +178,7 @@ const flagX = computed(() =>
         rx="2.5"
       />
       <rect
+        v-if="realistic"
         class="syringe__thumb"
         :x="BARREL_X + BARREL_W + 52"
         :y="BARREL_Y - 6"

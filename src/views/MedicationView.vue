@@ -270,7 +270,7 @@ async function deleteMedication() {
                 {{ formatDateTime(lastDose.takenAt) }}
               </p>
               <div v-if="reading" class="gl-inset med-reading">
-                <SyringeGraphic :units="reading.units" />
+                <SyringeGraphic :units="reading.units" :realistic="settings.realisticSyringe" />
                 <div class="med-reading__text">
                   <span class="gl-num text-title-medium"
                     >{{ roundTo(reading.units, 1) }} units</span

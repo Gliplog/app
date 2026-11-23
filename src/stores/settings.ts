@@ -46,7 +46,14 @@ const SETTING_KEYS = {
   installHintDismissed: 'installHintDismissed',
   reminders: 'reminders',
   dismissedOverlaps: 'dismissedOverlaps',
+  realisticSyringe: 'realisticSyringe',
 } as const
+
+/**
+ * Whether the syringe drawing shows a needle and plunger. Off by default in the Android and iOS
+ * apps, where store policies restrict medical syringe imagery; on by default on the web.
+ */
+const REALISTIC_SYRINGE_DEFAULT = !__NATIVE__
 
 const positiveOrNull = (v: unknown) =>
   typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : null
@@ -79,6 +86,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const reminders = ref<ReminderSettings>(sanitizeReminderSettings(null))
   /** Combinations of medicines whose "both in use" notice the user dismissed (see overlap.ts). */
   const dismissedOverlaps = ref<string[]>([])
+  const realisticSyringe = ref(REALISTIC_SYRINGE_DEFAULT)
 
   async function load() {
     const [
@@ -93,6 +101,7 @@ export const useSettingsStore = defineStore('settings', () => {
       hint,
       remind,
       overlaps,
+      realistic,
     ] = await Promise.all([
       repository.getSetting<ThemePreference>(SETTING_KEYS.theme),
       repository.getSetting<WeightUnit>(SETTING_KEYS.weightUnit),
@@ -105,6 +114,7 @@ export const useSettingsStore = defineStore('settings', () => {
       repository.getSetting<boolean>(SETTING_KEYS.installHintDismissed),
       repository.getSetting<unknown>(SETTING_KEYS.reminders),
       repository.getSetting<unknown>(SETTING_KEYS.dismissedOverlaps),
+      repository.getSetting<unknown>(SETTING_KEYS.realisticSyringe),
     ])
     const storedUnits = {
       weightUnit: wUnit,
@@ -135,6 +145,7 @@ export const useSettingsStore = defineStore('settings', () => {
     installHintDismissed.value = hint ?? false
     reminders.value = sanitizeReminderSettings(remind)
     dismissedOverlaps.value = sanitizeDismissed(overlaps)
+    realisticSyringe.value = typeof realistic === 'boolean' ? realistic : REALISTIC_SYRINGE_DEFAULT
     await Promise.all(
       (Object.keys(toStore) as (keyof UnitDefaults)[]).map((key) => {
         const value = toStore[key]
@@ -156,6 +167,11 @@ export const useSettingsStore = defineStore('settings', () => {
   async function setTheme(value: ThemePreference) {
     theme.value = value
     await repository.setSetting(SETTING_KEYS.theme, value)
+  }
+
+  async function setRealisticSyringe(value: boolean) {
+    realisticSyringe.value = value
+    await repository.setSetting(SETTING_KEYS.realisticSyringe, value)
   }
 
   async function setWeightUnit(value: WeightUnit) {
@@ -253,8 +269,10 @@ export const useSettingsStore = defineStore('settings', () => {
     installHintDismissed,
     reminders,
     dismissedOverlaps,
+    realisticSyringe,
     load,
     setTheme,
+    setRealisticSyringe,
     setWeightUnit,
     setHeightUnit,
     setGlucoseUnit,

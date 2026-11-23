@@ -6,6 +6,7 @@ import { formatDose, roundTo } from '@/domain/units'
 import { useJournalStore } from '@/stores/journal'
 import { useNotifyStore } from '@/stores/notify'
 import { useConfirmStore } from '@/stores/confirm'
+import { useSettingsStore } from '@/stores/settings'
 import { fromLocalInputValue, nowIso, toIso, toLocalInputValue } from '@/services/time'
 import PresetPicker from '@/components/common/PresetPicker.vue'
 import SyringeGraphic from './SyringeGraphic.vue'
@@ -24,6 +25,7 @@ const open = defineModel<boolean>({ required: true })
 const journal = useJournalStore()
 const notify = useNotifyStore()
 const confirm = useConfirmStore()
+const settings = useSettingsStore()
 const titleId = useId()
 const saving = ref(false)
 
@@ -141,7 +143,7 @@ async function remove() {
           input-id="dose-custom"
         />
         <div v-if="reading" class="gl-inset reading">
-          <SyringeGraphic :units="reading.units" />
+          <SyringeGraphic :units="reading.units" :realistic="settings.realisticSyringe" />
           <div class="reading__text" aria-live="polite">
             <span class="gl-num text-title-large">{{ roundTo(reading.units, 1) }} units</span>
             <span class="gl-muted text-body-small">
